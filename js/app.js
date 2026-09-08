@@ -314,6 +314,16 @@ function init(rows, modified) {
     const open = $(".topnav").classList.toggle("is-open");
     $("#menu-btn").setAttribute("aria-expanded", String(open));
   });
+  // The open panel also closes on Escape and on a tap anywhere outside the strip.
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && $(".topnav").classList.contains("is-open")) {
+      closeMenu();
+      $("#menu-btn").focus();
+    }
+  });
+  document.addEventListener("click", (e) => {
+    if ($(".topnav").classList.contains("is-open") && !e.target.closest(".topnav")) closeMenu();
+  });
 
   // One delegated listener covers every feed row ever rendered: the caret
   // button toggles the detail, a click elsewhere on the row does the same
@@ -527,8 +537,28 @@ const SUBTYPE_ORDER = {
 };
 
 // ERC's own + Texas subtypes always wear the solid-border Aggie-maroon pill
-// (Kate's rule); everything else cycles the 5-colour palette.
+// (Kate's rule); everything else takes a fixed hue from the table below, so a
+// subtype keeps its colour wherever it appears. Within any one tab the hues
+// are distinct; a subtype missing from the table falls back to the old cycle.
 const MAROON_SUBS = new Set(["erc events", "erc research", "texas"]);
+const SUBTYPE_COLOR = {
+  // Research
+  "working paper": "tag--c0", // navy
+  "peer-reviewed": "tag--c2", // teal
+  report: "tag--c3", // purple
+  // Events
+  "webinar-online": "tag--c0",
+  webinar: "tag--c0",
+  online: "tag--c0",
+  "off-campus": "tag--c3",
+  "texas a&m": "tag--c4", // orange
+  // Headlines
+  national: "tag--c0",
+  // Opportunities
+  "funding & grants": "tag--c2",
+  "fellowships & programs": "tag--c1", // gold
+  "call for proposals": "tag--c4",
+};
 function sortSubtypes(subs, type) {
   const order = SUBTYPE_ORDER[(type || "").toLowerCase()] || [];
   const rank = (s) => {
@@ -1247,9 +1277,10 @@ function render() {
   const colorFor = {};
   let ci = 0;
   tabSubs.forEach((s) => {
-    colorFor[s] = MAROON_SUBS.has(s.trim().toLowerCase())
+    const key = s.trim().toLowerCase();
+    colorFor[s] = MAROON_SUBS.has(key)
       ? "tag--maroon"
-      : `tag--c${ci++ % 5}`;
+      : SUBTYPE_COLOR[key] || `tag--c${ci++ % 5}`;
   });
 
   if (results.length === 0) {
