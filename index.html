@@ -79,12 +79,14 @@
     <div class="results" id="section" hidden>
       <div class="section-head" id="section-head" hidden></div>
       <div class="opp-toolbar" id="opp-toolbar" hidden></div>
+      <div class="news-list" id="news-list">
+        <p class="state state--loading" role="status">Loading the latest items…</p>
+      </div>
+      <!-- The count element moves into the toolbar's sort row on section views
+           (app.js) and back here for search results; the stamp stays below. -->
       <div class="results__meta">
         <p class="results__count" id="news-count" aria-live="polite" role="status"></p>
         <p class="results__updated" id="news-updated"></p>
-      </div>
-      <div class="news-list" id="news-list">
-        <p class="state state--loading" role="status">Loading the latest items…</p>
       </div>
     </div>
   </main>

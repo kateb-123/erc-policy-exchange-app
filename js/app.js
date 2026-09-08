@@ -865,7 +865,11 @@ function renderToolbar() {
       <span class="tgroup__label">Quick Search</span>${catBtns}${clearBtn}${archiveBtn}
     </div>`;
 
+  // The count node is persistent (it is the live region screen readers track),
+  // so detach it before the rebuild and seat it at the head of the sort row.
+  const count = $("#news-count");
   bar.innerHTML = catGroup + sortGroup;
+  if (count) bar.querySelector(".tgroup--sort").prepend(count);
   syncToolbarHeight();
 }
 
@@ -892,8 +896,12 @@ function renderFeedCards(results, colorFor, total = results.length) {
       const subtype = (it.subtype || "").trim();
       const catText = subtype || (it.type || "");
       // Category = a coloured pill above the title (the .tag palette), with a
-      // small icon when the subtype has one in CAT_ICONS.
-      const catClass = colorFor[subtype] || "tag--c0";
+      // small icon when the subtype has one in CAT_ICONS. When this subtype is
+      // the active filter, the tag matches the selected pill's warm grey instead.
+      const catClass =
+        state.subtype !== "all" && subtype === state.subtype
+          ? "tag--selected"
+          : colorFor[subtype] || "tag--c0";
       const catIcon = CAT_ICONS[catText.trim().toLowerCase()] || "";
       const catHTML = `<div class="feed-item__cat"><span class="tag ${catClass}">${
         catIcon ? `<span class="tag__icon" ${iconMask("icons/" + catIcon)} aria-hidden="true"></span>` : ""
@@ -1094,6 +1102,8 @@ function renderSearch() {
   if (head) head.hidden = true;
   $("#opp-toolbar").hidden = true;
   syncToolbarHeight();
+  // Search has no toolbar, so the count returns to the line under the list.
+  $(".results__meta").prepend($("#news-count"));
 
   const q = state.q.trim();
   const results = state.items

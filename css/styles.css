@@ -366,7 +366,7 @@ main {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 0 12px; /* sits between the toolbar and the list, so the count answers a filter click at once */
+  margin: 14px 0 0; /* below the list: the count rides on the toolbar's sort row instead (Kate's pick 3) */
   flex-wrap: wrap;
 }
 .results__count {
@@ -379,7 +379,12 @@ main {
 .results__updated {
   font-size: 0.8rem;
   color: var(--faint);
-  margin: 0;
+  margin: 0 0 0 auto; /* right edge, whether or not the count is beside it */
+}
+/* The count on the sort row: quiet, ahead of the sort actions. */
+.tgroup--sort .results__count {
+  margin: 0 18px 0 0;
+  font-size: 0.85rem;
 }
 .news-tab__icon {
   display: inline-flex;
@@ -922,6 +927,14 @@ main {
 .tag--c2 { background: transparent; color: var(--cat2-ink); border-color: var(--cat2-line); }
 .tag--c3 { background: transparent; color: var(--cat3-ink); border-color: var(--cat3-line); }
 .tag--c4 { background: transparent; color: var(--cat4-ink); border-color: var(--cat4-line); }
+/* While a Quick Search filter is on, the matching rows' tags wear the same warm
+   grey as the selected pill, so the filter and its results read as one thing
+   (Kate, Sep 2026). */
+.tag--selected {
+  background: var(--pill-active-bg);
+  color: var(--ink);
+  border-color: var(--pill-active-line);
+}
 
 /* Category text colours (search-result rows) — same hues as the pills, text only. */
 
