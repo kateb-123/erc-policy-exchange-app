@@ -178,6 +178,7 @@ function readURL() {
     state.view = "home";
   }
   if (state.q) state.view = "search";
+  state.brief = null;
   const brief = (p.get("brief") || "").trim();
   if (brief) {
     state.view = "brief";
@@ -188,7 +189,9 @@ function readURL() {
   state.archive = p.get("archive") === "1";
 }
 
-function writeURL() {
+// push = a new history entry (view or section changes, so Back returns here);
+// otherwise the current entry is rewritten (filters, sort, search keystrokes).
+function writeURL(push = false) {
   const p = new URLSearchParams();
   // Search carries ?q=; a section carries ?type=; home is a clean URL.
   if (state.view === "search") {
@@ -202,7 +205,9 @@ function writeURL() {
   }
   const qs = p.toString();
   const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
-  window.history.replaceState(null, "", url);
+  const current = window.location.pathname + window.location.search;
+  if (push && url !== current) window.history.pushState(null, "", url);
+  else window.history.replaceState(null, "", url);
 }
 
 /* ------------------------------------------------------------
@@ -225,10 +230,22 @@ function init(rows, modified) {
             .reduce((m, d) => (d > m ? d : m), "")
         );
   $("#news-updated").textContent = stamp ? `Updated ${stamp}` : "";
+  $("#landing-updated").textContent = stamp ? `Updated ${stamp}` : "";
 
   buildNav();
   buildLanding();
   validateSubtype();
+
+  // Back and Forward: the URL is the source of truth, so re-read it and render.
+  window.addEventListener("popstate", () => {
+    readURL();
+    validateSubtype();
+    state.shown = PAGE_SIZE;
+    state.searchFrom = null;
+    $("#global-search").value = state.q;
+    closeMenu();
+    render();
+  });
 
   // Global search (top strip): typing searches every section at once; clearing
   // returns to wherever you were (landing or a section).
@@ -345,41 +362,64 @@ function init(rows, modified) {
 // Build the top nav strip: Home + the four sections.
 function buildNav() {
   const el = $("#topnav");
+  // Real links: every view has a URL, so middle-click, "open in new tab" and
+  // copy-link all work, and screen readers hear "link". A plain click is
+  // intercepted for the in-page route.
   const home = `
-    <button type="button" class="topnav__link topnav__home" data-view="home">
+    <a class="topnav__link topnav__home" href="?" data-view="home">
       <span class="topnav__icon" aria-hidden="true">${HOME_ICON}</span>Home
-    </button>`;
+    </a>`;
   // Section links are text-only; Home keeps its icon (it reads as the one
   // utility control in the row).
   const sections = NEWS_TABS.map(
     (t) => `
-    <button type="button" class="topnav__link" data-type="${t.value}">${esc(t.nav)}</button>`
+    <a class="topnav__link" href="?type=${t.value}" data-type="${t.value}">${esc(t.nav)}</a>`
   ).join("");
   el.innerHTML = home + sections;
 
   el.addEventListener("click", (e) => {
-    const btn = e.target.closest(".topnav__link");
-    if (!btn) return;
-    if (btn.dataset.view === "home") setHome();
-    else if (btn.dataset.type) setType(btn.dataset.type);
+    const link = e.target.closest(".topnav__link");
+    if (!link || modifiedClick(e)) return;
+    e.preventDefault();
+    if (link.dataset.view === "home") setHome();
+    else if (link.dataset.type) setType(link.dataset.type);
   });
 }
+
+// Cmd/Ctrl/Shift-click or middle-click: let the browser open a new tab or window.
+const modifiedClick = (e) => e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1;
 
 // Build the landing-page section cards (icon + title).
 function buildLanding() {
   const el = $("#landing-cards");
   el.innerHTML = NEWS_TABS.map(
     (t) => `
-    <button type="button" class="lcard" data-type="${t.value}">
+    <a class="lcard" href="?type=${t.value}" data-type="${t.value}">
       <span class="lcard__icon" aria-hidden="true"><span class="lcard__glyph" ${iconMask(t.icon)}></span></span>
       <span class="lcard__title">${(t.lines || [t.label]).map(esc).join("<br>")}</span>
-    </button>`
+      <span class="lcard__count">${esc(countLabel(t.value))}</span>
+    </a>`
   ).join("");
 
   el.addEventListener("click", (e) => {
     const card = e.target.closest(".lcard");
-    if (card) setType(card.dataset.type);
+    if (!card || modifiedClick(e)) return;
+    e.preventDefault();
+    setType(card.dataset.type);
   });
+}
+
+// "14 upcoming", "23 recent", "8 open": how much is live in a section right now,
+// so the landing page answers "is this site alive?" before anyone clicks.
+const COUNT_WORD = { event: "upcoming", research: "recent", opportunity: "open", headline: "recent" };
+function countLabel(type) {
+  const n = state.items.filter(
+    (it) =>
+      (it.type || "").toLowerCase() === type &&
+      !isExpired(it) &&
+      !(type === "research" && isArchivedResearch(it))
+  ).length;
+  return `${n} ${COUNT_WORD[type] || "items"}`;
 }
 
 // Highlight the active top-nav link (none while searching).
@@ -415,8 +455,9 @@ function setType(type) {
   clearSearch();
   closeMenu();
   render();
-  writeURL();
+  writeURL(true);
   window.scrollTo(0, 0);
+  focusHeading();
 }
 
 // Return to the landing page.
@@ -425,8 +466,9 @@ function setHome() {
   clearSearch();
   closeMenu();
   render();
-  writeURL();
+  writeURL(true);
   window.scrollTo(0, 0);
+  focusHeading();
 }
 
 function clearSearch() {
@@ -434,6 +476,31 @@ function clearSearch() {
   state.searchFrom = null;
   const gs = $("#global-search");
   if (gs) gs.value = "";
+}
+
+// After a navigation, move focus to the new view's heading (intro, section
+// title, or brief title) so keyboard and screen reader users land on it.
+function focusHeading() {
+  const target = $$("[data-focus-target]").find((el) => el.offsetParent !== null);
+  if (target) target.focus({ preventScroll: true });
+}
+
+// Browser-tab title per view: sections, searches and briefs are distinguishable
+// in history, bookmarks and a row of open tabs.
+const SITE_NAME = "ERC Policy Exchange";
+function setTitle() {
+  let title = SITE_NAME;
+  if (state.view === "search") {
+    title = `Search: ${state.q.trim()} · ${SITE_NAME}`;
+  } else if (state.view === "brief") {
+    const it = state.items.find((x) => briefId(x) === state.brief);
+    title = `${it ? it.headline : state.briefTitle || "ERC Research"} · ${SITE_NAME}`;
+  } else if (state.view === "section") {
+    const tab = NEWS_TABS.find((x) => x.value === state.type);
+    const archive = state.type === "research" && state.archive ? " — Archive" : "";
+    title = `${tab ? tab.label : SITE_NAME}${archive} · ${SITE_NAME}`;
+  }
+  document.title = title;
 }
 
 /* ------------------------------------------------------------
@@ -547,6 +614,15 @@ function daysUntil(iso) {
   return Math.round((new Date(y, m - 1, d) - new Date(ty, tm - 1, td)) / 86400000);
 }
 
+// Words for the closing-soon cue, so urgency does not ride on colour alone:
+// "today", "tomorrow", "6 days left" (deadlines) or "in 6 days" (events).
+function relativeDays(iso, isDeadline) {
+  const n = daysUntil(iso);
+  if (n <= 0) return "today";
+  if (n === 1) return "tomorrow";
+  return isDeadline ? `${n} days left` : `in ${n} days`;
+}
+
 // Sort options offered in each tab's button toolbar. Opportunities contrasts
 // posted-date vs deadline; Events and Headlines are chronological.
 const TOOLBAR_SORTS = {
@@ -642,9 +718,15 @@ const DETAIL_LINK_LABEL = {
 const SEP = `<span class="feed-meta-sep" aria-hidden="true">·</span>`;
 const iconMask = (file) =>
   `style="-webkit-mask-image:url('assets/${file}');mask-image:url('assets/${file}')"`;
-const titleLink = (link, headline) =>
+// ext = show the ↗ outbound marker. On expandable rows the row opens in place
+// while the title leaves the site, so the title needs its own cue (phones have
+// no hover underline). Link-only rows already carry a row-level ↗.
+const NEW_TAB = `<span class="sr-only"> (opens in new tab)</span>`;
+const titleLink = (link, headline, ext = false) =>
   link
-    ? `<a class="feed-title-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(headline)}</a>`
+    ? `<a class="feed-title-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(headline)}${
+        ext ? `<span class="feed-ext" aria-hidden="true">↗</span>` : ""
+      }${NEW_TAB}</a>`
     : `<span class="feed-title-link">${esc(headline)}</span>`;
 
 // ERC Research Briefs live on Google Drive; instead of bouncing readers out,
@@ -661,11 +743,11 @@ const briefId = (it) =>
 // Title link for a feed row: briefs route to the internal viewer (the
 // delegated #news-list listener intercepts data-brief clicks — no reload);
 // everything else opens the source in a new tab.
-const itemTitleLink = (it) => {
+const itemTitleLink = (it, ext = false) => {
   const id = briefId(it);
   return id
     ? `<a class="feed-title-link" href="?brief=${id}" data-brief="${id}">${esc(it.headline)}</a>`
-    : titleLink((it.link || "").trim(), it.headline);
+    : titleLink((it.link || "").trim(), it.headline, ext);
 };
 // The expanded "Read the full …" link mirrors the title: a brief opens the
 // in-app viewer (intercepted by the delegated listener), everything else
@@ -796,10 +878,15 @@ function renderFeedCards(results, colorFor, total = results.length) {
         rv.firm && rv.iso >= TODAY && daysUntil(rv.iso) <= 14
           ? " feed-deadline--soon"
           : "";
+      const soonText = soon ? relativeDays(rv.iso, isOpp) : "";
       const deadlineHTML = rv.label
-        ? `<span class="feed-deadline${soon}">${esc(rv.label)}</span>`
+        ? `<span class="feed-deadline${soon}">${esc(rv.label)}${
+            soonText
+              ? `<span class="feed-deadline__days"> · ${esc(soonText)}</span><span class="sr-only"> closing soon</span>`
+              : ""
+          }</span>`
         : "";
-      const titleHTML = itemTitleLink(it);
+      const titleHTML = itemTitleLink(it, expandable);
       const linkHTML = itemDetailLink(it);
       // Optional second action: a "View infographic" button when the CSV's
       // `infographic` cell holds a link. A Drive link opens in the in-app
@@ -846,13 +933,22 @@ function renderFeedCards(results, colorFor, total = results.length) {
       // Metadata line under the title: source · [icon] medium label (the
       // category rides in the pill above the title now). Both icon and label
       // come from the optional `medium` column; blank medium = source only.
+      // Events add time · location here, so a reader can pick a webinar they
+      // can attend without expanding every row.
       const med = MEDIA[(it.medium || "").trim().toLowerCase()];
       const mediumHTML = med
         ? `${SEP}<span class="feed-medium-type"><span class="feed-medium" aria-hidden="true">${med.icon}</span>${esc(med.label)}</span>`
         : "";
-      const metaHTML = source
-        ? `<span class="feed-source">${esc(source)}</span>${mediumHTML}`
-        : "";
+      const whenWhere =
+        state.type === "event"
+          ? [(it.time || "").trim(), (it.location || "").trim()]
+              .filter(Boolean)
+              .map((v) => `<span class="feed-medium-type">${esc(v)}</span>`)
+              .join(SEP)
+          : "";
+      const metaHTML = [source ? `<span class="feed-source">${esc(source)}</span>${mediumHTML}` : "", whenWhere]
+        .filter(Boolean)
+        .join(SEP);
       const metaDivHTML = metaHTML
         ? `<div class="feed-item__meta">${metaHTML}</div>`
         : "";
@@ -1052,10 +1148,12 @@ function renderBrief() {
   $("#news-count").textContent = "";
   $("#news-list").innerHTML = `
     <div class="brief">
+      <h2 class="section-head__title brief__title" tabindex="-1" data-focus-target>${esc(label)}</h2>
       <div class="brief__bar">
         <button type="button" class="brief__back">← Back to Research</button>
         <a class="brief__open" href="${driveView}" target="_blank" rel="noopener noreferrer">Open in Google Drive ↗</a>
       </div>
+      <p class="state state--loading brief__loading" role="status">Loading the brief…</p>
       <iframe
         class="brief__frame"
         src="https://drive.google.com/file/d/${esc(state.brief)}/preview"
@@ -1063,6 +1161,10 @@ function renderBrief() {
         allow="autoplay"
         loading="lazy"></iframe>
     </div>`;
+  // Drive's preview can take a few seconds; drop the loading line once it lands.
+  const frame = $(".brief__frame");
+  const loading = $(".brief__loading");
+  if (frame && loading) frame.addEventListener("load", () => { loading.hidden = true; }, { once: true });
 }
 
 function openBrief(id, title) {
@@ -1073,12 +1175,14 @@ function openBrief(id, title) {
   clearSearch();
   closeMenu();
   render();
-  writeURL();
+  writeURL(true);
   window.scrollTo(0, 0);
+  focusHeading();
 }
 
 function render() {
   updateNavActive();
+  setTitle();
 
   // The strip is identical on every page — persistent nav people learn once.
   // (The landing cards introduce; the bar is the always-there utility.)
@@ -1111,7 +1215,7 @@ function render() {
   if (head) {
     head.hidden = !headTab;
     if (headTab) {
-      head.innerHTML = `<h2 class="section-head__title">${esc(headTab.label)}${
+      head.innerHTML = `<h2 class="section-head__title" tabindex="-1" data-focus-target>${esc(headTab.label)}${
         archiveMode ? " — Archive" : ""
       }</h2><p class="section-head__desc">${esc(
         archiveMode
@@ -1123,7 +1227,11 @@ function render() {
 
   const list = $("#news-list");
   const results = filter();
-  $("#news-count").textContent = ""; // count shows only on search results
+  // The count answers every filter and sort click, and the live region reads
+  // it out for screen readers.
+  $("#news-count").innerHTML = `<strong>${results.length}</strong> ${
+    results.length === 1 ? "item" : "items"
+  }${state.subtype !== "all" ? ` in ${esc(state.subtype)}` : ""}`;
 
   renderToolbar();
 
@@ -1195,18 +1303,21 @@ async function boot() {
     const { rows, modified } = await loadCSV(NEWS_CSV);
     init(rows, modified);
   } catch (err) {
-    // Most common cause: opened as file:// so fetch() is blocked.
+    // Visitors get plain words and a way out; the local-server hint appears
+    // only when the page was opened from the file system, where fetch() is blocked.
+    const local = window.location.protocol === "file:";
     $("#news-list").innerHTML = `
       <div class="state">
-        <strong>Couldn't load the feed data</strong>
-        This app needs to be served over http, not opened directly from the
-        file system.<br /><br />
-        From the project folder, run
-        <code>python3 -m http.server 8000</code>
-        then visit <code>http://localhost:8000</code>.
-        <br /><br />
-        <span style="font-size:.85em;color:#999">(${esc(err.message)})</span>
+        <strong>We couldn't load the latest items</strong>
+        ${
+          local
+            ? "This page needs to be served over http, not opened from the file system. From the project folder run <code>python3 -m http.server 8000</code>, then visit <code>http://localhost:8000</code>."
+            : 'Refresh the page to try again. If it keeps happening, email <a href="mailto:erc@tamu.edu">erc@tamu.edu</a>.'
+        }
+        <div class="feed-actions state__actions"><button type="button" class="feed-link state__retry">Try again</button></div>
+        <span class="state__hint">(${esc(err.message)})</span>
       </div>`;
+    $(".state__retry").addEventListener("click", () => window.location.reload());
     console.error(err);
   }
 }

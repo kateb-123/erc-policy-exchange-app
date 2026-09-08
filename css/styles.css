@@ -22,7 +22,7 @@
   /* Category pill palette (Kate's, from her Adobe set): ink = text/icon,
      line = the pill's hairline border (a mid-tone of the same hue). */
   --cat0-ink: #1b3a5c; --cat0-line: #8fb3d4; /* navy   */
-  --cat1-ink: #8f6e14; --cat1-line: #cbb35c; /* gold   */
+  --cat1-ink: #7a5d10; --cat1-line: #cbb35c; /* gold — darkened Sep 2026 for 12px text on the tan row (6:1) */
   --cat2-ink: #275d5d; --cat2-line: #6fb5a2; /* teal   */
   --cat3-ink: #46426e; --cat3-line: #a9a5c9; /* purple */
   --cat4-ink: #b5511f; --cat4-line: #e0a173; /* orange */
@@ -363,7 +363,7 @@ main {
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  margin: 14px 0 0; /* sits below the table */
+  margin: 0 0 12px; /* sits between the toolbar and the list, so the count answers a filter click at once */
   flex-wrap: wrap;
 }
 .results__count {
@@ -439,11 +439,16 @@ main {
   border-color: var(--maroon);
   color: var(--maroon);
 }
-/* Selected view = soft light-grey pill (not maroon), dark text. */
+/* Selected view = solid ink pill (still not maroon): unmistakable beside the
+   white pills, where the old light-grey fill read as "off". */
 .tbtn.is-active {
-  background: #e8e7e6;
-  border-color: #d8d6d4;
-  color: var(--ink);
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+.tbtn.is-active:hover {
+  border-color: var(--ink);
+  color: #fff;
 }
 /* Sort options: plain text actions (no box), active one emphasised. */
 .tsort {
@@ -885,7 +890,7 @@ main {
 /* ---------- Type tags ---------- */
 .tag {
   display: inline-block;
-  font-size: 0.567rem; /* = 10px at the 110.3% root scale */
+  font-size: 0.68rem; /* = 12px at the 110.3% root scale, the floor for readable labels */
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -1127,4 +1132,68 @@ main {
    set off by a little extra gap so it reads as a view switch, not a filter. */
 .tbtn--archive {
   margin-left: 14px;
+}
+
+/* ---------- Sep 2026 usability fixes ---------- */
+/* Nav items and landing cards are real links now (open in new tab, copy link,
+   "link" for screen readers); the classes already carry their look. */
+.topnav__link,
+.topnav__link:hover,
+.lcard,
+.lcard:hover {
+  text-decoration: none;
+}
+/* Landing card: how much is live in the section right now. */
+.lcard__count {
+  font-size: 0.82rem;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+.intro__updated {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--faint);
+}
+/* Outbound marker on expandable rows' titles: the row opens, the title leaves. */
+.feed-ext {
+  font-size: 0.8em;
+  margin-left: 5px;
+  color: var(--maroon);
+  font-weight: 700;
+}
+/* "· 6 days left" beside a closing-soon deadline, so urgency is words, not just colour. */
+.feed-deadline__days {
+  font-weight: 600;
+}
+.brief__title {
+  margin-bottom: 10px;
+}
+.brief__loading {
+  margin-bottom: 12px;
+  padding: 18px;
+}
+.state--loading {
+  border-style: solid;
+  color: var(--faint);
+}
+.state__actions {
+  justify-content: center;
+}
+.state__retry {
+  appearance: none;
+  background: var(--card);
+  font-family: inherit;
+  cursor: pointer;
+}
+.state__hint {
+  display: block;
+  margin-top: 10px;
+  font-size: 0.85em;
+  color: var(--faint);
+}
+/* Headings receive focus after navigation so screen readers announce the new
+   view; they are not interactive, so no ring. */
+[data-focus-target]:focus,
+[data-focus-target]:focus-visible {
+  outline: none;
 }

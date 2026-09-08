@@ -8,6 +8,14 @@
     name="description"
     content="Education Research Center — Policy Exchange: a filterable, spreadsheet-driven feed of education opportunities, new policy research, headlines, and upcoming events."
   />
+  <!-- Link previews (email, Teams, Slack) and the browser-tab icon. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ERC Policy Exchange" />
+  <meta property="og:title" content="ERC Policy Exchange" />
+  <meta property="og:description" content="New education policy research, upcoming events, opportunities, and education headlines, curated by the Texas A&amp;M Education Research Center." />
+  <meta property="og:url" content="https://kateb-123.github.io/erc-policy-exchange/" />
+  <meta name="twitter:card" content="summary" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23500000'/%3E%3Ctext x='32' y='45' font-family='Arial,Helvetica,sans-serif' font-size='38' font-weight='800' fill='%23fff' text-anchor='middle'%3EE%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -15,7 +23,7 @@
     rel="stylesheet"
   />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=46" />
+  <link rel="stylesheet" href="css/styles.css?v=47" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -56,24 +64,27 @@
     <!-- Landing page (home view): intro + section cards. -->
     <section class="landing" id="landing" aria-label="Welcome" hidden>
       <div class="intro">
-        <h2 class="intro__title">Howdy! Welcome to the ERC Policy Exchange</h2>
+        <h2 class="intro__title" tabindex="-1" data-focus-target>Howdy! Welcome to the ERC Policy Exchange</h2>
         <p class="intro__text">
           Browse through the latest research, upcoming events, opportunities,
           and education headlines. Curated by the
           <a href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener"><strong>Texas A&amp;M Education Research Center</strong></a>.
         </p>
+        <p class="intro__updated" id="landing-updated"></p>
       </div>
       <div class="cards cards--4" id="landing-cards"></div>
     </section>
 
-    <!-- Section view: title + blurb, filter toolbar, feed, then the count. -->
+    <!-- Section view: title + blurb, filter toolbar, count + freshness, feed. -->
     <div class="results" id="section" hidden>
       <div class="section-head" id="section-head" hidden></div>
       <div class="opp-toolbar" id="opp-toolbar" hidden></div>
-      <div class="news-list" id="news-list"></div>
       <div class="results__meta">
         <p class="results__count" id="news-count" aria-live="polite" role="status"></p>
         <p class="results__updated" id="news-updated"></p>
+      </div>
+      <div class="news-list" id="news-list">
+        <p class="state state--loading" role="status">Loading the latest items…</p>
       </div>
     </div>
   </main>
@@ -106,6 +117,6 @@
   </footer>
 
   <script src="js/csv.js?v=2"></script>
-  <script src="js/app.js?v=48"></script>
+  <script src="js/app.js?v=49"></script>
 </body>
 </html>
