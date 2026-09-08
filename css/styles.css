@@ -410,15 +410,21 @@ main {
   top: 0;
   z-index: 3;
   background: var(--bg);
-  /* One line on every tab: SHOW pinned left, SORT justified to the table's
-     right edge. */
+  /* Two rows on every tab: the Quick Search pills, then the count + sort
+     justified to the table's right edge (one bulky line otherwise). */
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 10px 26px;
+  gap: 6px 26px;
   margin: 0;
-  padding: 10px 0 14px;
+  padding: 10px 0 12px;
+}
+.tgroup--show {
+  flex: 1 1 100%;
+}
+.tgroup--sort {
+  margin-left: auto;
 }
 .tgroup {
   display: flex;
@@ -1088,6 +1094,10 @@ main {
      sticks to the very top instead. */
   .opp-toolbar {
     position: static;
+  }
+  /* Phones keep the count + sort line flush left under the pills. */
+  .tgroup--sort {
+    margin-left: 0;
   }
   .feed__head {
     top: 0;
