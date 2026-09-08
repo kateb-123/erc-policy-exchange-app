@@ -747,7 +747,7 @@ const NEW_TAB = `<span class="sr-only"> (opens in new tab)</span>`;
 const titleLink = (link, headline, ext = false) =>
   link
     ? `<a class="feed-title-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(headline)}${
-        ext ? faIcon("arrow-up-right-from-square", "feed-ext") : ""
+        ext ? `&nbsp;${faIcon("arrow-up-right-from-square", "feed-ext")}` : "" // nbsp keeps the arrow on the last word's line
       }${NEW_TAB}</a>`
     : `<span class="feed-title-link">${esc(headline)}</span>`;
 
@@ -1000,8 +1000,10 @@ function renderFeedCards(results, colorFor, total = results.length) {
         ]
           .filter(Boolean)
           .join(SEP);
+        // feed-item--caret-only: the right cell holds just the chevron, so on
+        // phones it tucks into the row's top-right corner instead of taking a line.
         return `
-          <li class="feed-item" data-expanded="false">
+          <li class="feed-item feed-item--caret-only" data-expanded="false">
             <div class="feed-item__row">
               <div class="feed-item__body">
                 ${catHTML}
@@ -1088,14 +1090,15 @@ function showMoreHTML(total) {
 // their section so you know where each hit lives. Archived research counts —
 // it has aged out of the fresh feed, not out of the site.
 function renderSearch() {
-  const head = $("#section-head");
-  if (head) head.hidden = true;
   $("#opp-toolbar").hidden = true;
   syncToolbarHeight();
-  // Search has no toolbar, so the count returns to the line under the list.
-  $(".results__meta").prepend($("#news-count"));
-
   const q = state.q.trim();
+  // Search uses the same head as a section: a title, then the count where the
+  // description line would be (no toolbar, so the count lives here).
+  const head = $("#section-head");
+  head.hidden = false;
+  head.innerHTML = `<h2 class="section-head__title" tabindex="-1" data-focus-target>Search results</h2>`;
+  head.append($("#news-count"));
   const results = state.items
     .filter((it) => !isExpired(it))
     .filter((it) =>
@@ -1136,7 +1139,7 @@ function renderSearch() {
         .filter(Boolean)
         .join(SEP);
       return `
-        <li class="feed-item feed-item--link"${link ? ` data-href="${esc(link)}"` : ""}>
+        <li class="feed-item feed-item--link feed-item--caret-only"${link ? ` data-href="${esc(link)}"` : ""}>
           <div class="feed-item__row">
             <div class="feed-item__body">
               <div class="feed-item__title">${titleHTML}</div>
@@ -1150,14 +1153,10 @@ function renderSearch() {
     })
     .join("");
 
-  // Search has no section title, so it keeps a header — but light, not the
-  // maroon bar, so no second maroon band competes with the masthead.
+  // No header bar: the section head above carries the title and count, as on
+  // every other list.
   list.innerHTML = `
     <div class="feed feed--opp">
-      <div class="feed__head feed__head--light">
-        <span class="feed__head-l">Search results</span>
-        <span class="feed__head-r"></span>
-      </div>
       <ul class="feed__list" role="list">${rows}</ul>
       ${showMoreHTML(results.length)}
     </div>`;
@@ -1213,6 +1212,9 @@ function openBrief(id, title) {
 function render() {
   updateNavActive();
   setTitle();
+  // The count node is persistent (the live region). Park it under the list
+  // first; the section toolbar or the search head then seats it where it goes.
+  $(".results__meta").prepend($("#news-count"));
 
   // The strip is identical on every page — persistent nav people learn once.
   // (The landing cards introduce; the bar is the always-there utility.)

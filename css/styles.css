@@ -387,6 +387,11 @@ main {
   margin: 0 18px 0 0;
   font-size: 0.85rem;
 }
+/* The count under the search title, in the description line's place. */
+.section-head .results__count {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+}
 .news-tab__icon {
   display: inline-flex;
   align-items: center;
@@ -1104,6 +1109,20 @@ main {
     justify-content: flex-start;
     margin-top: 0;
   }
+  /* Rows whose right cell is only an icon (research chevron, search-result
+     arrow): tuck it into the row's top-right corner rather than giving it a
+     line of its own. */
+  .feed-item--caret-only .feed-item__row {
+    position: relative;
+    padding-right: 52px;
+  }
+  .feed-item--caret-only .feed-cell--due {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    flex: none;
+    width: auto;
+  }
 
   /* Landing cards: 4-across becomes 2-across. */
   .cards--4 {
@@ -1184,7 +1203,7 @@ main {
 /* Outbound marker on expandable rows' titles: the row opens, the title leaves. */
 .feed-ext {
   font-size: 0.7em;
-  margin-left: 6px;
+  margin-left: 2px; /* a non-breaking space precedes it in the markup */
   color: var(--maroon);
   vertical-align: 0.1em;
 }
