@@ -715,10 +715,19 @@ const CAT_ICONS = {
   "peer-reviewed": "file-circle-check",
   report: "file-lines",
   "working paper": "file-pen",
-  // Headlines
+  // Headlines. Texas keeps Kate's own outline of the state (no Font Awesome
+  // equivalent in the free set); an object value means "mask this SVG".
   national: "flag-usa",
-  texas: "flag",
+  texas: { svg: "texas.svg" },
 };
+
+// One category-pill icon: a Font Awesome name, or one of Kate's SVGs masked
+// over currentColor so it takes the pill's colour like the others.
+function catIconHTML(icon) {
+  if (!icon) return "";
+  if (typeof icon === "string") return faIcon(icon, "tag__icon");
+  return `<span class="tag__icon tag__icon--svg" ${iconMask("icons/" + icon.svg)} aria-hidden="true"></span>`;
+}
 
 // Per-tab wording for the expanded detail's outbound link.
 const DETAIL_LINK_LABEL = {
@@ -886,9 +895,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
           ? "tag--selected"
           : colorFor[subtype] || "tag--c0";
       const catIcon = CAT_ICONS[catText.trim().toLowerCase()] || "";
-      const catHTML = `<div class="feed-item__cat"><span class="tag ${catClass}">${
-        catIcon ? faIcon(catIcon, "tag__icon") : ""
-      }${esc(catText)}</span></div>`;
+      const catHTML = `<div class="feed-item__cat"><span class="tag ${catClass}">${catIconHTML(catIcon)}${esc(catText)}</span></div>`;
       const detailId = `feed-detail-${i}`;
       // Right column: Opportunities show the deadline; Events show the event date.
       const rv = isOpp

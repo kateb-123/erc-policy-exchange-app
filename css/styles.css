@@ -685,9 +685,17 @@ main {
   margin-right: 5px;
   font-size: 0.95em;
 }
-/* The landing-card glyphs are Kate's own SVGs, painted with currentColor
-   through a CSS mask (set inline from app.js so the URL resolves against the
-   page, not this file). */
+/* A pill icon drawn from one of Kate's SVGs (Texas): sized like the font icons. */
+.tag__icon--svg {
+  display: inline-block;
+  width: 1.1em;
+  height: 1.1em;
+  vertical-align: -0.2em;
+}
+/* Kate's own SVGs (landing-card glyphs, the Texas pill) are painted with
+   currentColor through a CSS mask (set inline from app.js so the URL resolves
+   against the page, not this file). */
+.tag__icon--svg,
 .lcard__glyph {
   background-color: currentColor;
   -webkit-mask-repeat: no-repeat;
