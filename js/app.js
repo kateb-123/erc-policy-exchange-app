@@ -58,8 +58,7 @@ const NEWS_TABS = [
 ];
 
 // Home icon for the top nav.
-const HOME_ICON =
-  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75"/></svg>';
+const HOME_ICON = faIcon("house");
 
 // Today (YYYY-MM-DD). Upcoming Events drop off automatically once their date
 // passes, so the feed stays current with no manual pruning.
@@ -109,6 +108,12 @@ function esc(str) {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+// One Font Awesome icon (solid, Free, same set as the Content Desk). Decorative:
+// the neighbouring text carries the meaning, so every icon is aria-hidden.
+function faIcon(name, extraClass = "") {
+  return `<i class="fa-solid fa-${name}${extraClass ? ` ${extraClass}` : ""}" aria-hidden="true"></i>`;
 }
 
 // Format an ISO date (YYYY-MM-DD) as e.g. "Jun 30, 2026". Partial dates from
@@ -674,67 +679,45 @@ const TOOLBAR_SORTS = {
   ],
 };
 
-// Medium icons (Heroicons, inlined) + display labels — shown AFTER the source
+// Medium icons (Font Awesome) + display labels — shown AFTER the source
 // ("K-12 Dive · [icon] Article") when the CSV's `medium` column is filled.
 // Blank medium = source only, so the column stays optional row by row.
 const MEDIA = {
-  online: {
-    label: "Online",
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm0 0c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3 7.5 7.03 7.5 12s2.015 9 4.5 9Zm-8.716-6h17.432M3.284 9h17.432"/></svg>',
-  },
-  magazine: {
-    label: "Magazine",
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"/></svg>',
-  },
-  newspaper: {
-    label: "Article",
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z"/></svg>',
-  },
-  radio: {
-    label: "Radio",
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9.348 14.652a3.75 3.75 0 0 1 0-5.304m5.304 0a3.75 3.75 0 0 1 0 5.304m-7.425 2.121a6.75 6.75 0 0 1 0-9.546m9.546 0a6.75 6.75 0 0 1 0 9.546M5.106 18.894c-3.808-3.807-3.808-9.98 0-13.788m13.788 0c3.808 3.807 3.808 9.98 0 13.788M12 12h.008v.008H12V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg>',
-  },
-  tv: {
-    label: "TV",
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 20.25h12m-7.5-3v3m3-3v3m-10.125-3h17.25c.621 0 1.125-.504 1.125-1.125V4.875c0-.621-.504-1.125-1.125-1.125H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125Z"/></svg>',
-  },
-  opinion: {
-    label: "Opinion",
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 0 1 1.037-.443 48.282 48.282 0 0 0 5.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0 0 12 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018Z"/></svg>',
-  },
-  blog: {
-    label: "Blog",
-    icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"/></svg>',
-  },
+  online: { label: "Online", icon: faIcon("globe") },
+  magazine: { label: "Magazine", icon: faIcon("book-open") },
+  newspaper: { label: "Article", icon: faIcon("newspaper") },
+  radio: { label: "Radio", icon: faIcon("radio") },
+  tv: { label: "TV", icon: faIcon("tv") },
+  opinion: { label: "Opinion", icon: faIcon("comment") },
+  blog: { label: "Blog", icon: faIcon("blog") },
 };
 
-// Small icons inside the category pills — FEED ROWS ONLY (the SHOW filter
-// pills stay text-only). Keyed by lowercase subtype → an SVG in assets/icons/
-// (Kate's own set, 2026-07-15). Rendered via CSS mask so the icon takes the
-// pill's colour; swap/edit the SVG files and the app picks them up as-is.
+// Small icons inside the category pills — FEED ROWS ONLY (the Quick Search
+// pills stay text-only). Keyed by lowercase subtype → a Font Awesome solid
+// icon name (Sep 2026; the earlier hand-drawn SVG set stays in assets/icons/
+// for reference). The icon takes the pill's colour through currentColor.
 // Unknown subtypes simply get no icon, so new CSV categories degrade
 // gracefully.
 const CAT_ICONS = {
   // Opportunities
-  "call for proposals": "megaphone.svg",
-  "fellowships & programs": "fellowships-programs.svg",
-  "funding & grants": "grants.svg",
-  // Events — subtypes per Kate 2026-07-15: ERC Events / Texas A&M / Online /
-  // Off-Campus / Webinar (Featured gets no pill). ERC Events shares the star
-  // with ERC Research Brief (both = "ours").
-  "erc events": "star.svg",
-  "texas a&m": "on-campus.svg",
-  "off-campus": "off-campus.svg",
-  online: "webinar.svg",
-  webinar: "webinar.svg",
+  "call for proposals": "bullhorn",
+  "fellowships & programs": "lightbulb",
+  "funding & grants": "sack-dollar",
+  // Events — ERC Events shares the star with ERC Research (both = "ours").
+  "erc events": "star",
+  "texas a&m": "building-columns",
+  "off-campus": "location-dot",
+  online: "video",
+  webinar: "video",
+  "webinar-online": "video",
   // Research
-  "erc research": "star.svg",
-  "peer-reviewed": "peer-reviewed.svg",
-  report: "reports.svg",
-  "working paper": "working-paper.svg",
+  "erc research": "star",
+  "peer-reviewed": "file-circle-check",
+  report: "file-lines",
+  "working paper": "file-pen",
   // Headlines
-  national: "us.svg",
-  texas: "texas.svg",
+  national: "flag-usa",
+  texas: "flag",
 };
 
 // Per-tab wording for the expanded detail's outbound link.
@@ -755,7 +738,7 @@ const NEW_TAB = `<span class="sr-only"> (opens in new tab)</span>`;
 const titleLink = (link, headline, ext = false) =>
   link
     ? `<a class="feed-title-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(headline)}${
-        ext ? `<span class="feed-ext" aria-hidden="true">↗</span>` : ""
+        ext ? faIcon("arrow-up-right-from-square", "feed-ext") : ""
       }${NEW_TAB}</a>`
     : `<span class="feed-title-link">${esc(headline)}</span>`;
 
@@ -785,10 +768,10 @@ const itemTitleLink = (it, ext = false) => {
 const itemDetailLink = (it) => {
   const id = briefId(it);
   if (id)
-    return `<a class="feed-link" href="?brief=${id}" data-brief="${id}">Read the full brief ↗</a>`;
+    return `<a class="feed-link" href="?brief=${id}" data-brief="${id}">Read the full brief ${faIcon("arrow-up-right-from-square")}</a>`;
   const link = (it.link || "").trim();
   return link
-    ? `<a class="feed-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${DETAIL_LINK_LABEL[state.type] || "Read more"} ↗</a>`
+    ? `<a class="feed-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${DETAIL_LINK_LABEL[state.type] || "Read more"} ${faIcon("arrow-up-right-from-square")}</a>`
     : "";
 };
 
@@ -904,7 +887,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
           : colorFor[subtype] || "tag--c0";
       const catIcon = CAT_ICONS[catText.trim().toLowerCase()] || "";
       const catHTML = `<div class="feed-item__cat"><span class="tag ${catClass}">${
-        catIcon ? `<span class="tag__icon" ${iconMask("icons/" + catIcon)} aria-hidden="true"></span>` : ""
+        catIcon ? faIcon(catIcon, "tag__icon") : ""
       }${esc(catText)}</span></div>`;
       const detailId = `feed-detail-${i}`;
       // Right column: Opportunities show the deadline; Events show the event date.
@@ -933,8 +916,8 @@ function renderFeedCards(results, colorFor, total = results.length) {
       const igId = driveId(infographic);
       const infographicHTML = infographic
         ? igId
-          ? `<a class="feed-link" href="?brief=${igId}" data-brief="${igId}" data-brief-title="${esc(it.headline)} infographic">View infographic ↗</a>`
-          : `<a class="feed-link" href="${esc(infographic)}" target="_blank" rel="noopener noreferrer">View infographic ↗</a>`
+          ? `<a class="feed-link" href="?brief=${igId}" data-brief="${igId}" data-brief-title="${esc(it.headline)} infographic">View infographic ${faIcon("arrow-up-right-from-square")}</a>`
+          : `<a class="feed-link" href="${esc(infographic)}" target="_blank" rel="noopener noreferrer">View infographic ${faIcon("arrow-up-right-from-square")}</a>`
         : "";
       const actionsHTML =
         linkHTML || infographicHTML
@@ -949,7 +932,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
           : "";
       const actionLink = (label) =>
         link
-          ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${label} ↗</a>`
+          ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${label} ${faIcon("arrow-up-right-from-square")}</a>`
           : "";
       let factsHTML = "";
       if (state.type === "event") {
@@ -1043,7 +1026,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
               </div>
               <div class="feed-cell--due">
                 ${deadlineHTML}
-                ${link ? `<span class="feed-goto" aria-hidden="true">↗</span>` : ""}
+                ${link ? `${faIcon("arrow-up-right-from-square", "feed-goto")}` : ""}
               </div>
             </div>
           </li>`;
@@ -1153,7 +1136,7 @@ function renderSearch() {
               <div class="feed-item__meta">${meta}</div>
             </div>
             <div class="feed-cell--due">
-              ${link ? `<span class="feed-goto" aria-hidden="true">↗</span>` : ""}
+              ${link ? `${faIcon("arrow-up-right-from-square", "feed-goto")}` : ""}
             </div>
           </div>
         </li>`;
@@ -1190,8 +1173,8 @@ function renderBrief() {
     <div class="brief">
       <h2 class="section-head__title brief__title" tabindex="-1" data-focus-target>${esc(label)}</h2>
       <div class="brief__bar">
-        <button type="button" class="brief__back">← Back to Research</button>
-        <a class="brief__open" href="${driveView}" target="_blank" rel="noopener noreferrer">Open in Google Drive ↗</a>
+        <button type="button" class="brief__back">${faIcon("arrow-left")}Back to Research</button>
+        <a class="brief__open" href="${driveView}" target="_blank" rel="noopener noreferrer">Open in Google Drive ${faIcon("arrow-up-right-from-square")}</a>
       </div>
       <p class="state state--loading brief__loading" role="status">Loading the brief…</p>
       <iframe
@@ -1322,7 +1305,7 @@ function toggleDetail(caretBtn) {
 }
 
 function chevronIcon() {
-  return `<svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>`;
+  return faIcon("chevron-down", "chevron");
 }
 
 /* ------------------------------------------------------------

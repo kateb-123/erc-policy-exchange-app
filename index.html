@@ -22,8 +22,10 @@
     href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Work+Sans:wght@600;700;800&display=swap"
     rel="stylesheet"
   />
+  <!-- Font Awesome 7 Free: the same tag and hash the Content Desk uses, so both apps share one icon set. -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=47" />
+  <link rel="stylesheet" href="css/styles.css?v=48" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -43,12 +45,12 @@
   <nav class="topnav" aria-label="Sections">
     <div class="topnav__in">
       <button type="button" class="topnav__menu-btn" id="menu-btn" aria-expanded="false" aria-controls="topnav">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <i class="fa-solid fa-bars" aria-hidden="true"></i>
         Menu
       </button>
       <div id="topnav" class="topnav__links"></div>
       <div class="topnav__search">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
         <input
           type="search"
           id="global-search"
@@ -102,16 +104,11 @@
       />
       <div class="site-footer__links">
         <a class="site-footer__link" href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">
-          <svg class="site-footer__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
-            <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm4.5 5.5-2.4 6.6-6.6 2.4 2.4-6.6 6.6-2.4zM12 10.7a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 0 0 0-2.6z" />
-          </svg>
+          <i class="fa-solid fa-globe site-footer__icon" aria-hidden="true"></i>
           <span>erc.cehd.tamu.edu</span>
         </a>
         <a class="site-footer__link" href="mailto:erc@tamu.edu">
-          <svg class="site-footer__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false">
-            <path d="M2 6.5A2.5 2.5 0 0 1 4.5 4h15A2.5 2.5 0 0 1 22 6.5v.3l-10 5.7L2 6.8v-.3z" />
-            <path d="M22 8.9V17.5A2.5 2.5 0 0 1 19.5 20h-15A2.5 2.5 0 0 1 2 17.5V8.9l9.5 5.4a1 1 0 0 0 1 0L22 8.9z" />
-          </svg>
+          <i class="fa-solid fa-envelope site-footer__icon" aria-hidden="true"></i>
           <span>erc@tamu.edu</span>
         </a>
       </div>
@@ -119,6 +116,6 @@
   </footer>
 
   <script src="js/csv.js?v=2"></script>
-  <script src="js/app.js?v=49"></script>
+  <script src="js/app.js?v=50"></script>
 </body>
 </html>

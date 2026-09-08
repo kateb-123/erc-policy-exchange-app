@@ -168,13 +168,12 @@ a:hover {
   position: relative;
   padding: 7px 0;
 }
-.topnav__search svg {
+.topnav__search i {
   position: absolute;
   left: 11px;
   top: 50%;
   transform: translateY(-50%);
-  width: 15px;
-  height: 15px;
+  font-size: 14px;
   color: var(--faint);
   pointer-events: none;
 }
@@ -231,9 +230,8 @@ a:hover {
 .topnav__icon {
   display: inline-flex;
 }
-.topnav__icon svg {
-  width: 17px;
-  height: 17px;
+.topnav__icon i {
+  font-size: 15px;
 }
 
 /* ---------- Landing page ---------- */
@@ -600,8 +598,7 @@ main {
 }
 .chevron {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  font-size: 1rem;
   color: var(--maroon);
   transition: transform 0.2s ease;
 }
@@ -682,20 +679,15 @@ main {
 .feed-item__cat {
   margin-bottom: 6px;
 }
-/* Small icon inside the pill (feed rows only). The SVG file (mask-image, set
-   inline from app.js so the URL resolves against the page, not this file) is
-   used as a mask over currentColor, so any icon dropped in assets/icons/
-   renders in the pill's own colour. */
+/* Small Font Awesome icon inside the pill (feed rows only); it takes the pill's
+   own colour through currentColor. */
 .tag__icon {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  vertical-align: -3px;
   margin-right: 5px;
+  font-size: 0.95em;
 }
-/* Both masked-icon spans paint their SVG (set inline as mask-image) with
-   currentColor — one shared mechanism. */
-.tag__icon,
+/* The landing-card glyphs are Kate's own SVGs, painted with currentColor
+   through a CSS mask (set inline from app.js so the URL resolves against the
+   page, not this file). */
 .lcard__glyph {
   background-color: currentColor;
   -webkit-mask-repeat: no-repeat;
@@ -776,12 +768,11 @@ main {
 }
 .feed-medium {
   display: inline-flex;
-  vertical-align: -3px;
+  vertical-align: -1px;
   margin-right: 5px;
 }
-.feed-medium svg {
-  width: 15px;
-  height: 15px;
+.feed-medium i {
+  font-size: 13px;
 }
 .feed-deadline {
   color: var(--muted);
@@ -837,9 +828,19 @@ main {
    edge shows a small ↗ instead of an expand caret. */
 .feed-goto {
   color: var(--maroon);
-  font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   line-height: 1;
+}
+/* Icons inside text actions: a touch smaller than the words, spaced off them. */
+.feed-link i,
+.brief__open i,
+.feed-fact__value a i {
+  font-size: 0.8em;
+  margin-left: 4px;
+}
+.brief__back i {
+  font-size: 0.85em;
+  margin-right: 6px;
 }
 /* Narrow screens: hide the column header; the flex row already stacks well. */
 @media (max-width: 640px) {
@@ -1000,8 +1001,7 @@ main {
   text-decoration: none;
 }
 .site-footer__icon {
-  width: 16px;
-  height: 16px;
+  font-size: 14px;
   flex-shrink: 0;
 }
 
@@ -1033,9 +1033,8 @@ main {
     color: var(--maroon);
     padding: 12px 4px;
   }
-  .topnav__menu-btn svg {
-    width: 20px;
-    height: 20px;
+  .topnav__menu-btn i {
+    font-size: 18px;
   }
   .topnav__search {
     order: 2;
@@ -1173,10 +1172,10 @@ main {
 }
 /* Outbound marker on expandable rows' titles: the row opens, the title leaves. */
 .feed-ext {
-  font-size: 0.8em;
-  margin-left: 5px;
+  font-size: 0.7em;
+  margin-left: 6px;
   color: var(--maroon);
-  font-weight: 700;
+  vertical-align: 0.1em;
 }
 /* "· 6 days left" beside a closing-soon deadline, so urgency is words, not just colour. */
 .feed-deadline__days {
