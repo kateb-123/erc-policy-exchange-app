@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Share something — ERC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'Open Sans', sans-serif;
+      background: #f6f6f6;
+      color: #3E3E3E;
+      font-size: 0.95rem;
+      line-height: 1.7;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    /* Cover banner — a placeholder in type until the real image lands.
+       Swap the whole .cover block for <img src="form-header.png"> when ready. */
+    .cover { width: 100%; max-width: 560px; margin: 0 0 22px; }
+    .cover .kicker {
+      font-family: 'Work Sans', sans-serif;
+      font-weight: 400;
+      font-size: clamp(1.05rem, 4.4vw, 1.75rem);
+      letter-spacing: 0.02em;
+      color: #7a2222;
+      margin: 0;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+    .cover .headline {
+      font-family: 'Work Sans', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.9rem, 8.2vw, 3.3rem);
+      letter-spacing: -0.01em;
+      color: #500000;
+      margin: 0;
+      line-height: 0.98;
+      text-transform: uppercase;
+    }
+    .submit-card {
+      width: 100%;
+      max-width: 560px;
+      background: #fff;
+      border: 3px solid #500000;
+      box-shadow: 10px 10px 0 #500000;
+      padding: 28px 32px 36px;
+    }
+    h1 {
+      font-family: 'Work Sans', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #500000;
+      margin: 0 0 8px;
+    }
+    .lede { margin: 0 0 22px; }
+    .lede a { color: #500000; font-weight: 600; }
+    .lede a:hover { color: #732F2F; }
+    .field-group { margin-bottom: 20px; }
+    .field-label {
+      font-family: 'Work Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      display: block;
+      margin-bottom: 7px;
+    }
+    .hint { font-weight: 400; font-size: 0.82rem; color: #767676; }
+    .field-input, textarea {
+      font-family: 'Open Sans', sans-serif;
+      font-size: 0.95rem;
+      color: #3E3E3E;
+      width: 100%;
+      border: 1px solid #e2e2e2;
+      border-radius: 4px;
+      padding: 10px 12px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field-input:focus, textarea:focus {
+      border-color: #500000;
+      box-shadow: 0 0 0 3px rgba(80,0,0,0.08);
+    }
+    textarea { resize: vertical; }
+    fieldset { border: 0; padding: 0; margin: 0 0 20px; }
+    legend {
+      font-family: 'Work Sans', sans-serif;
+      font-weight: 600;
+      padding: 0;
+      margin-bottom: 7px;
+    }
+    .radio { display: block; margin: 4px 0; cursor: pointer; }
+    .radio input { accent-color: #500000; margin-right: 6px; }
+    .optin { display: flex; gap: 9px; align-items: flex-start; margin: 0 0 4px; cursor: pointer; font-size: 0.92rem; }
+    .optin input { accent-color: #500000; margin-top: 5px; flex-shrink: 0; }
+    .img-upload { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .btn-outline {
+      font-family: 'Work Sans', sans-serif;
+      font-size: 0.85rem; font-weight: 600;
+      color: #500000; background: #fff;
+      border: 1px solid #500000; border-radius: 4px;
+      padding: 8px 14px; cursor: pointer;
+    }
+    .btn-outline:hover { background: #fbf5f5; }
+    .linkish {
+      font-family: 'Open Sans', sans-serif; font-size: 0.85rem;
+      color: #767676; background: none; border: 0; padding: 0;
+      cursor: pointer; text-decoration: underline;
+    }
+    .img-status { font-size: 0.85rem; color: #767676; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-submit {
+      display: block; width: 100%; max-width: 280px;
+      margin: 26px auto 0;
+      font-family: 'Work Sans', sans-serif;
+      font-size: 0.875rem; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 0.15em;
+      background: #500000; color: #fff;
+      border: 2px solid #500000; border-radius: 6px;
+      padding: 14px 20px; cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .btn-submit:hover:not(:disabled) { background: #3a0000; border-color: #3a0000; }
+    .status { margin: 12px 0 0; text-align: center; font-size: 0.9rem; min-height: 1.4em; }
+    .status-error { color: #c0392b; }
+    .cf { display: flex; justify-content: center; }
+    .dots { display: inline-flex; gap: 5px; vertical-align: middle; margin-right: 8px; }
+    .dots i { width: 8px; height: 8px; border-radius: 50%; background: #a95f5f; display: inline-block; animation: pulse 1.2s ease-in-out infinite; }
+    .dots i:nth-child(2) { animation-delay: .15s; background: #8a3535; }
+    .dots i:nth-child(3) { animation-delay: .3s; background: #500000; }
+    @keyframes pulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
+    .done-title {
+      font-family: 'Work Sans', sans-serif; font-size: 1rem;
+      font-weight: 700; color: #500000; margin: 0 0 10px;
+    }
+    .submit-done p { margin: 0 0 6px; }
+    .again-btn {
+      font-family: 'Work Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
+      color: #500000; background: #fff; border: 1px solid #500000;
+      border-radius: 4px; padding: 8px 14px; margin-top: 14px; cursor: pointer;
+    }
+    .again-btn:hover { background: #fbf5f5; }
+    .footer-logo { display: block; width: 220px; margin-top: 28px; }
+    @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <div class="cover">
+    <p class="kicker">Education Research Center</p>
+    <p class="headline">Share your work</p>
+  </div>
+
+  <main class="submit-card">
+    <h1>Share something with the ERC</h1>
+    <p class="lede">Anyone can share, at Texas A&amp;M or beyond. Events, research, opportunities — if it belongs in the ERC newsletter or on the <a href="../">Policy Exchange</a>, send it here. We review everything before it is published.</p>
+    <div id="root"></div>
+  </main>
+  <img src="erc-logo-maroon.png" alt="Texas A&amp;M University Education Research Center" class="footer-logo" />
+
+<script type="module">
+const DESK = 'https://erc-content-desk.vercel.app';
+const LISTSERV = 'https://script.google.com/macros/s/AKfycbz8neQVg5opjiTIATq8-xBhTFiA1WaDx8ST6rKAduxz0cf3LYAChNstg_UK1hoizoZ_/exec';
+
+const TYPES = [
+  ['research', 'New Ed Policy Research'],
+  ['event', 'Event/Webinar'],
+  ['opportunity', 'Opportunity'],
+  ['other', 'Other'],
+];
+
+const el = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+};
+const withScheme = v => {
+  const s = String(v ?? '').trim();
+  if (!s) return '';
+  return /^[a-z][a-z0-9+.-]*:/i.test(s) ? s : `https://${s}`;
+};
+const dots = () => {
+  const d = el('span', 'dots');
+  d.append(el('i'), el('i'), el('i'));
+  return d;
+};
+
+const root = document.getElementById('root');
+let picked = '';
+let mediaUrl = '';
+
+root.innerHTML = `
+  <form id="f" novalidate>
+    <div class="field-group">
+      <label class="field-label" for="t">Title</label>
+      <input class="field-input" id="t" type="text" autocomplete="off">
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="d">Description <span class="hint">(paste whatever you have — dates, abstract, the whole announcement)</span></label>
+      <textarea id="d" rows="6"></textarea>
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="l">Link</label>
+      <input class="field-input" id="l" type="url" autocomplete="off">
+    </div>
+    <fieldset><legend>Type</legend><div id="types"></div></fieldset>
+    <div class="field-group">
+      <span class="field-label">Media <span class="hint">(optional — a flyer, PDF, or picture)</span></span>
+      <div class="img-upload">
+        <button type="button" class="btn-outline" id="pick">Upload media</button>
+        <button type="button" class="linkish" id="rm" hidden>Remove media</button>
+        <span class="img-status" id="mstat"></span>
+        <input type="file" id="file" accept=".png,.jpg,.jpeg,.gif,.webp,.pdf" hidden>
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="n">Your name</label>
+      <input class="field-input" id="n" type="text" autocomplete="name">
+    </div>
+    <div class="field-group">
+      <label class="field-label" for="e">Your email address</label>
+      <input class="field-input" id="e" type="email" autocomplete="email">
+      <label class="optin"><input type="checkbox" id="optin"><span>Add me to the ERC newsletter.</span></label>
+    </div>
+    <div class="cf" id="cf"></div>
+    <button type="submit" class="btn-submit" id="go">Submit</button>
+    <p class="status" id="stat"></p>
+  </form>
+`;
+
+const typesBox = document.getElementById('types');
+for (const [value, label] of TYPES) {
+  const wrap = el('label', 'radio');
+  const input = Object.assign(el('input'), { type: 'radio', name: 'type', value });
+  input.addEventListener('change', () => { picked = value; });
+  wrap.append(input, ` ${label}`);
+  typesBox.append(wrap);
+}
+
+// Bot check (Cloudflare Turnstile). The desk refuses calls from this page
+// without a token. Tokens are single-use and expire, so every call takes a
+// fresh one and the widget is reset to produce the next.
+const SITE_KEY = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+  ? '1x00000000000000000000AA'   // Cloudflare's test key: always passes
+  : 'SITE_KEY_FROM_KATE';
+let widgetId = null;
+let token = '';
+let waiting = [];
+function renderTurnstile() {
+  if (widgetId !== null || !window.turnstile) return;
+  widgetId = turnstile.render('#cf', {
+    sitekey: SITE_KEY,
+    appearance: 'interaction-only',
+    callback: t => { token = t; const w = waiting; waiting = []; w.forEach(fn => fn()); },
+    'error-callback': () => { token = ''; },
+    'expired-callback': () => { token = ''; },
+  });
+}
+window.onTurnstileLoad = renderTurnstile;
+renderTurnstile();
+function takeToken() {
+  return new Promise((resolve, reject) => {
+    const take = () => {
+      const t = token; token = '';
+      setTimeout(() => turnstile.reset(widgetId), 0);
+      resolve(t);
+    };
+    if (token) return take();
+    const onToken = () => { clearTimeout(timer); take(); };
+    const timer = setTimeout(() => {
+      waiting = waiting.filter(fn => fn !== onToken);
+      reject(new Error("Couldn't confirm you're a person. Reload the page and try again."));
+    }, 60000);
+    waiting.push(onToken);
+  });
+}
+
+const form = document.getElementById('f');
+const stat = document.getElementById('stat');
+const mstat = document.getElementById('mstat');
+const pick = document.getElementById('pick');
+const rm = document.getElementById('rm');
+const fileIn = document.getElementById('file');
+
+const setStat = (msg, kind) => {
+  stat.className = `status${kind ? ' status-' + kind : ''}`;
+  stat.replaceChildren();
+  if (kind === 'busy' && msg) { stat.append(dots(), document.createTextNode(msg)); }
+  else stat.textContent = msg;
+};
+
+async function pdfFirstPage(file) {
+  const pdfjs = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs');
+  pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
+  const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+  const page = await doc.getPage(1);
+  const scale = 1200 / page.getViewport({ scale: 1 }).width;
+  const viewport = page.getViewport({ scale });
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(viewport.width);
+  canvas.height = Math.round(viewport.height);
+  await page.render({ canvasContext: canvas.getContext('2d'), viewport, intent: 'print' }).promise;
+  return new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error("Couldn't convert that PDF.")), 'image/png'));
+}
+
+const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' };
+
+pick.addEventListener('click', () => fileIn.click());
+rm.addEventListener('click', () => { mediaUrl = ''; mstat.textContent = ''; pick.textContent = 'Upload media'; rm.hidden = true; });
+fileIn.addEventListener('change', async () => {
+  const file = fileIn.files[0];
+  if (!file) return;
+  pick.hidden = true; rm.hidden = true;
+  try {
+    let blob = file;
+    let ext = EXT[file.type];
+    if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
+      mstat.replaceChildren(dots(), document.createTextNode('Converting the PDF…'));
+      blob = await pdfFirstPage(file);
+      ext = 'png';
+    }
+    if (!ext) throw new Error('Use a PNG, JPG, or PDF.');
+    if (blob.size > 2.5 * 1024 * 1024) throw new Error('Too big — keep it under 2.5 MB.');
+    mstat.replaceChildren(dots(), document.createTextNode('Uploading…'));
+    const b64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result).split(',')[1] ?? '');
+      r.onerror = () => rej(new Error("Couldn't read that file."));
+      r.readAsDataURL(blob);
+    });
+    const resp = await fetch(`${DESK}/api/newsletter-image`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: file.name, type: ext, file: b64, turnstile_token: await takeToken() }),
+    });
+    const data = await resp.json();
+    if (!data.ok) throw new Error(data.error || 'upload failed');
+    mediaUrl = data.url;
+    mstat.textContent = 'Added.';
+    pick.textContent = 'Replace media';
+    rm.hidden = false;
+  } catch (err) {
+    mstat.textContent = err.message;
+  }
+  fileIn.value = '';
+  pick.hidden = false;
+});
+
+const doneBox = el('div', 'submit-done');
+doneBox.hidden = true;
+root.append(doneBox);
+
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  const name = document.getElementById('n').value.trim();
+  const email = document.getElementById('e').value.trim();
+  const link = withScheme(document.getElementById('l').value);
+  const errors = [];
+  if (!picked) errors.push('Pick a type.');
+  if (!link) errors.push('Add a link.');
+  else if (!/^https?:\/\//i.test(link)) errors.push('That link needs to be a normal web link.');
+  if (!name) errors.push('Add your name.');
+  if (!email) errors.push('Add your email address.');
+  else if (!/^\S+@\S+\.\S+$/.test(email)) errors.push("That email address doesn't look right.");
+  if (errors.length) return setStat(errors.join(' '), 'error');
+
+  const go = document.getElementById('go');
+  go.disabled = true; go.hidden = true;
+  setStat('Sending', 'busy');
+  try {
+    const resp = await fetch(`${DESK}/api/submit`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: document.getElementById('t').value,
+        blurb: document.getElementById('d').value,
+        link,
+        type: picked === 'other' ? '' : picked,
+        subtype: '',
+        spotlight: false,
+        submitter: name,
+        submitter_email: email,
+        infographic: mediaUrl,
+        turnstile_token: await takeToken(),
+      }),
+    });
+    const data = await resp.json();
+    if (!data.ok) throw new Error((data.errors ?? ['Something went wrong.']).join(' '));
+
+    // Opt-in only: never subscribe anyone who did not tick the box.
+    if (document.getElementById('optin').checked) {
+      const now = new Date();
+      const date_subscribed = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      try {
+        await fetch(LISTSERV, {
+          method: 'POST', mode: 'no-cors',
+          body: JSON.stringify({ action: 'listserv_signup', name, email, date_subscribed, time: now.toTimeString().slice(0, 8) }),
+        });
+      } catch { /* the submission already landed; the list can wait */ }
+    }
+
+    form.reset(); picked = ''; mediaUrl = '';
+    mstat.textContent = ''; pick.textContent = 'Upload media'; rm.hidden = true;
+    setStat('');
+    const title = el('p', 'done-title', 'Thank you — the ERC has it.');
+    doneBox.replaceChildren(title);
+    doneBox.append(el('p', '', 'The team reviews every submission before anything is published.'));
+    const again = el('button', 'again-btn', 'Submit another');
+    again.type = 'button';
+    again.addEventListener('click', () => {
+      doneBox.hidden = true; form.hidden = false;
+      document.getElementById('n').value = name;
+      document.getElementById('e').value = email;
+      document.getElementById('t').focus();
+    });
+    doneBox.append(again);
+    form.hidden = true; doneBox.hidden = false;
+  } catch (err) {
+    setStat(err instanceof TypeError ? "Couldn't reach the server. Check your connection." : err.message, 'error');
+  } finally {
+    go.disabled = false; go.hidden = false;
+  }
+});
+</script>
+</body>
+</html>
