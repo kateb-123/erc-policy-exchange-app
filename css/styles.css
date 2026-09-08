@@ -29,6 +29,9 @@
 
   --line: #d9d4d0;
   --line-soft: #e7e1dc;
+  /* Selected Quick Search pill (Kate's pick D, Sep 2026): warm grey, bold, never maroon. */
+  --pill-active-bg: #ddd6d0;
+  --pill-active-line: #b9aea6;
   --bg: #ffffff;
   --warm: #f4f0ec;
   --panel: #faf7f3;
@@ -439,16 +442,17 @@ main {
   border-color: var(--maroon);
   color: var(--maroon);
 }
-/* Selected view = solid ink pill (still not maroon): unmistakable beside the
-   white pills, where the old light-grey fill read as "off". */
+/* Selected view = warm grey, bold (not maroon, so it never argues with the
+   maroon tags). Darker than the old #e8e7e6 fill, which read as "off". */
 .tbtn.is-active {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: #fff;
+  background: var(--pill-active-bg);
+  border-color: var(--pill-active-line);
+  color: var(--ink);
+  font-weight: 700;
 }
 .tbtn.is-active:hover {
-  border-color: var(--ink);
-  color: #fff;
+  border-color: var(--pill-active-line);
+  color: var(--ink);
 }
 /* Sort options: plain text actions (no box), active one emphasised. */
 .tsort {
