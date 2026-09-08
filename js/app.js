@@ -902,8 +902,12 @@ function renderFeedCards(results, colorFor, total = results.length) {
         ? parseDeadline(it.deadline)
         : { label: it.date ? formatDate(it.date) : "", firm: !!it.date, iso: it.date || "" };
       // Flag anything happening within two weeks so urgency reads at a glance.
+      // Only rows with a moment ahead get it: opportunity deadlines and event
+      // dates. Headlines and research carry a publication date, so a fresh
+      // item there is just fresh, not "closing soon".
+      const hasMomentAhead = isOpp || state.type === "event";
       const soon =
-        rv.firm && rv.iso >= TODAY && daysUntil(rv.iso) <= 14
+        hasMomentAhead && rv.firm && rv.iso >= TODAY && daysUntil(rv.iso) <= 14
           ? " feed-deadline--soon"
           : "";
       const soonText = soon ? relativeDays(rv.iso, isOpp) : "";
