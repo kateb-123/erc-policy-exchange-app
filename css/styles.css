@@ -3,8 +3,8 @@
  * ============================================================
  * Claude Design handoff (Sep 9, 2026), on the Aggie UX system: maroon
  * #4F001A bar, Work Sans headings + Open Sans body, teal links and focus,
- * square buttons and inputs, borders drawn as inset shadows, tinted pill
- * tags. Blocks not yet moved over still carry the older tokens below.
+ * square buttons and inputs, borders drawn as inset shadows (row separators
+ * excepted), tinted pill tags. 16px base, sizes in px, an 8px rhythm.
  * ============================================================ */
 
 :root {
@@ -27,39 +27,9 @@
   --cream3: #D6D3C4;
   --error: #D04343;
 
-  /* Older tokens, still used by the section, feed, and tag blocks. */
-  --maroon-soft: #732f2f;
-  --maroon-700: #6b1010;
-  --maroon-tint: #f2e8e8;
-
-  /* Text greys = the A&M grayscale (Kate 2026-07-15): Gray 900 / 800 / 600 —
-     darker than the old #333/#626262/#8a8a8a so nothing reads washed out. */
-  --ink: #202020;
-  --body: #202020;
-  --muted: #3e3e3e;
-  --faint: #626262;
-
-  /* Category pill palette (Kate's, from her Adobe set): ink = text/icon,
-     line = the pill's hairline border (a mid-tone of the same hue). */
-  --cat0-ink: #1b3a5c; --cat0-line: #8fb3d4; /* navy   */
-  --cat1-ink: #7a5d10; --cat1-line: #cbb35c; /* gold — darkened Sep 2026 for 12px text on the tan row (6:1) */
-  --cat2-ink: #275d5d; --cat2-line: #6fb5a2; /* teal   */
-  --cat3-ink: #46426e; --cat3-line: #a9a5c9; /* purple */
-  --cat4-ink: #b5511f; --cat4-line: #e0a173; /* orange */
-
-  --line: #d9d4d0;
-  --line-soft: #e7e1dc;
-  /* Selected Quick Search pill (Kate's pick D, Sep 2026): warm grey, bold, never maroon. */
-  --pill-active-bg: #ddd6d0;
-  --pill-active-line: #b9aea6;
-  --bg: #ffffff;
-  --warm: #f4f0ec;
-  --panel: #faf7f3;
-  --card: #ffffff;
-
-  --radius: 14px;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 6px 18px rgba(80, 0, 0, 0.05);
-  --shadow-hover: 0 2px 6px rgba(0, 0, 0, 0.06), 0 10px 28px rgba(80, 0, 0, 0.09);
+  /* The handoff's gold is too light for small text (2.9:1); this darker gold
+     from Kate's palette (6:1) carries the gold tags. */
+  --gold-ink: #7a5d10;
 
   --head: "Work Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --sans: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -80,18 +50,13 @@
 html {
   scroll-behavior: smooth;
 }
-/* Root type scale: 110.3% of the 16px default puts the pill text (0.68rem)
-   at 12px exactly; every rem-based font scales with it (Kate, 2026-07-15). */
-html {
-  font-size: 110.3%;
-}
 body {
   margin: 0;
   font-family: var(--sans);
-  color: var(--body);
-  background: var(--bg);
-  line-height: 1.6;
-  font-size: 1rem;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--g900);
+  background: #fff;
   -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;
@@ -101,7 +66,7 @@ h1, h2, h3 {
   font-family: var(--head);
 }
 a {
-  color: var(--maroon-700);
+  color: var(--teal);
   text-decoration: none;
 }
 a:hover {
@@ -119,7 +84,6 @@ a:hover {
   color: #fff;
   padding: 10px 16px;
   z-index: 100;
-  border-radius: 0 0 6px 0;
 }
 .skip-link:focus {
   left: 0;
@@ -383,212 +347,108 @@ main {
   flex: 1 0 auto; /* short pages still push the footer to the viewport bottom */
   /* width:100% is load-bearing: body is a flex column (for the sticky
      footer), so without it `margin:0 auto` reads as a flex auto-margin and
-     `main` shrink-wraps to each tab's content — making the table width jump
-     between tabs. Forcing full width keeps every tab's frame identical. */
+     `main` shrink-wraps to each view's content. Forcing full width keeps
+     every view's frame identical. */
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
   padding: 0 24px;
 }
-/* The landing carries its own vertical rhythm (above); the section, search,
-   and brief views keep theirs here until they move to the handoff. */
-main > .results {
-  padding: 30px 0 80px;
+
+/* ---------- Section head ---------- */
+/* The section's full title and one line about it, in the landing hero's
+   type. The search view shows its count in the line's place. */
+.section-head {
+  padding: 48px 0 24px;
 }
-.rail__group + .rail__group {
-  margin-top: 20px;
-}
-.rail__label {
-  display: block;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.11em;
+.section-head__title {
+  font-family: var(--head);
+  font-size: 36px;
   font-weight: 700;
-  color: var(--muted);
-  margin: 0 0 10px;
-}
-.rail__reset {
-  margin-top: 20px;
-  appearance: none;
-  border: 1px solid var(--line);
-  background: var(--card);
-  font-family: inherit;
-  font-size: 0.82rem;
-  color: var(--muted);
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  width: 100%;
-}
-.rail__reset:hover {
-  border-color: var(--maroon);
+  line-height: 1.2;
   color: var(--maroon);
+  margin: 0;
+  text-wrap: pretty;
+}
+.section-head__desc,
+.section-head .results__count {
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--g900);
+  margin: 16px 0 0;
 }
 
-/* ---------- Results meta ---------- */
-.results__meta {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  margin: 14px 0 0; /* below the list: the count rides on the toolbar's sort row instead (Kate's pick 3) */
-  flex-wrap: wrap;
-}
-.results__count {
-  font-size: 0.88rem;
-  color: var(--muted);
-}
-.results__count strong {
-  color: var(--ink);
-}
-.results__updated {
-  font-size: 0.8rem;
-  color: var(--faint);
-  margin: 0 0 0 auto; /* right edge, whether or not the count is beside it */
-}
-/* The count on the sort row: quiet, ahead of the sort actions. */
-.tgroup--sort .results__count {
-  margin: 0 18px 0 0;
-  font-size: 0.85rem;
-}
-/* The count under the search title, in the description line's place. */
-.section-head .results__count {
-  margin: 4px 0 0;
-  font-size: 0.95rem;
-}
-.news-tab__icon {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-.news-tab__icon svg {
-  width: 18px;
-  height: 18px;
-}
-/* ---------- Card-tab button toolbar (category views + sort) ----------
-   Sticky: the filters stay pinned while the list scrolls, and the table
-   header (.feed__head) docks directly beneath them (offset measured into
-   --toolbar-h by app.js, since the toolbar can wrap to two rows). */
+/* ---------- Quick Search + sort ---------- */
+/* Two rows: the Quick Search buttons, then the count and the sort actions
+   on the feed's right edge. */
 .opp-toolbar {
-  position: sticky;
-  top: 0;
-  z-index: 3;
-  background: var(--bg);
-  /* Two rows on every tab: the Quick Search pills, then the count + sort
-     justified to the table's right edge (one bulky line otherwise). */
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   align-items: center;
-  gap: 6px 26px;
-  margin: 0;
-  padding: 10px 0 12px;
-}
-.tgroup--show {
-  flex: 1 1 100%;
-}
-.tgroup--sort {
-  margin-left: auto;
+  gap: 8px 24px;
 }
 .tgroup {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
 }
-/* The SHOW/SORT labels sit inline, just ahead of their options. */
+.tgroup--show {
+  flex: 1 1 100%;
+  padding-bottom: 16px;
+}
 .tgroup__label {
   font-family: var(--head);
-  font-size: 0.68rem;
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--faint);
-  margin-right: 2px;
+  color: var(--g600);
+  margin-right: 4px;
 }
-.tbtn {
+/* Square outline button; the pressed one fills maroon. */
+.tbtn,
+.feed-more__btn {
   appearance: none;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--muted);
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 999px; /* pill */
-  padding: 5px 16px;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--maroon);
+  color: var(--maroon);
+  font-family: var(--head);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 12px 20px;
   cursor: pointer;
   white-space: nowrap;
 }
-.tbtn:hover {
-  border-color: var(--maroon);
-  color: var(--maroon);
+.tbtn:hover,
+.feed-more__btn:hover {
+  background: var(--cream);
 }
-/* Selected view = warm grey, bold (not maroon, so it never argues with the
-   maroon tags). Darker than the old #e8e7e6 fill, which read as "off". */
-.tbtn.is-active {
-  background: var(--pill-active-bg);
-  border-color: var(--pill-active-line);
-  color: var(--ink);
-  font-weight: 700;
-}
+.tbtn.is-active,
 .tbtn.is-active:hover {
-  border-color: var(--pill-active-line);
-  color: var(--ink);
+  background: var(--maroon);
+  color: #fff;
 }
-/* Sort options: plain text actions (no box), active one emphasised. */
-.tsort {
-  appearance: none;
-  border: 0;
-  background: none;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--muted);
-  padding: 4px 2px;
-  cursor: pointer;
+/* Research's Archive toggle rides at the row's end, set off a little so it
+   reads as a view switch, not a filter. */
+.tbtn--archive {
+  margin-left: 14px;
 }
-.tsort:hover {
-  color: var(--maroon);
-  text-decoration: underline;
-}
-.tsort.is-active {
-  color: var(--maroon);
-  font-weight: 700;
-}
-.tsort-sep {
-  color: var(--faint);
-  margin: 0 5px;
-}
-/* Section head: the tab's full title + a one-line description, above the
-   Quick Search toolbar. */
-.section-head {
-  margin: 6px 0 16px;
-}
-.section-head__title {
-  font-family: var(--head);
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--maroon);
-  margin: 0 0 4px;
-}
-.section-head__desc {
-  color: var(--muted);
-  font-size: 0.95rem;
-  margin: 0;
-}
-
-/* Quiet "Clear" text action beside the Quick Search pills — dimmed until a
-   category filter is actually on. */
+/* Quiet "Clear" text action beside the buttons, dimmed until a filter is on. */
 .tclear {
   appearance: none;
   border: 0;
   background: none;
-  font-family: inherit;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--faint);
+  font-family: var(--sans);
+  font-size: 16px;
+  color: var(--g700);
   padding: 4px 2px;
-  margin-left: 6px;
   cursor: pointer;
 }
 .tclear:hover {
@@ -601,207 +461,121 @@ main > .results {
   text-decoration: none;
   pointer-events: none;
 }
-/* col-title takes the remaining space. */
-.feed-table thead th {
-  background: var(--maroon);
-  color: #fff;
-  font-family: var(--head);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  text-align: left;
-  padding: 12px 16px;
-  white-space: nowrap;
+.tgroup--sort {
+  margin-left: auto;
+  gap: 24px;
+  padding: 8px 0 16px;
+  font-size: 16px;
+  color: var(--g600);
 }
-/* "Abstract" label above an expanded research summary. */
-.feed-detail__label {
-  margin: 0 0 6px;
-  font-family: var(--head);
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
+.results__count {
+  margin: 0;
 }
-.feed-detail__blurb {
-  margin: 0 0 14px;
-  font-size: 0.92rem;
-  color: var(--body);
+.results__count strong {
+  color: var(--g900);
 }
-/* Row of action buttons in an expanded card (Read the full … + View infographic). */
-.feed-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 14px;
-}
-.feed-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  border: 1px solid var(--maroon);
-  color: var(--maroon);
-  font-weight: 600;
-  font-size: 0.84rem;
-  padding: 7px 13px;
-  border-radius: 8px;
-}
-.feed-link:hover {
-  background: var(--maroon);
-  color: #fff;
-  text-decoration: none;
-}
-/* Title links straight to the source (primary action). */
-.feed-title-link {
-  color: var(--maroon-700);
-  font-weight: 600;
-  text-decoration: none;
-}
-.feed-title-link:hover {
-  text-decoration: underline;
-}
-/* Caret button = expand/collapse the summary. */
-.feed-expand {
+/* Sort options: text actions, the current one in maroon. */
+.tsort {
   appearance: none;
   border: 0;
-  background: transparent;
+  background: none;
+  font-family: var(--head);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--teal);
+  padding: 0;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
-  display: inline-flex;
+}
+.tsort:hover {
+  text-decoration: underline;
+}
+.tsort.is-active {
   color: var(--maroon);
 }
-.feed-expand:hover {
-  background: rgba(80, 0, 0, 0.07);
-}
-.chevron {
-  flex-shrink: 0;
-  font-size: 1rem;
-  color: var(--maroon);
-  transition: transform 0.2s ease;
-}
-[aria-expanded="true"] .chevron {
-  transform: rotate(180deg);
+.tsort-sep {
+  color: var(--g600);
 }
 
-/* ---------- Feed (framed two-row table — Opportunities) ----------
-   Each item is a 2×2 grid: title / deadline on the top row, source / pill on
-   the bottom row. Left column flexes; right column is fixed so the deadline and
-   pill line up into a column down the page. */
-.feed--opp {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--card);
-  box-shadow: var(--shadow);
-  overflow: hidden; /* clips rows to the rounded frame (no sticky header now) */
-}
-/* Header bar — only the global-search view still uses one, in the light
-   variant below. Section feeds dropped it (title + pills carry the context). */
-.feed__head {
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--head);
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  padding: 11px 18px;
-}
-.feed__head--light {
-  background: var(--panel);
-  color: var(--faint);
-  border-bottom: 1px solid var(--line);
-}
-.feed__head-r {
-  text-align: right;
+/* ---------- Feed ---------- */
+/* One framed list. Each row: tag, title, source, a detail line; the date or
+   deadline at the right beside a chevron that opens the summary in place. */
+.feed {
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--g400);
+  border-radius: 2px;
+  margin-bottom: 48px;
 }
 .feed__list {
   list-style: none;
   margin: 0;
   padding: 0;
 }
+.feed-item {
+  padding: 24px;
+}
 .feed-item + .feed-item {
-  border-top: 1px solid var(--line-soft);
+  border-top: 1px solid var(--g400);
 }
 .feed-item__row {
-  display: flex;
-  align-items: flex-start;
-  gap: 18px;
-  padding: 14px 18px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px 24px;
+  align-items: start;
+}
+/* A row with a summary opens on a click anywhere in it (a bigger target than
+   the chevron); a search result opens its source the same way. */
+.feed-item:has(.feed-expand) .feed-item__row,
+.feed-item--link .feed-item__row {
   cursor: pointer;
 }
-.feed-item:not([data-expanded="true"]):hover {
-  background: var(--panel); /* same warm tan a clicked-open row gets */
-}
-/* Open items: the clicked ROW holds the warm tan (with a hairline under it);
-   the abstract/details below stay clean white. */
-.feed-item[data-expanded="true"] > .feed-item__row {
-  background: var(--panel);
-  border-bottom: 1px solid var(--line-soft);
-}
-/* Left column: title over a quiet metadata line (category · source). */
 .feed-item__body {
-  flex: 1 1 auto;
   min-width: 0;
 }
 .feed-item__title {
-  margin-bottom: 5px;
-}
-.feed-item__meta {
-  font-size: 0.86rem;
-}
-/* Category pill rides on its own line BELOW the meta line (.tag supplies the
-   pill look; this just sets the spacing). */
-/* Pill = an eyebrow above the title (D3): its own quiet line, so categories
-   form a clean left-aligned scan column down the feed. */
-.feed-item__cat {
-  margin-bottom: 6px;
-}
-/* Small Font Awesome icon inside the pill (feed rows only); it takes the pill's
-   own colour through currentColor. */
-.tag__icon {
-  margin-right: 5px;
-  font-size: 0.95em;
-}
-/* A pill icon drawn from one of Kate's SVGs (Texas): sized like the font icons. */
-.tag__icon--svg {
-  display: inline-block;
-  width: 1.1em;
-  height: 1.1em;
-  vertical-align: -0.2em;
-}
-/* Kate's own SVGs (landing-card glyphs, the Texas pill) are painted with
-   currentColor through a CSS mask (set inline from app.js so the URL resolves
-   against the page, not this file). */
-.tag__icon--svg,
-.card__glyph {
-  background-color: currentColor;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  -webkit-mask-size: contain;
-  mask-repeat: no-repeat;
-  mask-position: center;
-  mask-size: contain;
-}
-/* Search results still tag rows inline with coloured text; typography matches
-   .feed-source so the meta line reads as one piece. */
-.feed-cat {
-  font-size: 0.88rem;
+  font-family: var(--head);
+  font-size: 20px;
   font-weight: 600;
+  line-height: 1.2;
+  color: var(--maroon);
+  margin: 0;
+  text-wrap: pretty;
+}
+.feed-item__cat + .feed-item__title {
+  margin-top: 10px;
+}
+.feed-title-link {
+  color: var(--maroon);
+  text-decoration: none;
+}
+.feed-title-link:hover {
+  text-decoration: underline;
+}
+/* The outbound marker after a title that leaves the site. */
+.feed-ext {
+  font-size: 14px;
+  margin-left: 6px;
+  color: var(--g600);
+}
+.feed-item__source {
+  font-size: 16px;
+  color: var(--g600);
+  margin-top: 4px;
+}
+/* Research: the authors. Events: time · location. Search: section · source · date. */
+.feed-item__meta {
+  font-size: 15px;
+  color: var(--g600);
+  margin-top: 2px;
 }
 .feed-meta-sep {
-  color: var(--faint);
-  margin: 0 8px;
+  margin: 0 6px;
 }
-/* Research line 2: the authors — the scan-key, so darker than the meta line. */
-.feed-item__authors {
-  color: var(--body);
-  font-size: 0.88rem;
-  margin-bottom: 4px;
+.feed-cat {
+  font-weight: 600;
+  color: var(--g900);
 }
-/* Long author lists un-truncate in place: collapsed shows "…et al.", expanded
-   swaps in the full list on the same line — no jumping. */
-.feed-item__authors .authors-full {
+/* Long author lists un-truncate in place when the row opens. */
+.authors-full {
   display: none;
 }
 .feed-item[data-expanded="true"] .authors-short {
@@ -810,243 +584,219 @@ main > .results {
 .feed-item[data-expanded="true"] .authors-full {
   display: inline;
 }
-/* Research line 3: posted date, quiet at the end of the meta line. */
-.feed-meta-date {
-  color: var(--faint);
-  font-size: 0.85rem;
-  font-variant-numeric: tabular-nums;
-}
-/* Right column: deadline beside the caret, top-aligned with the title. */
-/* Right column: FIXED width so the title/date boundary is identical on every
-   tab (Kate's hard rule — columns must never jump between tabs). Content is
-   right-aligned; --due-drop pushes it down past the eyebrow pill so the date
-   lines up with the TITLE, not the pill. */
-.feed-cell--due {
-  flex: 0 0 var(--due-col, 152px);
+/* The right side: the date or deadline, then the chevron. */
+.feed-item__side {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
+  gap: 16px;
+  min-height: 40px;
+  font-weight: 600;
   white-space: nowrap;
-  margin-top: var(--due-drop, 36px);
 }
-/* Title links straight to the source (primary action). */
-.feed-item .feed-title-link {
-  font-family: var(--head);
-  font-weight: 700;
-  font-size: 1rem;
-  line-height: 1.35;
-  color: var(--maroon-700);
-  text-decoration: none;
-}
-.feed-item .feed-title-link:hover {
-  text-decoration: underline;
-}
-.feed-source {
-  color: var(--muted);
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-/* Medium type (icon + "Article"/"Radio"/…) riding after the source name. */
-.feed-medium-type {
-  color: var(--faint);
-  font-size: 0.85rem;
-}
-.feed-medium {
-  display: inline-flex;
-  vertical-align: -1px;
-  margin-right: 5px;
-}
-.feed-medium i {
-  font-size: 13px;
-}
-.feed-deadline {
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 600;
+.feed-date {
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
-/* Firm deadline closing within two weeks — nudge it in maroon. */
-.feed-deadline--soon {
+/* Closing within two weeks: the words carry it, in brick. */
+.feed-date__soon {
+  color: var(--brick);
+}
+.feed-expand {
+  appearance: none;
+  border: 0;
+  background: none;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
   color: var(--maroon);
+  font-size: 18px;
+  cursor: pointer;
 }
-.feed-item__detail {
-  /* Indented under the tan row — the abstract reads as nested content. */
-  padding: 14px 18px 18px 42px;
+.chevron {
+  transition: transform 0.2s ease;
 }
-/* Facts panel beside the summary (two columns on wider screens) — Events
-   (Date/Time/Location/Register) and Opportunities (Deadline/Topic/Apply). */
-.feed-item__detail--cols {
-  display: grid;
-  grid-template-columns: minmax(160px, 220px) 1fr;
-  gap: 26px;
-  align-items: start;
+[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
 }
-.feed-facts {
-  margin: 0;
-  display: grid;
-  gap: 12px;
-  padding: 14px 16px;
-  background: var(--panel);
-  border: 1px solid var(--line-soft);
-  border-radius: 10px;
-}
-.feed-fact {
-  display: grid;
-  gap: 1px;
-}
-.feed-fact__label {
-  font-family: var(--head);
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--maroon);
-}
-.feed-fact__value {
-  margin: 0;
-  font-size: 0.9rem;
-  color: var(--body);
-  font-weight: 600;
-}
-/* Link-only rows (Headlines): the row itself opens the source, so the right
-   edge shows a small ↗ instead of an expand caret. */
+/* Search results: the row opens the source, marked with a small arrow. */
 .feed-goto {
   color: var(--maroon);
-  font-size: 0.85rem;
+  font-size: 14px;
+}
+.feed-item__detail {
+  margin-top: 16px;
+  max-width: 820px;
+}
+.feed-detail__blurb {
+  margin: 0 0 12px;
+}
+.feed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+}
+/* The way out of a summary: a teal text action. */
+.feed-link {
+  font-family: var(--head);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--teal);
+  text-decoration: none;
+}
+.feed-link:hover {
+  text-decoration: underline;
+}
+/* "Show more" under a list with pages left. */
+.feed-more {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--g400);
+}
+.feed-more__count {
+  font-size: 14px;
+  color: var(--g600);
+}
+
+/* ---------- Tags ---------- */
+/* Tinted pills: the type colour as text on a 10% tint of itself. Maroon is
+   ERC's own and Texas; teal, navy, and gold are assigned per subtype in
+   app.js. */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  --t: var(--teal);
+  font-family: var(--head);
+  font-size: 13px;
+  font-weight: 600;
   line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 7px 14px;
+  border-radius: 999px;
+  white-space: nowrap;
+  color: var(--t);
+  background: color-mix(in srgb, var(--t) 10%, #fff);
 }
-/* Icons inside text actions: a touch smaller than the words, spaced off them. */
-.feed-link i,
-.brief__open i,
-.feed-fact__value a i {
-  font-size: 0.8em;
-  margin-left: 4px;
+.tag--maroon {
+  --t: var(--maroon);
 }
-.brief__back i {
-  font-size: 0.85em;
-  margin-right: 6px;
+.tag--teal {
+  --t: var(--teal);
 }
-/* Narrow screens: hide the column header; the flex row already stacks well. */
-@media (max-width: 640px) {
-  .feed__head {
-    display: none;
-  }
-  /* The 42px nesting indent is too deep on a phone — pull the expanded
-     detail back so the summary gets full width, and stack the two columns. */
-  .feed-item__detail {
-    padding-left: 18px;
-  }
-  .feed-item__detail--cols {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
+.tag--navy {
+  --t: var(--navy);
+}
+/* The handoff's gold (#AF8846) reads at 2.9:1 on its tint, under the 4.5:1
+   floor for 13px text; the darker gold from Kate's palette (6:1) carries the
+   text and the tint alike. */
+.tag--gold {
+  --t: var(--gold-ink);
 }
 
 /* ---------- Brief viewer ---------- */
 /* One ERC Research Brief, embedded in place via Drive's /preview iframe. */
+.brief {
+  padding: 48px 0;
+}
+.brief__title {
+  margin-bottom: 16px;
+}
 .brief__bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
-.brief__back {
+.brief__back,
+.brief__open {
   appearance: none;
   border: 0;
-  background: transparent;
+  background: none;
   cursor: pointer;
   font-family: var(--head);
+  font-size: 16px;
   font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--maroon-700);
+  color: var(--teal);
   padding: 0;
 }
-.brief__back:hover {
+.brief__back:hover,
+.brief__open:hover {
   text-decoration: underline;
 }
-.brief__open {
-  font-family: var(--head);
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: var(--faint);
+.brief__back i {
+  font-size: 0.85em;
+  margin-right: 6px;
 }
-/* The frame is bare — Drive's player brings its own chrome, so any border or
-   panel of ours just adds a frame around a frame. */
+.brief__open i {
+  font-size: 0.8em;
+  margin-left: 4px;
+}
+.brief__loading {
+  margin-bottom: 12px;
+}
+/* The frame is bare: Drive's player brings its own chrome. */
 .brief__frame {
   display: block;
   width: 100%;
   height: min(85vh, 1100px);
   border: 0;
-  border-radius: 8px;
 }
 
-/* ---------- Type tags ---------- */
-.tag {
-  display: inline-block;
-  font-size: 0.68rem; /* = 12px at the 110.3% root scale, the floor for readable labels */
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  padding: 3px 9px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  white-space: nowrap;
-}
-/* Sub-category pill palette (Kate's, 2026-07-15): SOLID Aggie maroon with
-   white text is reserved for "ours/Texas" subtypes (ERC Events, ERC Research
-   Brief, Texas — assigned in app.js), everything else cycles navy / gold /
-   teal / purple / orange as coloured text on that hue's tint. Gold + orange
-   text darkened a touch from Kate's swatches for small-text contrast; CVD +
-   contrast validated. */
-/* D3 style (Kate 2026-07-16): outlined pill, TRANSPARENT fill — text + icon
-   in the category's dark tone, border a mid-tone of the same hue (maroon
-   keeps a full-strength border since it IS the brand accent). */
-.tag--maroon {
-  background: transparent;
-  color: var(--maroon);
-  border-color: var(--maroon);
-}
-.tag--c0 { background: transparent; color: var(--cat0-ink); border-color: var(--cat0-line); }
-.tag--c1 { background: transparent; color: var(--cat1-ink); border-color: var(--cat1-line); }
-.tag--c2 { background: transparent; color: var(--cat2-ink); border-color: var(--cat2-line); }
-.tag--c3 { background: transparent; color: var(--cat3-ink); border-color: var(--cat3-line); }
-.tag--c4 { background: transparent; color: var(--cat4-ink); border-color: var(--cat4-line); }
-/* While a Quick Search filter is on, the matching rows' tags wear the same warm
-   grey as the selected pill, so the filter and its results read as one thing
-   (Kate, Sep 2026). */
-.tag--selected {
-  background: var(--pill-active-bg);
-  color: var(--ink);
-  border-color: var(--pill-active-line);
-}
-
-/* Category text colours (search-result rows) — same hues as the pills, text only. */
-
-/* ---------- Empty / error state ---------- */
+/* ---------- Empty, loading, and error states ---------- */
 .state {
-  background: var(--card);
-  border: 1px dashed var(--line);
-  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--g400);
+  border-radius: 2px;
   padding: 40px 28px;
+  margin-bottom: 48px;
   text-align: center;
-  color: var(--muted);
+  color: var(--g600);
 }
 .state strong {
-  color: var(--ink);
   display: block;
   margin-bottom: 6px;
-  font-size: 1.02rem;
+  font-family: var(--head);
+  font-size: 18px;
+  color: var(--g900);
+}
+.state--loading {
+  box-shadow: none;
+  background: none;
+  padding: 24px 0;
 }
 .state code {
-  background: var(--maroon-tint);
+  background: var(--g100);
   padding: 2px 7px;
-  border-radius: 4px;
-  font-size: 0.88em;
-  color: var(--maroon-700);
+  font-size: 0.9em;
+  color: var(--maroon);
 }
+.state__actions {
+  justify-content: center;
+  margin-top: 16px;
+}
+.state__retry {
+  appearance: none;
+  border: 0;
+  background: none;
+  font-family: var(--head);
+  cursor: pointer;
+}
+.state__hint {
+  display: block;
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--g600);
+}
+/* Headings receive focus after navigation so screen readers announce the new
+   view; they are not interactive, so no ring. */
+[data-focus-target]:focus,
+[data-focus-target]:focus-visible {
+  outline: none;
+}
+
 /* ---------- Footer ---------- */
 /* Claude Design handoff (Sep 9, 2026): a cream band with the ERC wordmark and
    the website, email, and Share an item links, each with an Aggie UX glyph. */
@@ -1114,7 +864,7 @@ main > .results {
   mask-image: url("../assets/aggie/paper-plane.svg");
 }
 
-/* ---------- Responsive ---------- */
+/* ---------- Phones ---------- */
 @media (max-width: 780px) {
   /* Top bar on phones: the title and the Menu button share the first row,
      the links open in a list under them, and the search takes the last row
@@ -1174,7 +924,7 @@ main > .results {
     margin: 0 0 12px;
   }
 
-  /* The landing on phones: a tighter hero, one column of cards. */
+  /* The landing: a tighter hero, one column of cards. */
   .hero {
     padding: 32px 0 24px;
   }
@@ -1194,6 +944,34 @@ main > .results {
     font-size: 20px;
   }
 
+  /* Sections: tighter head, the count and sorts flush left, rows stack with
+     the date line under the text. */
+  .section-head {
+    padding: 32px 0 16px;
+  }
+  .section-head__title {
+    font-size: 30px;
+  }
+  .tgroup--sort {
+    margin-left: 0;
+    gap: 16px;
+  }
+  .feed-item {
+    padding: 16px;
+  }
+  .feed-item__row {
+    grid-template-columns: 1fr;
+  }
+  .feed-item__side {
+    justify-content: space-between;
+  }
+  .feed-more {
+    padding: 16px;
+  }
+  .brief {
+    padding: 32px 0;
+  }
+
   /* The footer stacks: wordmark, then the links one under another. */
   .site-footer__inner {
     flex-direction: column;
@@ -1204,50 +982,6 @@ main > .results {
     align-items: flex-start;
     gap: 12px;
   }
-
-  /* The toolbar un-sticks (it eats half a phone screen); the table header
-     sticks to the very top instead. */
-  .opp-toolbar {
-    position: static;
-  }
-  /* Phones keep the count + sort line flush left under the pills. */
-  .tgroup--sort {
-    margin-left: 0;
-  }
-  .feed__head {
-    top: 0;
-  }
-
-  /* Feed rows stack: full-width body, the date/deadline + caret line drops
-     below the text instead of squeezing the title into a sliver. */
-  .feed-item__row {
-    flex-wrap: wrap;
-    gap: 6px 18px;
-  }
-  .feed-item__body {
-    flex: 1 1 100%;
-  }
-  /* Stacked: the due line sits below the text full-width, so drop the fixed
-     column width, the right-drop, and left-align it. */
-  .feed-cell--due {
-    flex: 1 1 100%;
-    justify-content: flex-start;
-    margin-top: 0;
-  }
-  /* Rows whose right cell is only an icon (research chevron, search-result
-     arrow): tuck it into the row's top-right corner rather than giving it a
-     line of its own. */
-  .feed-item--caret-only .feed-item__row {
-    position: relative;
-    padding-right: 52px;
-  }
-  .feed-item--caret-only .feed-cell--due {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    flex: none;
-    width: auto;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1255,86 +989,4 @@ main > .results {
     transition: none !important;
     scroll-behavior: auto !important;
   }
-}
-/* "Show more" pagination: a quiet centered pill under the list, with a muted
-   running count beside it. Same pill language as the toolbar buttons. */
-.feed-more {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 14px 18px;
-  border-top: 1px solid var(--line-soft);
-}
-.feed-more__btn {
-  appearance: none;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--muted);
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 6px 20px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.feed-more__btn:hover {
-  border-color: var(--maroon);
-  color: var(--maroon);
-}
-.feed-more__count {
-  font-size: 0.8rem;
-  color: var(--faint);
-}
-
-/* Research's Archive toggle: rides at the end of the Quick Search pill row,
-   set off by a little extra gap so it reads as a view switch, not a filter. */
-.tbtn--archive {
-  margin-left: 14px;
-}
-
-/* ---------- Sep 2026 usability fixes ---------- */
-/* Outbound marker on expandable rows' titles: the row opens, the title leaves. */
-.feed-ext {
-  font-size: 0.7em;
-  margin-left: 2px; /* a non-breaking space precedes it in the markup */
-  color: var(--maroon);
-  vertical-align: 0.1em;
-}
-/* "· 6 days left" beside a closing-soon deadline, so urgency is words, not just colour. */
-.feed-deadline__days {
-  font-weight: 600;
-}
-.brief__title {
-  margin-bottom: 10px;
-}
-.brief__loading {
-  margin-bottom: 12px;
-  padding: 18px;
-}
-.state--loading {
-  border-style: solid;
-  color: var(--faint);
-}
-.state__actions {
-  justify-content: center;
-}
-.state__retry {
-  appearance: none;
-  background: var(--card);
-  font-family: inherit;
-  cursor: pointer;
-}
-.state__hint {
-  display: block;
-  margin-top: 10px;
-  font-size: 0.85em;
-  color: var(--faint);
-}
-/* Headings receive focus after navigation so screen readers announce the new
-   view; they are not interactive, so no ring. */
-[data-focus-target]:focus,
-[data-focus-target]:focus-visible {
-  outline: none;
 }

@@ -19,13 +19,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Work+Sans:wght@600;700;800;900&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Work+Sans:wght@600;700;900&display=swap"
     rel="stylesheet"
   />
   <!-- Font Awesome 7 Free: the same tag and hash the Content Desk uses, so both apps share one icon set. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=55" />
+  <link rel="stylesheet" href="css/styles.css?v=56" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -74,18 +74,17 @@
       <p class="upd upd--below" id="landing-updated"></p>
     </section>
 
-    <!-- Section view: title + blurb, filter toolbar, count + freshness, feed. -->
+    <!-- Section view: title + one line, Quick Search + sort, the feed. -->
     <div class="results" id="section" hidden>
       <div class="section-head" id="section-head" hidden></div>
       <div class="opp-toolbar" id="opp-toolbar" hidden></div>
       <div class="news-list" id="news-list">
         <p class="state state--loading" role="status">Loading the latest items…</p>
       </div>
-      <!-- The count element moves into the toolbar's sort row on section views
-           (app.js) and back here for search results; the stamp stays below. -->
+      <!-- The count element's parking spot: app.js seats it on the sort row
+           in a section and under the title in search. -->
       <div class="results__meta">
         <p class="results__count" id="news-count" aria-live="polite" role="status"></p>
-        <p class="results__updated" id="news-updated"></p>
       </div>
     </div>
   </main>
@@ -117,7 +116,7 @@
   </footer>
 
   <script src="js/csv.js?v=2"></script>
-  <script src="js/app.js?v=55"></script>
+  <script src="js/app.js?v=56"></script>
   <!-- Cloudflare Web Analytics: visit counts, no cookies. The site token is public by design. -->
   <script
     type="module"

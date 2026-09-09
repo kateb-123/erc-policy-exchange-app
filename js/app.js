@@ -228,7 +228,6 @@ function init(rows, modified) {
             .filter((d) => d && d <= TODAY)
             .reduce((m, d) => (d > m ? d : m), "")
         );
-  $("#news-updated").textContent = stamp ? `Updated ${stamp}` : "";
   $("#landing-updated").textContent = stamp ? `Updated ${stamp}` : "";
 
   buildNav();
@@ -275,11 +274,11 @@ function init(rows, modified) {
   // toolbar is rebuilt by render(), so afterwards we restore focus to the
   // equivalent new button (keyboard users would otherwise be dropped).
   $("#opp-toolbar").addEventListener("click", (e) => {
-    const btn = e.target.closest("[data-sortkey], [data-subtype], [data-archive]");
+    const btn = e.target.closest("[data-sort], [data-subtype], [data-archive]");
     if (!btn) return;
     state.shown = PAGE_SIZE; // any toolbar change starts the list over
-    if (btn.dataset.sortkey) {
-      state.sort = { key: btn.dataset.sortkey, dir: btn.dataset.sortdir };
+    if (btn.dataset.sort != null) {
+      state.sort = TOOLBAR_SORTS[state.type][Number(btn.dataset.sort)] || null;
     } else if (btn.dataset.archive != null) {
       // Archive is a view switch, so the sub-category filter starts fresh
       // (fresh and archived research can have different sub-category mixes).
@@ -295,17 +294,14 @@ function init(rows, modified) {
     render();
     writeURL();
     const again = $("#opp-toolbar").querySelector(
-      btn.dataset.sortkey
-        ? `[data-sortkey="${btn.dataset.sortkey}"][data-sortdir="${btn.dataset.sortdir}"]`
+      btn.dataset.sort != null
+        ? `[data-sort="${btn.dataset.sort}"]`
         : btn.dataset.archive != null
           ? "[data-archive]"
           : `[data-subtype="${CSS.escape(btn.dataset.subtype)}"]`
     );
     if (again && !again.disabled) again.focus();
   });
-
-  // Re-measure the sticky toolbar when the viewport changes (it can re-wrap).
-  window.addEventListener("resize", syncToolbarHeight);
 
   // Mobile hamburger: toggles the collapsed nav panel (CSS shows the button
   // and hides the links only under the mobile breakpoint).
@@ -535,28 +531,29 @@ const SUBTYPE_ORDER = {
   opportunity: ["call for proposals", "fellowships & programs", "funding & grants"],
 };
 
-// ERC's own + Texas subtypes always wear the solid-border Aggie-maroon pill
-// (Kate's rule); everything else takes a fixed hue from the table below, so a
-// subtype keeps its colour wherever it appears. Within any one tab the hues
-// are distinct; a subtype missing from the table falls back to the old cycle.
-const MAROON_SUBS = new Set(["erc events", "erc research", "texas"]);
+// Tag colours (Claude Design handoff, Sep 2026): maroon for ERC's own and
+// Texas, then teal / navy / gold per subtype, so a subtype keeps its colour
+// wherever it appears. A subtype missing here wears teal.
 const SUBTYPE_COLOR = {
   // Research
-  "working paper": "tag--c0", // navy
-  "peer-reviewed": "tag--c2", // teal
-  report: "tag--c3", // purple
+  "erc research": "tag--maroon",
+  "peer-reviewed": "tag--teal",
+  "working paper": "tag--navy",
+  report: "tag--gold",
   // Events
-  "webinar-online": "tag--c0",
-  webinar: "tag--c0",
-  online: "tag--c0",
-  "off-campus": "tag--c3",
-  "texas a&m": "tag--c4", // orange
-  // Headlines
-  national: "tag--c0",
+  "erc events": "tag--maroon",
+  "texas a&m": "tag--maroon",
+  "webinar-online": "tag--teal",
+  webinar: "tag--teal",
+  online: "tag--teal",
+  "off-campus": "tag--navy",
   // Opportunities
-  "funding & grants": "tag--c2",
-  "fellowships & programs": "tag--c1", // gold
-  "call for proposals": "tag--c4",
+  "funding & grants": "tag--teal",
+  "fellowships & programs": "tag--gold",
+  "call for proposals": "tag--navy",
+  // Headlines
+  texas: "tag--maroon",
+  national: "tag--teal",
 };
 function sortSubtypes(subs, type) {
   const order = SUBTYPE_ORDER[(type || "").toLowerCase()] || [];
@@ -609,15 +606,21 @@ function filter() {
   return out;
 }
 
-// The sort in effect: the user's chosen action, or the tab's first toolbar
-// option (soonest-first for Upcoming Events, newest-first everywhere else).
+// The sort in effect: the user's chosen action, or the tab's first option
+// (closing soon for Opportunities, soonest for Events, newest elsewhere).
 function activeSort() {
   return state.sort || TOOLBAR_SORTS[state.type][0];
 }
 
 function sortComparator() {
-  const { key, dir } = activeSort();
+  const { key, dir, first } = activeSort();
   const mult = dir === "asc" ? 1 : -1;
+  // "ERC first" / "Texas first": that subtype on top, newest first within
+  // each half.
+  if (key === "sub") {
+    const top = (it) => ((it.subtype || "").trim().toLowerCase() === first ? 0 : 1);
+    return (a, b) => top(a) - top(b) || (b.date || "").localeCompare(a.date || "");
+  }
   // "Closing soon": firm deadlines ascending (soonest first); rolling / fuzzy /
   // undated ones always fall to the bottom, ordered newest-posted among
   // themselves so the list stays stable.
@@ -652,82 +655,34 @@ function relativeDays(iso, isDeadline) {
   return isDeadline ? `${n} days left` : `in ${n} days`;
 }
 
-// Sort options offered in each tab's button toolbar. Opportunities contrasts
-// posted-date vs deadline; Events and Headlines are chronological.
+// Sort options per section (the first is the default). Opportunities and
+// Events sort by the moment ahead; Research and Headlines can pull ERC's own
+// or Texas to the top.
 const TOOLBAR_SORTS = {
   opportunity: [
-    { label: "Newest posted", key: "date", dir: "desc" },
     { label: "Closing soon", key: "deadline", dir: "asc" },
+    { label: "Newest posted", key: "date", dir: "desc" },
   ],
   event: [
-    { label: "Soonest first", key: "date", dir: "asc" },
-    { label: "Latest first", key: "date", dir: "desc" },
+    { label: "Soonest", key: "date", dir: "asc" },
+    { label: "Newest posted", key: "date", dir: "desc" },
   ],
   headline: [
-    { label: "Newest first", key: "date", dir: "desc" },
-    { label: "Oldest first", key: "date", dir: "asc" },
+    { label: "Newest", key: "date", dir: "desc" },
+    { label: "Texas first", key: "sub", dir: "desc", first: "texas" },
   ],
   research: [
-    { label: "Newest first", key: "date", dir: "desc" },
-    { label: "Oldest first", key: "date", dir: "asc" },
+    { label: "Newest", key: "date", dir: "desc" },
+    { label: "ERC first", key: "sub", dir: "desc", first: "erc research" },
   ],
 };
 
-// Medium icons (Font Awesome) + display labels — shown AFTER the source
-// ("K-12 Dive · [icon] Article") when the CSV's `medium` column is filled.
-// Blank medium = source only, so the column stays optional row by row.
-const MEDIA = {
-  online: { label: "Online", icon: faIcon("globe") },
-  magazine: { label: "Magazine", icon: faIcon("book-open") },
-  newspaper: { label: "Article", icon: faIcon("newspaper") },
-  radio: { label: "Radio", icon: faIcon("radio") },
-  tv: { label: "TV", icon: faIcon("tv") },
-  opinion: { label: "Opinion", icon: faIcon("comment") },
-  blog: { label: "Blog", icon: faIcon("blog") },
-};
-
-// Small icons inside the category pills — FEED ROWS ONLY (the Quick Search
-// pills stay text-only). Keyed by lowercase subtype → a Font Awesome solid
-// icon name (Sep 2026; the earlier hand-drawn SVG set stays in assets/icons/
-// for reference). The icon takes the pill's colour through currentColor.
-// Unknown subtypes simply get no icon, so new CSV categories degrade
-// gracefully.
-const CAT_ICONS = {
-  // Opportunities
-  "call for proposals": "bullhorn",
-  "fellowships & programs": "lightbulb",
-  "funding & grants": "sack-dollar",
-  // Events — ERC Events shares the star with ERC Research (both = "ours").
-  "erc events": "star",
-  "texas a&m": "building-columns",
-  "off-campus": "location-dot",
-  online: "video",
-  webinar: "video",
-  "webinar-online": "video",
-  // Research
-  "erc research": "star",
-  "peer-reviewed": "file-circle-check",
-  report: "file-lines",
-  "working paper": "file-pen",
-  // Headlines. Texas keeps Kate's own outline of the state (no Font Awesome
-  // equivalent in the free set); an object value means "mask this SVG".
-  national: "flag-usa",
-  texas: { svg: "texas.svg" },
-};
-
-// One category-pill icon: a Font Awesome name, or one of Kate's SVGs masked
-// over currentColor so it takes the pill's colour like the others.
-function catIconHTML(icon) {
-  if (!icon) return "";
-  if (typeof icon === "string") return faIcon(icon, "tag__icon");
-  return `<span class="tag__icon tag__icon--svg" ${iconMask("icons/" + icon.svg)} aria-hidden="true"></span>`;
-}
-
-// Per-tab wording for the expanded detail's outbound link.
+// Per-section wording for the way out of an opened summary.
 const DETAIL_LINK_LABEL = {
-  opportunity: "View opportunity",
-  event: "Event details",
-  research: "Read the full paper",
+  opportunity: "Open at the source",
+  event: "Register at the source",
+  research: "Open at the source",
+  headline: "Read at the source",
 };
 
 // Shared helpers for the feed templates.
@@ -771,24 +726,11 @@ const itemTitleLink = (it, ext = false) => {
 const itemDetailLink = (it) => {
   const id = briefId(it);
   if (id)
-    return `<a class="feed-link" href="?brief=${id}" data-brief="${id}">Read the full brief ${faIcon("arrow-up-right-from-square")}</a>`;
+    return `<a class="feed-link" href="?brief=${id}" data-brief="${id}">Read the full brief »</a>`;
   const link = (it.link || "").trim();
   return link
-    ? `<a class="feed-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${DETAIL_LINK_LABEL[state.type] || "Read more"} ${faIcon("arrow-up-right-from-square")}</a>`
+    ? `<a class="feed-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${DETAIL_LINK_LABEL[state.type] || "Read more"} »${NEW_TAB}</a>`
     : "";
-};
-
-// Column labels for the card table's frozen header, per tab.
-// `expand: false` = rows don't expand in place; the row is a straight link to
-// the source (Headlines: the blurb is just a teaser, the article is the point).
-const CARD_HEADERS = {
-  opportunity: { left: "Opportunity", right: "Deadline", expand: true },
-  event: { left: "Event", right: "Date", expand: true },
-  headline: { left: "Headline", right: "Date", expand: false },
-  // Research: authors are the scan-key, so rows run three lines (title /
-  // authors / source · category · date) and the date column moves off the
-  // right edge — no right header label.
-  research: { left: "Research", right: "", expand: true, authors: true },
 };
 
 // "A, B, C, D…" → "A, B, C, et al." for the collapsed row (full list shows in
@@ -802,20 +744,19 @@ function shortAuthors(raw) {
   return { text: names.slice(0, 3).join(", ") + ", et al.", truncated: true };
 }
 
-// Build the card-tab toolbar: a Category group (only when there's more than one
-// sub-category to choose between) and a Sort group of lighter text actions.
+// Build the section toolbar: the Quick Search buttons (one per sub-category,
+// plus Clear and, for Research, Archive), then the count and the sort actions.
 function renderToolbar() {
   const bar = $("#opp-toolbar");
   bar.hidden = false;
   const items = liveItemsOfType(state.type);
   const cur = activeSort();
 
-  // Sort = lighter text actions (not boxed buttons like the category filters).
   const sortHTML = (TOOLBAR_SORTS[state.type] || [])
-    .map((s) => {
-      const active = cur.key === s.key && cur.dir === s.dir;
-      return `<button type="button" class="tsort${active ? " is-active" : ""}" data-sortkey="${s.key}" data-sortdir="${s.dir}" aria-pressed="${active}">${esc(s.label)}</button>`;
-    })
+    .map(
+      (s, i) =>
+        `<button type="button" class="tsort${s === cur ? " is-active" : ""}" data-sort="${i}" aria-pressed="${s === cur}">${esc(s.label)}</button>`
+    )
     .join(`<span class="tsort-sep" aria-hidden="true">·</span>`);
   // No visible "Sort" label — the options are self-describing; the group's
   // aria-label still announces it for assistive tech.
@@ -824,9 +765,8 @@ function renderToolbar() {
       ${sortHTML}
     </div>`;
 
-  // Category filter buttons render on every tab — even with a single
-  // sub-category — so the toolbar structure (SHOW row over SORT row) is
-  // identical as you move between sections.
+  // The category buttons render on every section, even with one sub-category,
+  // so the toolbar's shape is identical as you move between sections.
   const subs = sortSubtypes(distinct("subtype", items), state.type);
   const catBtns = subs
     .map((v) => {
@@ -834,8 +774,8 @@ function renderToolbar() {
       return `<button type="button" class="tbtn${active ? " is-active" : ""}" data-subtype="${esc(v)}" aria-pressed="${active}">${esc(v)}</button>`;
     })
     .join("");
-  // No "All" pill — clicking a category filters, and the quiet Clear text
-  // action beside the pills resets to everything (dimmed until a filter is on).
+  // No "All" button — clicking a category filters, and the quiet Clear text
+  // action beside the buttons resets to everything (dimmed until a filter is on).
   const clearBtn = `<button type="button" class="tclear" data-subtype="all"${
     state.subtype === "all" && !state.archive ? " disabled" : ""
   }>Clear</button>`;
@@ -848,7 +788,7 @@ function renderToolbar() {
       : "";
   const catGroup = `
     <div class="tgroup tgroup--show" role="group" aria-label="Quick search by category">
-      <span class="tgroup__label">Quick Search</span>${catBtns}${clearBtn}${archiveBtn}
+      <span class="tgroup__label">Quick search</span>${catBtns}${clearBtn}${archiveBtn}
     </div>`;
 
   // The count node is persistent (it is the live region screen readers track),
@@ -856,42 +796,22 @@ function renderToolbar() {
   const count = $("#news-count");
   bar.innerHTML = catGroup + sortGroup;
   if (count) bar.querySelector(".tgroup--sort").prepend(count);
-  syncToolbarHeight();
 }
 
-// Publish the sticky toolbar's height as --toolbar-h so the table header can
-// dock directly beneath it (the toolbar wraps to two rows on some tabs).
-function syncToolbarHeight() {
-  const bar = $("#opp-toolbar");
-  document.documentElement.style.setProperty(
-    "--toolbar-h",
-    `${bar && !bar.hidden ? bar.offsetHeight : 0}px`
-  );
-}
-
-// Every tab renders as card rows: category pill above the title, source (and
-// medium / authors / date) below, expanding in place to the full blurb. The
-// right-hand value is the deadline (Opportunities) or the date.
+// Every section renders as rows: the tag above the title, the source and a
+// detail line below (Research: the authors; Events: time · location), the
+// date or deadline at the right beside a chevron that opens the summary in
+// place. Rows without a summary have no chevron; their title is the link.
 function renderFeedCards(results, colorFor, total = results.length) {
   const isOpp = state.type === "opportunity";
-  const expandable = (CARD_HEADERS[state.type] || {}).expand !== false;
-  const cards = results
+  const rows = results
     .map((it, i) => {
-      const link = (it.link || "").trim();
       const source = (it.source || "").trim();
       const subtype = (it.subtype || "").trim();
       const catText = subtype || (it.type || "");
-      // Category = a coloured pill above the title (the .tag palette), with a
-      // small icon when the subtype has one in CAT_ICONS. When this subtype is
-      // the active filter, the tag matches the selected pill's warm grey instead.
-      const catClass =
-        state.subtype !== "all" && subtype === state.subtype
-          ? "tag--selected"
-          : colorFor[subtype] || "tag--c0";
-      const catIcon = CAT_ICONS[catText.trim().toLowerCase()] || "";
-      const catHTML = `<div class="feed-item__cat"><span class="tag ${catClass}">${catIconHTML(catIcon)}${esc(catText)}</span></div>`;
+      const catHTML = `<div class="feed-item__cat"><span class="tag ${colorFor[subtype] || "tag--teal"}">${esc(catText)}</span></div>`;
       const detailId = `feed-detail-${i}`;
-      // Right column: Opportunities show the deadline; Events show the event date.
+      // The right side: Opportunities show the deadline, everything else its date.
       const rv = isOpp
         ? parseDeadline(it.deadline)
         : { label: it.date ? formatDate(it.date) : "", firm: !!it.date, iso: it.date || "" };
@@ -900,173 +820,72 @@ function renderFeedCards(results, colorFor, total = results.length) {
       // dates. Headlines and research carry a publication date, so a fresh
       // item there is just fresh, not "closing soon".
       const hasMomentAhead = isOpp || state.type === "event";
-      const soon =
-        hasMomentAhead && rv.firm && rv.iso >= TODAY && daysUntil(rv.iso) <= 14
-          ? " feed-deadline--soon"
-          : "";
+      const soon = hasMomentAhead && rv.firm && rv.iso >= TODAY && daysUntil(rv.iso) <= 14;
       const soonText = soon ? relativeDays(rv.iso, isOpp) : "";
-      const deadlineHTML = rv.label
-        ? `<span class="feed-deadline${soon}">${esc(rv.label)}${
+      const dateHTML = rv.label
+        ? `<span class="feed-date">${esc(rv.label)}${
             soonText
-              ? `<span class="feed-deadline__days"> · ${esc(soonText)}</span><span class="sr-only"> closing soon</span>`
+              ? `<span class="feed-date__soon"> · ${esc(soonText)}</span><span class="sr-only"> closing soon</span>`
               : ""
           }</span>`
         : "";
-      const titleHTML = itemTitleLink(it, expandable);
-      const linkHTML = itemDetailLink(it);
-      // Optional second action: a "View infographic" button when the CSV's
-      // `infographic` cell holds a link. A Drive link opens in the in-app
-      // viewer (like the brief); any other link opens in a new tab.
+      const titleHTML = itemTitleLink(it, true);
+      // Research: the authors, truncated ("…et al.") while the row is closed;
+      // the same line un-truncates in place on open, so nothing jumps around.
+      let metaHTML = "";
+      if (state.type === "research") {
+        const a = shortAuthors((it.authors || "").trim());
+        if (a.text)
+          metaHTML = a.truncated
+            ? `<div class="feed-item__meta"><span class="authors-short">${esc(a.text)}</span><span class="authors-full">${esc(it.authors)}</span></div>`
+            : `<div class="feed-item__meta">${esc(a.text)}</div>`;
+      } else if (state.type === "event") {
+        // time · location, so a reader can pick a webinar without opening rows.
+        const when = [(it.time || "").trim(), (it.location || "").trim()].filter(Boolean).map(esc).join(SEP);
+        if (when) metaHTML = `<div class="feed-item__meta">${when}</div>`;
+      }
+      // The summary: the blurb, the way out to the source (or a brief's in-app
+      // viewer), and an infographic when the sheet's `infographic` cell holds
+      // a link (a Drive link opens in the viewer, any other in a new tab).
       const infographic = (it.infographic || "").trim();
       const igId = driveId(infographic);
       const infographicHTML = infographic
         ? igId
-          ? `<a class="feed-link" href="?brief=${igId}" data-brief="${igId}" data-brief-title="${esc(it.headline)} infographic">View infographic ${faIcon("arrow-up-right-from-square")}</a>`
-          : `<a class="feed-link" href="${esc(infographic)}" target="_blank" rel="noopener noreferrer">View infographic ${faIcon("arrow-up-right-from-square")}</a>`
+          ? `<a class="feed-link" href="?brief=${igId}" data-brief="${igId}" data-brief-title="${esc(it.headline)} infographic">View infographic »</a>`
+          : `<a class="feed-link" href="${esc(infographic)}" target="_blank" rel="noopener noreferrer">View infographic »${NEW_TAB}</a>`
         : "";
-      const actionsHTML =
-        linkHTML || infographicHTML
-          ? `<div class="feed-actions">${linkHTML}${infographicHTML}</div>`
+      const actions = [itemDetailLink(it), infographicHTML].filter(Boolean).join("");
+      const blurb = (it.blurb || "").trim();
+      const detailHTML =
+        blurb || actions
+          ? `<div class="feed-item__detail" id="${detailId}" hidden>${
+              blurb ? `<p class="feed-detail__blurb">${esc(blurb)}</p>` : ""
+            }${actions ? `<div class="feed-actions">${actions}</div>` : ""}</div>`
           : "";
-      // Events and Opportunities lead their expanded detail with a standardized
-      // facts panel beside the summary (two columns). Each fact renders only
-      // when its CSV cell is filled, so sparse rows degrade gracefully.
-      const fact = (label, valueHTML) =>
-        valueHTML
-          ? `<div class="feed-fact"><dt class="feed-fact__label">${label}</dt><dd class="feed-fact__value">${valueHTML}</dd></div>`
-          : "";
-      const actionLink = (label) =>
-        link
-          ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${label} ${faIcon("arrow-up-right-from-square")}</a>`
-          : "";
-      let factsHTML = "";
-      if (state.type === "event") {
-        factsHTML = `<dl class="feed-facts">${
-          fact("Date", it.date ? esc(formatDate(it.date)) : "") +
-          fact("Time", esc((it.time || "").trim())) +
-          fact("Location", esc((it.location || "").trim())) +
-          fact("Register", actionLink("Event page"))
-        }</dl>`;
-      } else if (isOpp) {
-        // Deadline mirrors the collapsed row; Topic surfaces the CSV `topic`
-        // (otherwise unshown); Apply is the actionable link.
-        factsHTML = `<dl class="feed-facts">${
-          fact("Deadline", rv.label ? esc(rv.label.replace(/^Due /, "")) : "") +
-          fact("Topic", esc((it.topic || "").trim())) +
-          fact("Apply", actionLink("Application page"))
-        }</dl>`;
-      }
-      // Metadata line under the title: source · [icon] medium label (the
-      // category rides in the pill above the title now). Both icon and label
-      // come from the optional `medium` column; blank medium = source only.
-      // Events add time · location here, so a reader can pick a webinar they
-      // can attend without expanding every row.
-      const med = MEDIA[(it.medium || "").trim().toLowerCase()];
-      const mediumHTML = med
-        ? `${SEP}<span class="feed-medium-type"><span class="feed-medium" aria-hidden="true">${med.icon}</span>${esc(med.label)}</span>`
+      const toggleHTML = detailHTML
+        ? `<button type="button" class="feed-expand" aria-expanded="false" aria-controls="${detailId}" aria-label="Show details">${chevronIcon()}</button>`
         : "";
-      const whenWhere =
-        state.type === "event"
-          ? [(it.time || "").trim(), (it.location || "").trim()]
-              .filter(Boolean)
-              .map((v) => `<span class="feed-medium-type">${esc(v)}</span>`)
-              .join(SEP)
-          : "";
-      const metaHTML = [source ? `<span class="feed-source">${esc(source)}</span>${mediumHTML}` : "", whenWhere]
-        .filter(Boolean)
-        .join(SEP);
-      const metaDivHTML = metaHTML
-        ? `<div class="feed-item__meta">${metaHTML}</div>`
-        : "";
-      // Research: three-line row — title / authors / source · category · date.
-      // The caret is the only thing on the right; the full author list rides in
-      // the expanded detail when the collapsed line is truncated.
-      if ((CARD_HEADERS[state.type] || {}).authors) {
-        // Truncated ("…et al.") when collapsed; the same line un-truncates in
-        // place on expand (CSS swaps the spans), so nothing jumps around.
-        const a = shortAuthors((it.authors || "").trim());
-        const authorsHTML = a.text
-          ? a.truncated
-            ? `<div class="feed-item__authors"><span class="authors-short">${esc(a.text)}</span><span class="authors-full">${esc(it.authors)}</span></div>`
-            : `<div class="feed-item__authors">${esc(a.text)}</div>`
-          : "";
-        const line3 = [
-          metaHTML,
-          it.date
-            ? `<span class="feed-meta-date">${formatDate(it.date)}</span>`
-            : "",
-        ]
-          .filter(Boolean)
-          .join(SEP);
-        // feed-item--caret-only: the right cell holds just the chevron, so on
-        // phones it tucks into the row's top-right corner instead of taking a line.
-        return `
-          <li class="feed-item feed-item--caret-only" data-expanded="false">
-            <div class="feed-item__row">
-              <div class="feed-item__body">
-                ${catHTML}
-                <div class="feed-item__title">${titleHTML}</div>
-                ${authorsHTML}
-                ${line3 ? `<div class="feed-item__meta">${line3}</div>` : ""}
-              </div>
-              <div class="feed-cell--due">
-                <button type="button" class="feed-expand" aria-expanded="false" aria-controls="${detailId}" aria-label="Show abstract">${chevronIcon()}</button>
-              </div>
-            </div>
-            <div class="feed-item__detail" id="${detailId}" hidden>
-              <h3 class="feed-detail__label">Abstract</h3>
-              <p class="feed-detail__blurb">${esc(it.blurb)}</p>
-              ${actionsHTML}
-            </div>
-          </li>`;
-      }
-      // Non-expandable tabs (Headlines): no caret, no detail — the whole row is
-      // a straight link to the source (data-href picked up by the delegated listener).
-      if (!expandable) {
-        return `
-          <li class="feed-item feed-item--link"${link ? ` data-href="${esc(link)}"` : ""}>
-            <div class="feed-item__row">
-              <div class="feed-item__body">
-                ${catHTML}
-                <div class="feed-item__title">${titleHTML}</div>
-                ${metaDivHTML}
-              </div>
-              <div class="feed-cell--due">
-                ${deadlineHTML}
-                ${link ? `${faIcon("arrow-up-right-from-square", "feed-goto")}` : ""}
-              </div>
-            </div>
-          </li>`;
-      }
       return `
         <li class="feed-item" data-expanded="false">
           <div class="feed-item__row">
             <div class="feed-item__body">
               ${catHTML}
-              <div class="feed-item__title">${titleHTML}</div>
-              ${metaDivHTML}
+              <h3 class="feed-item__title">${titleHTML}</h3>
+              ${source ? `<div class="feed-item__source">${esc(source)}</div>` : ""}
+              ${metaHTML}
             </div>
-            <div class="feed-cell--due">
-              ${deadlineHTML}
-              <button type="button" class="feed-expand" aria-expanded="false" aria-controls="${detailId}" aria-label="Show details">${chevronIcon()}</button>
-            </div>
-          </div>
-          <div class="feed-item__detail${factsHTML ? " feed-item__detail--cols" : ""}" id="${detailId}" hidden>
-            ${factsHTML}
-            <div class="feed-detail__main">
-              <p class="feed-detail__blurb">${esc(it.blurb)}</p>
-              ${factsHTML ? "" : actionsHTML}
+            <div class="feed-item__side">
+              ${dateHTML}
+              ${toggleHTML}
             </div>
           </div>
+          ${detailHTML}
         </li>`;
     })
     .join("");
-  // No column-header bar: the section title + the per-row category pills carry
-  // the context, and each date labels itself ("Due …"). Keeps one maroon band
-  // (the masthead) instead of two competing ones.
   return `
-    <div class="feed feed--opp">
-      <ul class="feed__list" role="list">${cards}</ul>
+    <div class="feed">
+      <ul class="feed__list" role="list">${rows}</ul>
       ${showMoreHTML(total)}
     </div>`;
 }
@@ -1089,7 +908,6 @@ function showMoreHTML(total) {
 // it has aged out of the fresh feed, not out of the site.
 function renderSearch() {
   $("#opp-toolbar").hidden = true;
-  syncToolbarHeight();
   const q = state.q.trim();
   // Search uses the same head as a section: a title, then the count where the
   // description line would be (no toolbar, so the count lives here).
@@ -1137,13 +955,13 @@ function renderSearch() {
         .filter(Boolean)
         .join(SEP);
       return `
-        <li class="feed-item feed-item--link feed-item--caret-only"${link ? ` data-href="${esc(link)}"` : ""}>
+        <li class="feed-item feed-item--link"${link ? ` data-href="${esc(link)}"` : ""}>
           <div class="feed-item__row">
             <div class="feed-item__body">
-              <div class="feed-item__title">${titleHTML}</div>
+              <h3 class="feed-item__title">${titleHTML}</h3>
               <div class="feed-item__meta">${meta}</div>
             </div>
-            <div class="feed-cell--due">
+            <div class="feed-item__side">
               ${link ? `${faIcon("arrow-up-right-from-square", "feed-goto")}` : ""}
             </div>
           </div>
@@ -1151,10 +969,8 @@ function renderSearch() {
     })
     .join("");
 
-  // No header bar: the section head above carries the title and count, as on
-  // every other list.
   list.innerHTML = `
-    <div class="feed feed--opp">
+    <div class="feed">
       <ul class="feed__list" role="list">${rows}</ul>
       ${showMoreHTML(results.length)}
     </div>`;
@@ -1171,7 +987,6 @@ function renderBrief() {
   const head = $("#section-head");
   if (head) head.hidden = true;
   $("#opp-toolbar").hidden = true;
-  syncToolbarHeight();
   $("#news-count").textContent = "";
   $("#news-list").innerHTML = `
     <div class="brief">
@@ -1265,22 +1080,13 @@ function render() {
 
   renderToolbar();
 
-  // Give each sub-category in the active tab its own pill colour (palette in
-  // styles.css; MAROON_SUBS always wear the maroon pill).
-  const tabSubs = sortSubtypes(
-    distinct(
-      "subtype",
-      state.items.filter((it) => (it.type || "").toLowerCase() === state.type)
-    ),
-    state.type
-  );
+  // Each sub-category's tag colour (SUBTYPE_COLOR; unknown ones wear teal).
   const colorFor = {};
-  let ci = 0;
-  tabSubs.forEach((s) => {
-    const key = s.trim().toLowerCase();
-    colorFor[s] = MAROON_SUBS.has(key)
-      ? "tag--maroon"
-      : SUBTYPE_COLOR[key] || `tag--c${ci++ % 5}`;
+  distinct(
+    "subtype",
+    state.items.filter((it) => (it.type || "").toLowerCase() === state.type)
+  ).forEach((s) => {
+    colorFor[s] = SUBTYPE_COLOR[s.trim().toLowerCase()] || "tag--teal";
   });
 
   if (results.length === 0) {
@@ -1299,9 +1105,9 @@ function render() {
   );
 }
 
-// Toggle one item's detail via its caret button (the accessible expand
-// control): data-expanded drives the row's collapsed/expanded styling, and the
-// detail region named by aria-controls shows/hides.
+// Toggle one item's summary via its chevron button (the accessible expand
+// control): data-expanded drives the row's open styling, and the detail
+// region named by aria-controls shows/hides.
 function toggleDetail(caretBtn) {
   const expanded = caretBtn.getAttribute("aria-expanded") === "true";
   caretBtn.setAttribute("aria-expanded", String(!expanded));
