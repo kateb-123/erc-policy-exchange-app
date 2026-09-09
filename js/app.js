@@ -58,7 +58,6 @@ const NEWS_TABS = [
 ];
 
 // Home icon for the top nav.
-const HOME_ICON = faIcon("house");
 
 // Today (YYYY-MM-DD). Upcoming Events drop off automatically once their date
 // passes, so the feed stays current with no manual pruning.
@@ -374,30 +373,28 @@ function init(rows, modified) {
 /* ------------------------------------------------------------
  * Top navigation + landing
  * ------------------------------------------------------------ */
-// Build the top nav strip: Home + the four sections.
+// Build the top bar's section links. The site title beside them (static in
+// index.html) is the Home link.
 function buildNav() {
   const el = $("#topnav");
   // Real links: every view has a URL, so middle-click, "open in new tab" and
   // copy-link all work, and screen readers hear "link". A plain click is
   // intercepted for the in-page route.
-  const home = `
-    <a class="topnav__link topnav__home" href="?" data-view="home">
-      <span class="topnav__icon" aria-hidden="true">${HOME_ICON}</span>Home
-    </a>`;
-  // Section links are text-only; Home keeps its icon (it reads as the one
-  // utility control in the row).
-  const sections = NEWS_TABS.map(
+  el.innerHTML = NEWS_TABS.map(
     (t) => `
     <a class="topnav__link" href="?type=${t.value}" data-type="${t.value}">${esc(t.nav)}</a>`
   ).join("");
-  el.innerHTML = home + sections;
 
   el.addEventListener("click", (e) => {
     const link = e.target.closest(".topnav__link");
     if (!link || modifiedClick(e)) return;
     e.preventDefault();
-    if (link.dataset.view === "home") setHome();
-    else if (link.dataset.type) setType(link.dataset.type);
+    setType(link.dataset.type);
+  });
+  $(".topnav__brand").addEventListener("click", (e) => {
+    if (modifiedClick(e)) return;
+    e.preventDefault();
+    setHome();
   });
 }
 
@@ -437,19 +434,20 @@ function countLabel(type) {
   return `${n} ${COUNT_WORD[type] || "items"}`;
 }
 
-// Highlight the active top-nav link (none while searching).
+// Highlight the active section link (none on the landing or while
+// searching). The site title is the Home link: on the landing it carries
+// aria-current, with no visual change.
 function updateNavActive() {
+  const inSection = state.view !== "search" && state.view !== "home";
   $$("#topnav .topnav__link").forEach((b) => {
-    const active =
-      state.view === "search"
-        ? false
-        : state.view === "home"
-        ? b.dataset.view === "home"
-        : b.dataset.type === state.type;
+    const active = inSection && b.dataset.type === state.type;
     b.classList.toggle("is-active", active);
     if (active) b.setAttribute("aria-current", "page");
     else b.removeAttribute("aria-current");
   });
+  const brand = $(".topnav__brand");
+  if (state.view === "home") brand.setAttribute("aria-current", "page");
+  else brand.removeAttribute("aria-current");
 }
 
 // Open a section. Sub-category is category-specific, so it resets; navigating

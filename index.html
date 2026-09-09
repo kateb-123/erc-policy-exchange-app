@@ -25,25 +25,21 @@
   <!-- Font Awesome 7 Free: the same tag and hash the Content Desk uses, so both apps share one icon set. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=52" />
+  <link rel="stylesheet" href="css/styles.css?v=53" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <!-- Masthead: just the title (doubles as a Home link). The logo + contact
-       links live in the footer now. -->
-  <header class="site-header">
-    <div class="site-header__inner">
-      <h1 class="site-header__title">
-        <a href="?" aria-label="ERC Policy Exchange — home">ERC Policy Exchange</a>
-      </h1>
-    </div>
-  </header>
-
-  <!-- Top strip: on the landing it holds just the global search; inside a
-       section it also carries Home + the section links (built by app.js). -->
+  <!-- Top bar (Kate's pick C, Sep 8, 2026): the site title is the h1 and the
+       Home link, then the section links (built by app.js), then the global
+       search. On phones the title and the Menu button share the first row and
+       the search takes the second. The logo + contact links live in the
+       footer. -->
   <nav class="topnav" aria-label="Sections">
     <div class="topnav__in">
+      <h1 class="topnav__title">
+        <a class="topnav__brand" href="?" data-view="home">ERC Policy Exchange</a>
+      </h1>
       <button type="button" class="topnav__menu-btn" id="menu-btn" aria-expanded="false" aria-controls="topnav">
         <i class="fa-solid fa-bars" aria-hidden="true"></i>
         Menu
@@ -63,16 +59,21 @@
   </nav>
 
   <main id="main">
-    <!-- Landing page (home view): intro + section cards. -->
+    <!-- Landing page (home view): hero + section cards. -->
     <section class="landing" id="landing" aria-label="Welcome" hidden>
-      <div class="intro">
-        <h2 class="intro__title" tabindex="-1" data-focus-target>Howdy! Welcome to the ERC Policy Exchange</h2>
-        <p class="intro__text">
-          Browse through the latest research, upcoming events, opportunities,
-          and education headlines. Curated by the
-          <a href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener"><strong>Texas A&amp;M Education Research Center</strong></a>.
-        </p>
-        <p class="intro__updated" id="landing-updated"></p>
+      <!-- Hero: the logo slot beside the welcome text. The slot shows a
+           placeholder until the Exchange has a logo. -->
+      <div class="hero">
+        <div class="hero__logo" aria-hidden="true"><span>Logo<br />placeholder</span></div>
+        <div class="intro">
+          <h2 class="intro__title" tabindex="-1" data-focus-target>Howdy! Welcome to the ERC Policy Exchange</h2>
+          <p class="intro__text">
+            Browse through the latest research, upcoming events, opportunities,
+            and education headlines. Curated by the
+            <a href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener"><strong>Texas A&amp;M Education Research Center</strong></a>.
+          </p>
+          <p class="intro__updated" id="landing-updated"></p>
+        </div>
       </div>
       <div class="cards cards--4" id="landing-cards"></div>
     </section>
@@ -116,7 +117,7 @@
   </footer>
 
   <script src="js/csv.js?v=2"></script>
-  <script src="js/app.js?v=52"></script>
+  <script src="js/app.js?v=53"></script>
   <!-- Cloudflare Web Analytics: visit counts, no cookies. The site token is public by design. -->
   <script
     type="module"
