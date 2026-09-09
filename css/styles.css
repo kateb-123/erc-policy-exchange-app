@@ -312,8 +312,9 @@ a:hover {
 .hero__text a:hover {
   text-decoration: underline;
 }
-.hero__text + .hero__text {
-  margin-top: 12px;
+/* The share line sits under the cards, tucked into their bottom padding. */
+.landing__share {
+  margin: -24px 0 0;
 }
 .cards {
   display: grid;
@@ -385,11 +386,11 @@ a:hover {
   font-size: 20px;
   color: var(--teal);
 }
-/* The freshness line under the cards, tucked into their bottom padding. */
+/* The freshness line, last on the landing. */
 .upd--below {
   font-size: 14px;
   color: var(--g600);
-  margin: -24px 0 48px;
+  margin: 12px 0 48px;
 }
 
 /* ---------- Layout ---------- */
