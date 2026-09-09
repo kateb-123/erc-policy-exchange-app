@@ -27,16 +27,17 @@
   <!-- Font Awesome 7 Free: the same tag and hash the Content Desk uses, so both apps share one icon set. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=60" />
+  <link rel="stylesheet" href="css/styles.css?v=61" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
   <!-- Top bar (Claude Design handoff, Sep 9, 2026): the ERC mark + site title
        is the h1 and the Home link, then the section links (built by app.js);
-       on the right, Share an item and About the ERC over the global search.
-       On phones the title and the Menu button share the first row, the links
-       open in a list under them, and the search takes the last row. -->
+       Share an item and About the ERC sit at the right. The global search
+       lives in the white strip under the bar. On phones the title and the
+       Menu button share the first row and every link opens in a list under
+       them. -->
   <header class="topnav">
     <div class="topnav__in">
       <h1 class="topnav__title">
@@ -52,19 +53,24 @@
           <a class="topnav__link" href="share/" data-label="Share an item">Share an item</a>
           <a class="topnav__link" href="about/" data-label="About the ERC">About the ERC</a>
         </nav>
-        <div class="topnav__search">
-          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-          <input
-            type="search"
-            id="global-search"
-            placeholder="Search everything…"
-            aria-label="Search all sections"
-            autocomplete="off"
-          />
-        </div>
       </div>
     </div>
   </header>
+  <!-- The search strip (Kate, Sep 9): white, under the bar, the box flush right. -->
+  <div class="subbar">
+    <div class="subbar__in">
+      <div class="subbar__search">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input
+          type="search"
+          id="global-search"
+          placeholder="Search everything…"
+          aria-label="Search all sections"
+          autocomplete="off"
+        />
+      </div>
+    </div>
+  </div>
 
   <main id="main">
     <!-- Landing page (home view): the welcome text, the four section cards,
@@ -125,7 +131,7 @@
   </footer>
 
   <script src="js/csv.js?v=2"></script>
-  <script src="js/app.js?v=59"></script>
+  <script src="js/app.js?v=60"></script>
   <!-- Cloudflare Web Analytics: visit counts, no cookies. The site token is public by design. -->
   <script
     type="module"

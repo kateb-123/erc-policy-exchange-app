@@ -503,7 +503,7 @@ function setTitle() {
     title = `${it ? it.headline : state.briefTitle || "ERC Research"} · ${SITE_NAME}`;
   } else if (state.view === "section") {
     const tab = NEWS_TABS.find((x) => x.value === state.type);
-    const archive = state.type === "research" && state.archive ? " — Archive" : "";
+    const archive = state.type === "research" && state.archive ? ": Archive" : "";
     title = `${tab ? tab.label : SITE_NAME}${archive} · ${SITE_NAME}`;
   }
   document.title = title;
@@ -1062,7 +1062,7 @@ function render() {
     head.hidden = !headTab;
     if (headTab) {
       head.innerHTML = `<h2 class="section-head__title" tabindex="-1" data-focus-target>${esc(headTab.label)}${
-        archiveMode ? " — Archive" : ""
+        archiveMode ? ": Archive" : ""
       }</h2><p class="section-head__desc">${esc(
         archiveMode
           ? "Research published more than 60 days ago. Everything here still shows up in search."

@@ -16,7 +16,7 @@
   />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- The site's one stylesheet: the bar, the footer, and the form live there. -->
-  <link rel="stylesheet" href="../css/styles.css?v=60" />
+  <link rel="stylesheet" href="../css/styles.css?v=61" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
 </head>
 <body>
@@ -44,19 +44,23 @@
           <a class="topnav__link is-active" aria-current="page" href="./" data-label="Share an item">Share an item</a>
           <a class="topnav__link" href="../about/" data-label="About the ERC">About the ERC</a>
         </nav>
-        <form class="topnav__search" action="../" method="get" role="search">
-          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-          <input
-            type="search"
-            name="q"
-            placeholder="Search everything…"
-            aria-label="Search all sections"
-            autocomplete="off"
-          />
-        </form>
       </div>
     </div>
   </header>
+  <div class="subbar">
+    <div class="subbar__in">
+      <form class="subbar__search" action="../" method="get" role="search">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input
+          type="search"
+          name="q"
+          placeholder="Search everything…"
+          aria-label="Search all sections"
+          autocomplete="off"
+        />
+      </form>
+    </div>
+  </div>
 
   <main id="main">
     <div class="section-head">
