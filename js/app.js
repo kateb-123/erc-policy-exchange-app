@@ -36,7 +36,7 @@ const NEWS_TABS = [
     label: "Upcoming Events",
     nav: "Events",
     icon: "aggie/calendar.svg",
-    desc: "Events, lectures, webinars, and conferences, both on and off campus.",
+    desc: "Webinars, forums, and conferences on education policy from organizations across the country.",
   },
   {
     value: "opportunity",
@@ -50,7 +50,7 @@ const NEWS_TABS = [
     label: "Education Headlines",
     nav: "Headlines",
     icon: "aggie/newspaper.svg",
-    desc: "The education news we're following, from Texas and across the country.",
+    desc: "News about Texas and national education policy from outlets across the state and country.",
   },
 ];
 

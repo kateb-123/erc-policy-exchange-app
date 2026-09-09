@@ -625,9 +625,13 @@ main {
   color: var(--maroon);
   font-size: 14px;
 }
+/* The opened row: a maroon edge on the left (Kate, Sep 9), the summary
+   running the row's full width. */
+.feed-item[data-expanded="true"] {
+  box-shadow: inset 4px 0 0 var(--maroon);
+}
 .feed-item__detail {
   margin-top: 16px;
-  max-width: 820px;
 }
 .feed-detail__blurb {
   margin: 0 0 12px;
