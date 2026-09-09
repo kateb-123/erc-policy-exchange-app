@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Join the newsletter · ERC Policy Exchange</title>
+  <meta name="description" content="Join the ERC newsletter: new research, events, opportunities, and education news from the Texas A&amp;M Education Research Center." />
+  <link rel="icon" href="../assets/logo/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="../assets/logo/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="../assets/logo/apple-touch-icon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Work+Sans:wght@600;700;900&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="../css/styles.css?v=68" />
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <header class="topnav">
+    <div class="topnav__in">
+      <h1 class="topnav__title">
+        <a class="topnav__brand" href="../"><span class="topnav__mark" aria-hidden="true"></span>ERC Policy Exchange</a>
+      </h1>
+      <button type="button" class="topnav__menu-btn" id="menu-btn" aria-expanded="false" aria-controls="topnav">
+        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        Menu
+      </button>
+      <nav id="topnav" class="topnav__links" aria-label="Sections">
+        <a class="topnav__link" href="../?type=research" data-label="Research">Research</a>
+        <a class="topnav__link" href="../?type=event" data-label="Events">Events</a>
+        <a class="topnav__link" href="../?type=opportunity" data-label="Opportunities">Opportunities</a>
+        <a class="topnav__link" href="../?type=headline" data-label="Headlines">Headlines</a>
+      </nav>
+      <div class="topnav__side">
+        <nav class="topnav__utils" aria-label="Share and about">
+          <a class="topnav__link" href="../share/" data-label="Share an item">Share an item</a>
+          <a class="topnav__link" href="../about/" data-label="About the ERC">About the ERC</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <div class="subbar">
+    <div class="subbar__in">
+      <form class="subbar__search" action="../" method="get" role="search">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input
+          type="search"
+          name="q"
+          placeholder="Search everything…"
+          aria-label="Search all sections"
+          autocomplete="off"
+        />
+      </form>
+    </div>
+  </div>
+
+  <main id="main">
+    <div class="section-head">
+      <h2 class="section-head__title" tabindex="-1">Join the ERC newsletter</h2>
+      <!-- Kate: your words go here. -->
+      <p class="section-head__desc">New research, events, opportunities, and education news from the Texas A&amp;M Education Research Center, in your inbox.</p>
+    </div>
+    <div id="root"></div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <img
+        class="site-footer__logo"
+        src="../assets/ERC_Horizontal_MaroonText.png"
+        alt="Education Research Center, Texas A&amp;M University"
+      />
+      <div class="site-footer__links">
+        <a class="site-footer__link" href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">
+          <span class="site-footer__icon site-footer__icon--web" aria-hidden="true"></span>
+          <span>erc.cehd.tamu.edu</span>
+        </a>
+        <a class="site-footer__link" href="mailto:erc@tamu.edu">
+          <span class="site-footer__icon site-footer__icon--mail" aria-hidden="true"></span>
+          <span>erc@tamu.edu</span>
+        </a>
+        <a class="site-footer__link" href="../share/">
+          <span class="site-footer__icon site-footer__icon--share" aria-hidden="true"></span>
+          <span>Share an item</span>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+<script>
+// The phone Menu button: same panel as the Exchange's bar.
+(() => {
+  const nav = document.querySelector('.topnav');
+  const btn = document.getElementById('menu-btn');
+  btn.addEventListener('click', () => {
+    const open = nav.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', String(open));
+  });
+})();
+</script>
+<script type="module">
+// The same listserv script the share page's opt-in posts to (erc-tools'
+// listserv-signup page before this one): name, email, and the moment.
+const LISTSERV = 'https://script.google.com/macros/s/AKfycbz8neQVg5opjiTIATq8-xBhTFiA1WaDx8ST6rKAduxz0cf3LYAChNstg_UK1hoizoZ_/exec';
+
+const el = (tag, cls, text) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+};
+const dots = () => {
+  const d = el('span', 'dots');
+  d.append(el('i'), el('i'), el('i'));
+  return d;
+};
+
+const root = document.getElementById('root');
+root.innerHTML = `
+  <form id="f" class="form form--narrow" novalidate>
+    <div class="field">
+      <label for="n">Your name</label>
+      <input id="n" type="text" autocomplete="name">
+    </div>
+    <div class="field">
+      <label for="e">Your email address</label>
+      <input id="e" type="email" autocomplete="email">
+    </div>
+    <div class="btns field--full">
+      <button type="submit" class="btn" id="go">Subscribe »</button>
+    </div>
+    <p class="status field--full" id="stat" aria-live="polite"></p>
+  </form>
+`;
+
+const form = document.getElementById('f');
+const stat = document.getElementById('stat');
+const setStat = (msg, kind) => {
+  stat.className = `status field--full${kind ? ' status--' + kind : ''}`;
+  stat.replaceChildren();
+  if (kind === 'busy' && msg) { stat.append(dots(), document.createTextNode(msg)); }
+  else stat.textContent = msg;
+};
+
+const doneBox = el('div', 'done');
+doneBox.hidden = true;
+root.append(doneBox);
+
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  const name = document.getElementById('n').value.trim();
+  const email = document.getElementById('e').value.trim();
+  const errors = [];
+  if (!name) errors.push('Add your name.');
+  if (!email) errors.push('Add your email address.');
+  else if (!/^\S+@\S+\.\S+$/.test(email)) errors.push("That email address doesn't look right.");
+  if (errors.length) return setStat(errors.join(' '), 'error');
+
+  const go = document.getElementById('go');
+  go.disabled = true;
+  setStat('Sending', 'busy');
+  try {
+    const now = new Date();
+    const date_subscribed = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    await fetch(LISTSERV, {
+      method: 'POST', mode: 'no-cors',
+      body: JSON.stringify({ action: 'listserv_signup', name, email, date_subscribed, time: now.toTimeString().slice(0, 8) }),
+    });
+    form.reset();
+    setStat('');
+    const title = el('h3', '', 'Thank you. You are on the list.');
+    title.tabIndex = -1;
+    doneBox.replaceChildren(title);
+    doneBox.append(el('p', '', 'The next ERC newsletter will come to ' + email + '.'));
+    const back = el('a', 'btn-outline', 'Back to the Exchange');
+    back.href = '../';
+    doneBox.append(back);
+    form.hidden = true; doneBox.hidden = false;
+    title.focus();
+  } catch {
+    setStat("Couldn't reach the server. Check your connection and try again.", 'error');
+  } finally {
+    go.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

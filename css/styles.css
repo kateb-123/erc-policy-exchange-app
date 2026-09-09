@@ -981,6 +981,10 @@ main {
   max-width: 820px;
   padding-bottom: 48px;
 }
+/* The newsletter form: name and email side by side, nothing else. */
+.form--narrow {
+  max-width: 640px;
+}
 .field {
   display: flex;
   flex-direction: column;
@@ -1171,6 +1175,10 @@ main {
 }
 .done p {
   margin: 0 0 24px;
+}
+.done a.btn-outline {
+  display: inline-block;
+  text-decoration: none;
 }
 
 /* ---------- Footer ---------- */
