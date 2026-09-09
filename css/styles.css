@@ -1,13 +1,33 @@
 /* ============================================================
  * styles.css — ERC Policy Exchange
  * ============================================================
- * Texas A&M house style: maroon #500000 / #732f2f, Work Sans +
- * Open Sans, warm panels #faf7f3, cards radius 14px, expandable
- * detail with a maroon left border.
+ * Claude Design handoff (Sep 9, 2026), on the Aggie UX system: maroon
+ * #4F001A bar, Work Sans headings + Open Sans body, teal links and focus,
+ * square buttons and inputs, borders drawn as inset shadows, tinted pill
+ * tags. Blocks not yet moved over still carry the older tokens below.
  * ============================================================ */
 
 :root {
-  --maroon: #500000;
+  /* Aggie UX palette (the handoff's tokens). */
+  --maroon: #4F001A;
+  --maroon-dark: #3C0028;
+  --maroon-muted: #732F2F;
+  --brick: #95463B;
+  --teal: #006483;
+  --gold: #AF8846;
+  --navy: #3A567B;
+  --g100: #F6F6F6;
+  --g200: #EAEAEA;
+  --g400: #D1D1D1;
+  --g600: #535353;
+  --g700: #626262;
+  --g900: #202020;
+  --cream: #FAF7F3;
+  --cream2: #E9E4DC;
+  --cream3: #D6D3C4;
+  --error: #D04343;
+
+  /* Older tokens, still used by the section, feed, and tag blocks. */
   --maroon-soft: #732f2f;
   --maroon-700: #6b1010;
   --maroon-tint: #f2e8e8;
@@ -88,9 +108,8 @@ a:hover {
   text-decoration: underline;
 }
 :focus-visible {
-  outline: 3px solid var(--maroon);
+  outline: 3px solid var(--teal);
   outline-offset: 2px;
-  border-radius: 4px;
 }
 .skip-link {
   position: absolute;
@@ -118,11 +137,13 @@ a:hover {
 }
 
 /* ---------- Top bar ----------
-   One maroon bar (Kate's pick C, Sep 8, 2026): the site title at the left is
-   the h1 and the Home link, then the section links, then the global search.
-   It replaced the two-row masthead + grey strip. */
+   Claude Design handoff (Sep 9, 2026): one maroon bar, 64px tall. The ERC
+   mark + site title at the left is the h1 and the Home link, then the section
+   links (uppercase, the current one in Work Sans 900, no underline), then the
+   global search: a white box that shrinks before anything wraps. */
 .topnav {
   background: var(--maroon);
+  color: #fff;
 }
 .topnav__in {
   max-width: var(--maxw);
@@ -130,18 +151,21 @@ a:hover {
   padding: 0 24px;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  gap: 24px;
+  min-height: 64px;
 }
 .topnav__title {
-  margin: 0 24px 0 0;
-  font-size: 1.28rem;
-  font-weight: 800;
-  letter-spacing: -0.01em;
+  flex-shrink: 0;
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
   line-height: 1.2;
+  letter-spacing: 0.005em;
 }
 .topnav__brand {
-  display: inline-block;
-  padding: 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   color: #fff;
   text-decoration: none;
   white-space: nowrap;
@@ -149,72 +173,90 @@ a:hover {
 }
 .topnav__brand:hover {
   text-decoration: none;
-  opacity: 0.85;
+  opacity: 0.8;
+}
+/* The ERC mark: the simple icon masked over white, crisp at any size. */
+.topnav__mark {
+  display: block;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  background: #fff;
+  -webkit-mask: url("../assets/logo/erc-icon-simple.svg") center / contain no-repeat;
+  mask: url("../assets/logo/erc-icon-simple.svg") center / contain no-repeat;
 }
 .topnav__links {
   display: flex;
-  align-items: center;
-  gap: 26px; /* roomier, the links breathe across the bar */
-  flex-wrap: wrap;
-}
-.topnav__search {
-  margin-left: auto;
-  position: relative;
-  padding: 7px 0;
-}
-.topnav__search i {
-  position: absolute;
-  left: 11px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 14px;
-  color: var(--faint);
-  pointer-events: none;
-}
-.topnav__search input {
-  font-family: var(--sans);
-  font-size: 0.88rem;
-  padding: 8px 12px 8px 34px;
-  border: 1px solid transparent;
-  border-radius: 7px;
-  width: 220px;
-  background: var(--card);
-  color: var(--ink);
-  transition: box-shadow 0.15s ease, width 0.15s ease;
-}
-.topnav__search input::placeholder {
-  color: var(--faint);
-}
-.topnav__search input:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.35);
-  width: 260px;
+  flex-shrink: 0;
+  gap: 28px;
 }
 .topnav__link {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  cursor: pointer;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 0 21px;
   font-family: var(--head);
   font-weight: 600;
-  font-size: 0.92rem;
-  color: rgba(255, 255, 255, 0.8);
-  padding: 13px 15px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 3px solid transparent;
-  transition: color 0.15s ease, background-color 0.15s ease;
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+/* An invisible 900-weight copy of the label reserves the width the current
+   item needs, so its neighbours never shift when the section changes. */
+.topnav__link::after {
+  content: attr(data-label);
+  font-weight: 900;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
 }
 .topnav__link:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  text-decoration: none;
 }
 .topnav__link.is-active {
   color: #fff;
-  border-bottom-color: #fff;
+  font-weight: 900;
 }
-/* The bar is maroon, so the site-wide maroon focus ring would vanish on it. */
+.topnav__search {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 0 1 280px;
+  min-width: 150px;
+  height: 40px;
+  padding: 0 12px;
+  background: #fff;
+  color: var(--g600);
+}
+.topnav__search i {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.topnav__search input {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  border-radius: 0;
+  background: transparent;
+  font-family: var(--sans);
+  font-size: 16px;
+  color: var(--g900);
+}
+.topnav__search input::placeholder {
+  color: var(--g600);
+}
+.topnav__search:focus-within {
+  box-shadow: inset 0 0 0 2px var(--teal);
+}
+/* The bar is maroon, so the site-wide teal focus ring would vanish on it. */
 .topnav :focus-visible {
   outline-color: #fff;
 }
@@ -222,117 +264,118 @@ a:hover {
 .topnav__menu-btn {
   display: none;
 }
+@media (max-width: 1060px) {
+  .topnav__in,
+  .topnav__links {
+    gap: 18px;
+  }
+}
 
 /* ---------- Landing page ---------- */
-/* Kate's pick B (Sep 8, 2026): the welcome text on the left with the ERC icon
-   above it, the four section cards in a 2x2 on the right. Under 1000px the
-   two stack. */
-.landing {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
-  align-items: center;
-  margin-top: 16px;
-}
+/* Claude Design handoff (Sep 9, 2026): the welcome text full width, the four
+   section cards in a 2x2 (one column on phones), then the freshness line.
+   The ERC mark lives in the bar, so phones and desktops share one layout. */
 .hero {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 14px;
+  padding: 48px 0 32px;
 }
-.hero__logo {
-  width: 130px;
-  height: 130px;
-}
-.hero__logo img {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-.intro {
-  margin: 0;
-}
-/* Bigger than the section titles (1.5rem): with the masthead gone this is the
-   landing's one headline. */
-.intro__title {
+.hero__title {
   font-family: var(--head);
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1.2;
   color: var(--maroon);
-  margin: 0 0 14px;
-  letter-spacing: -0.01em;
-}
-.intro__text {
-  font-size: 1.12rem;
-  color: var(--body);
   margin: 0;
-  max-width: 70ch; /* Kate: "a little wider" than the 62ch first cut */
+  text-wrap: pretty;
+}
+.hero__text {
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--g900);
+  margin: 16px 0 0;
+}
+.hero__text a {
+  color: var(--maroon);
+  font-weight: 700;
+  text-decoration: none;
+}
+.hero__text a:hover {
+  text-decoration: underline;
 }
 .cards {
   display: grid;
-  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  padding-bottom: 48px;
 }
-.cards--4 {
-  grid-template-columns: repeat(2, 1fr);
-}
-/* Style D (Kate's pick, Sep 8, 2026): white borderless card on the site's soft
-   shadow, the warm tone kept only in the icon chip. Replaced Style H's flat
-   cream card. */
-.lcard {
-  appearance: none;
-  cursor: pointer;
-  font-family: inherit;
-  border: 0;
-  border-radius: 14px;
-  background: var(--card);
-  box-shadow: var(--shadow);
-  padding: 24px 16px;
-  display: flex;
-  flex-direction: column;
+/* One card = one link: glyph, title over the live count, chevron. Its border
+   is an inset shadow, the handoff's rule for every frame. */
+.card {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 20px;
+  row-gap: 2px;
   align-items: center;
-  text-align: center;
-  gap: 12px;
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  padding: 24px;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--g400);
+  border-radius: 2px;
+  color: var(--g900);
+  text-decoration: none;
+  transition: box-shadow 0.15s ease;
 }
-.lcard:hover {
-  box-shadow: var(--shadow-hover);
-  transform: translateY(-1px);
+.card:hover {
+  box-shadow: inset 0 0 0 2px var(--maroon-dark);
+  text-decoration: none;
 }
-.lcard__icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
-  background: var(--panel);
-  border: 1px solid var(--line-soft);
-  color: var(--maroon);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.card__icon {
+  grid-row: 1 / 3;
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  color: var(--maroon); /* the glyph paints in currentColor (mask rule below) */
 }
-/* The glyph = one of Kate's SVGs masked over the maroon, same trick as the
-   pill icons. */
-.lcard__glyph {
+/* The glyph = an Aggie UX SVG masked over the maroon (app.js sets the file). */
+.card__glyph {
   display: block;
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
+  background: var(--maroon);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  mask-size: contain;
 }
-.lcard__title {
+.card__title {
+  grid-column: 2;
   font-family: var(--head);
-  font-size: 1.08rem;
-  font-weight: 700;
-  color: var(--maroon-700);
-  line-height: 1.25;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--maroon);
+  margin: 0;
+  text-wrap: pretty;
 }
-@media (max-width: 1000px) {
-  .landing {
-    grid-template-columns: 1fr;
-    gap: 32px;
-  }
+.card__count {
+  grid-column: 2;
+  font-size: 16px;
+  color: var(--g600);
+  font-variant-numeric: tabular-nums;
 }
-@media (max-width: 520px) {
-  .cards--4 {
-    grid-template-columns: 1fr;
-  }
+.card__arr {
+  grid-row: 1 / 3;
+  grid-column: 3;
+  font-size: 20px;
+  color: var(--teal);
+}
+/* The freshness line under the cards, tucked into their bottom padding. */
+.upd--below {
+  font-size: 14px;
+  color: var(--g600);
+  margin: -24px 0 48px;
 }
 
 /* ---------- Layout ---------- */
@@ -345,7 +388,12 @@ main {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 30px 24px 80px;
+  padding: 0 24px;
+}
+/* The landing carries its own vertical rhythm (above); the section, search,
+   and brief views keep theirs here until they move to the handoff. */
+main > .results {
+  padding: 30px 0 80px;
 }
 .rail__group + .rail__group {
   margin-top: 20px;
@@ -726,7 +774,7 @@ main {
    currentColor through a CSS mask (set inline from app.js so the URL resolves
    against the page, not this file). */
 .tag__icon--svg,
-.lcard__glyph {
+.card__glyph {
   background-color: currentColor;
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-position: center;
@@ -1045,86 +1093,82 @@ main {
 
 /* ---------- Responsive ---------- */
 @media (max-width: 780px) {
-  /* Top bar on phones: title + Menu button on the first row, the search on
-     its own row under them; the links live in a tap-to-open panel below
+  /* Top bar on phones: the title and the Menu button share the first row,
+     the links open in a list under them, and the search takes the last row
      (closed on navigation by app.js). */
+  .topnav__in {
+    flex-wrap: wrap;
+    gap: 0 16px;
+  }
   .topnav__title {
-    order: 0;
     flex: 1 1 auto;
-    margin-right: 12px;
-    font-size: 1.12rem;
+    min-width: 0;
+    font-size: 18px;
   }
   .topnav__brand {
-    padding: 11px 0;
+    padding: 12px 0;
+  }
+  .topnav__mark {
+    width: 28px;
+    height: 28px;
   }
   .topnav__menu-btn {
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    order: 1;
+    gap: 8px;
+    margin-left: auto;
     appearance: none;
     border: 0;
     background: transparent;
     cursor: pointer;
     font-family: var(--head);
-    font-weight: 700;
-    font-size: 0.92rem;
+    font-weight: 600;
+    font-size: 16px;
     color: #fff;
-    padding: 12px 4px;
-  }
-  .topnav__menu-btn i {
-    font-size: 18px;
-  }
-  .topnav__search {
-    order: 2;
-    flex: 1 1 100%;
-    margin-left: 0;
-    padding: 0 0 10px;
-  }
-  .topnav__search input,
-  .topnav__search input:focus {
-    width: 100%;
+    padding: 8px 0;
   }
   .topnav__links {
-    order: 3;
     display: none;
     flex: 1 1 100%;
     flex-direction: column;
-    align-items: stretch;
     gap: 0;
-    padding: 2px 0 10px;
+    padding-bottom: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
   }
   .topnav.is-open .topnav__links {
     display: flex;
   }
   .topnav__link {
-    padding: 12px 10px;
-    font-size: 1rem;
-    border-bottom: 0;
+    align-items: flex-start;
+    padding: 14px 0 14px 12px;
     border-left: 3px solid transparent;
   }
   .topnav__link.is-active {
     border-left-color: #fff;
-    background: rgba(255, 255, 255, 0.08);
+  }
+  .topnav__search {
+    flex: 1 1 100%;
+    margin: 0 0 12px;
   }
 
-  /* Phones skip the icon (Kate's pick, Sep 8, 2026): the welcome text
-     leads, at the section-title size so the headline stays on two lines,
-     without the Howdy line break. */
-  .landing {
-    margin-top: 4px;
+  /* The landing on phones: a tighter hero, one column of cards. */
+  .hero {
+    padding: 32px 0 24px;
   }
-  .hero__logo {
-    display: none;
+  .hero__title {
+    font-size: 30px;
   }
-  .intro__title {
-    font-size: 1.5rem;
+  .cards {
+    grid-template-columns: 1fr;
+    gap: 16px;
   }
-  .intro__title br {
-    display: none;
+  .card {
+    padding: 16px;
+    column-gap: 16px;
+    row-gap: 4px;
   }
-  .intro__text {
-    font-size: 1.02rem;
+  .card__title {
+    font-size: 20px;
   }
 
   /* The toolbar un-sticks (it eats half a phone screen); the table header
@@ -1169,12 +1213,6 @@ main {
     right: 10px;
     flex: none;
     width: auto;
-  }
-}
-
-@media (max-width: 440px) {
-  .cards--4 {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -1223,25 +1261,6 @@ main {
 }
 
 /* ---------- Sep 2026 usability fixes ---------- */
-/* Nav items and landing cards are real links now (open in new tab, copy link,
-   "link" for screen readers); the classes already carry their look. */
-.topnav__link,
-.topnav__link:hover,
-.lcard,
-.lcard:hover {
-  text-decoration: none;
-}
-/* Landing card: how much is live in the section right now. */
-.lcard__count {
-  font-size: 0.82rem;
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
-}
-.intro__updated {
-  margin: 8px 0 0;
-  font-size: 0.85rem;
-  color: var(--faint);
-}
 /* Outbound marker on expandable rows' titles: the row opens, the title leaves. */
 .feed-ext {
   font-size: 0.7em;

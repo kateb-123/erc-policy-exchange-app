@@ -21,43 +21,38 @@ const NEWS_CSV = "data/news.csv";
 // categories are distinct enough that a mixed "All" view isn't useful).
 // These mirror the ERC newsletter's timely sections.
 // label = full name (feed/section header); nav = short top-nav label;
-// icon = a file under assets/ (Kate's dedicated home-icons set),
-// shown on the landing card via CSS mask — swap the file name to change it.
+// icon = a file under assets/ (the Aggie UX glyphs from the Claude Design
+// handoff), shown on the landing card via CSS mask — swap the file to change it.
 const NEWS_TABS = [
   {
     value: "research",
     label: "New Education Policy Research",
-    lines: ["New Education", "Policy Research"],
     nav: "Research",
-    icon: "home-icons/research.svg",
+    icon: "aggie/book-open.svg",
     desc: "New working papers, peer-reviewed studies, and reports.",
   },
   {
     value: "event",
     label: "Upcoming Events",
-    lines: ["Upcoming", "Events"],
     nav: "Events",
-    icon: "home-icons/events.svg",
+    icon: "aggie/calendar.svg",
     desc: "Events, lectures, webinars, and conferences, both on and off campus.",
   },
   {
     value: "opportunity",
     label: "Opportunities",
     nav: "Opportunities",
-    icon: "home-icons/opportunities.svg",
+    icon: "aggie/hand-holding-dollar.svg",
     desc: "Fellowships, grants, and calls for proposals relevant to education researchers.",
   },
   {
     value: "headline",
     label: "Education Headlines",
-    lines: ["Education", "Headlines"],
     nav: "Headlines",
-    icon: "home-icons/headlines.svg",
+    icon: "aggie/newspaper.svg",
     desc: "The education news we're following, from Texas and across the country.",
   },
 ];
-
-// Home icon for the top nav.
 
 // Today (YYYY-MM-DD). Upcoming Events drop off automatically once their date
 // passes, so the feed stays current with no manual pruning.
@@ -382,7 +377,7 @@ function buildNav() {
   // intercepted for the in-page route.
   el.innerHTML = NEWS_TABS.map(
     (t) => `
-    <a class="topnav__link" href="?type=${t.value}" data-type="${t.value}">${esc(t.nav)}</a>`
+    <a class="topnav__link" href="?type=${t.value}" data-type="${t.value}" data-label="${esc(t.nav)}">${esc(t.nav)}</a>`
   ).join("");
 
   el.addEventListener("click", (e) => {
@@ -401,20 +396,21 @@ function buildNav() {
 // Cmd/Ctrl/Shift-click or middle-click: let the browser open a new tab or window.
 const modifiedClick = (e) => e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1;
 
-// Build the landing-page section cards (icon + title).
+// Build the landing-page section cards: glyph, title over the live count, chevron.
 function buildLanding() {
   const el = $("#landing-cards");
   el.innerHTML = NEWS_TABS.map(
     (t) => `
-    <a class="lcard" href="?type=${t.value}" data-type="${t.value}">
-      <span class="lcard__icon" aria-hidden="true"><span class="lcard__glyph" ${iconMask(t.icon)}></span></span>
-      <span class="lcard__title">${(t.lines || [t.label]).map(esc).join("<br>")}</span>
-      <span class="lcard__count">${esc(countLabel(t.value))}</span>
+    <a class="card" href="?type=${t.value}" data-type="${t.value}">
+      <span class="card__icon" aria-hidden="true"><span class="card__glyph" ${iconMask(t.icon)}></span></span>
+      <h3 class="card__title">${esc(t.label)}</h3>
+      <span class="card__count">${esc(countLabel(t.value))}</span>
+      <i class="fa-solid fa-chevron-right card__arr" aria-hidden="true"></i>
     </a>`
   ).join("");
 
   el.addEventListener("click", (e) => {
-    const card = e.target.closest(".lcard");
+    const card = e.target.closest(".card");
     if (!card || modifiedClick(e)) return;
     e.preventDefault();
     setType(card.dataset.type);
