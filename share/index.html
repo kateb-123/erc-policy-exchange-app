@@ -16,7 +16,7 @@
   />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- The site's one stylesheet: the bar, the footer, and the form live there. -->
-  <link rel="stylesheet" href="../css/styles.css?v=68" />
+  <link rel="stylesheet" href="../css/styles.css?v=69" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
 </head>
 <body>
@@ -107,7 +107,6 @@
 </script>
 <script type="module">
 const DESK = 'https://erc-content-desk.vercel.app';
-const LISTSERV = 'https://script.google.com/macros/s/AKfycbz8neQVg5opjiTIATq8-xBhTFiA1WaDx8ST6rKAduxz0cf3LYAChNstg_UK1hoizoZ_/exec';
 
 const TYPES = [
   ['research', 'New Ed Policy Research'],
@@ -356,14 +355,14 @@ form.addEventListener('submit', async event => {
     const data = await resp.json();
     if (!data.ok) throw new Error((data.errors ?? ['Something went wrong.']).join(' '));
 
-    // Opt-in only: never subscribe anyone who did not tick the box.
+    // Opt-in only: never subscribe anyone who did not tick the box. It goes
+    // through the desk like the submission, so the list's address stays out
+    // of this page; a second token is taken for it.
     if (document.getElementById('optin').checked) {
-      const now = new Date();
-      const date_subscribed = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       try {
-        await fetch(LISTSERV, {
-          method: 'POST', mode: 'no-cors',
-          body: JSON.stringify({ action: 'listserv_signup', name, email, date_subscribed, time: now.toTimeString().slice(0, 8) }),
+        await fetch(`${DESK}/api/listserv`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, turnstile_token: await takeToken() }),
         });
       } catch { /* the submission already landed; the list can wait */ }
     }

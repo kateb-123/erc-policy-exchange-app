@@ -15,7 +15,8 @@
     rel="stylesheet"
   />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="../css/styles.css?v=68" />
+  <link rel="stylesheet" href="../css/styles.css?v=69" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -103,9 +104,10 @@
 })();
 </script>
 <script type="module">
-// The same listserv script the share page's opt-in posts to (erc-tools'
-// listserv-signup page before this one): name, email, and the moment.
-const LISTSERV = 'https://script.google.com/macros/s/AKfycbz8neQVg5opjiTIATq8-xBhTFiA1WaDx8ST6rKAduxz0cf3LYAChNstg_UK1hoizoZ_/exec';
+// The signup goes to the desk, which holds the list's address and checks the
+// Turnstile token before it writes. The address is deliberately not in this
+// page: it used to be, and anyone could append rows to the list by hand.
+const DESK = 'https://erc-content-desk.vercel.app';
 
 const el = (tag, cls, text) => {
   const n = document.createElement(tag);
@@ -134,8 +136,47 @@ root.innerHTML = `
       <button type="submit" class="btn" id="go">Subscribe »</button>
     </div>
     <p class="status field--full" id="stat" aria-live="polite"></p>
+    <div class="cf field--full" id="cf"></div>
   </form>
 `;
+
+// Bot check (Cloudflare Turnstile). The desk refuses this call without a
+// token. Tokens are single-use and expire, so every send takes a fresh one
+// and the widget is reset to produce the next.
+const SITE_KEY = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
+  ? '1x00000000000000000000AA'   // Cloudflare's test key: always passes
+  : '0x4AAAAAAEtQoqQ0BzahOG4t';
+let widgetId = null;
+let token = '';
+let waiting = [];
+function renderTurnstile() {
+  if (widgetId !== null || !window.turnstile) return;
+  widgetId = turnstile.render('#cf', {
+    sitekey: SITE_KEY,
+    appearance: 'interaction-only',
+    callback: t => { token = t; const w = waiting; waiting = []; w.forEach(fn => fn()); },
+    'error-callback': () => { token = ''; },
+    'expired-callback': () => { token = ''; },
+  });
+}
+window.onTurnstileLoad = renderTurnstile;
+renderTurnstile();
+function takeToken() {
+  return new Promise((resolve, reject) => {
+    const take = () => {
+      const t = token; token = '';
+      setTimeout(() => turnstile.reset(widgetId), 0);
+      resolve(t);
+    };
+    if (token) return take();
+    const onToken = () => { clearTimeout(timer); take(); };
+    const timer = setTimeout(() => {
+      waiting = waiting.filter(fn => fn !== onToken);
+      reject(new Error("Couldn't confirm you're a person. Reload the page and try again."));
+    }, 60000);
+    waiting.push(onToken);
+  });
+}
 
 const form = document.getElementById('f');
 const stat = document.getElementById('stat');
@@ -164,12 +205,12 @@ form.addEventListener('submit', async event => {
   go.disabled = true;
   setStat('Sending', 'busy');
   try {
-    const now = new Date();
-    const date_subscribed = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    await fetch(LISTSERV, {
-      method: 'POST', mode: 'no-cors',
-      body: JSON.stringify({ action: 'listserv_signup', name, email, date_subscribed, time: now.toTimeString().slice(0, 8) }),
+    const resp = await fetch(`${DESK}/api/listserv`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, turnstile_token: await takeToken() }),
     });
+    const data = await resp.json();
+    if (!data.ok) throw new Error((data.errors ?? ['Something went wrong.']).join(' '));
     form.reset();
     setStat('');
     const title = el('h3', '', 'Thank you. You are on the list.');
@@ -181,8 +222,8 @@ form.addEventListener('submit', async event => {
     doneBox.append(back);
     form.hidden = true; doneBox.hidden = false;
     title.focus();
-  } catch {
-    setStat("Couldn't reach the server. Check your connection and try again.", 'error');
+  } catch (err) {
+    setStat(err instanceof TypeError ? "Couldn't reach the server. Check your connection." : err.message, 'error');
   } finally {
     go.disabled = false;
   }
