@@ -1065,7 +1065,7 @@ function render() {
         archiveMode ? ": Archive" : ""
       }</h2><p class="section-head__desc">${esc(
         archiveMode
-          ? "Research published more than 60 days ago. Everything here still shows up in search."
+          ? "Research posted more than 60 days ago."
           : headTab.desc
       )}</p>`;
     }
