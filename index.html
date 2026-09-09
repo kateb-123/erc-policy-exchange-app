@@ -15,7 +15,9 @@
   <meta property="og:description" content="New education policy research, upcoming events, opportunities, and education headlines, curated by the Texas A&amp;M Education Research Center." />
   <meta property="og:url" content="https://kateb-123.github.io/erc-policy-exchange/" />
   <meta name="twitter:card" content="summary" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23500000'/%3E%3Ctext x='32' y='45' font-family='Arial,Helvetica,sans-serif' font-size='38' font-weight='800' fill='%23fff' text-anchor='middle'%3EE%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="assets/logo/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="assets/logo/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="assets/logo/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -25,16 +27,16 @@
   <!-- Font Awesome 7 Free: the same tag and hash the Content Desk uses, so both apps share one icon set. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=58" />
+  <link rel="stylesheet" href="css/styles.css?v=60" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
   <!-- Top bar (Claude Design handoff, Sep 9, 2026): the ERC mark + site title
-       is the h1 and the Home link, then the section links (built by app.js),
-       then the global search. On phones the title and the Menu button share
-       the first row, the links open in a list under them, and the search
-       takes the last row. -->
+       is the h1 and the Home link, then the section links (built by app.js);
+       on the right, Share an item and About the ERC over the global search.
+       On phones the title and the Menu button share the first row, the links
+       open in a list under them, and the search takes the last row. -->
   <header class="topnav">
     <div class="topnav__in">
       <h1 class="topnav__title">
@@ -45,15 +47,21 @@
         Menu
       </button>
       <nav id="topnav" class="topnav__links" aria-label="Sections"></nav>
-      <div class="topnav__search">
-        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-        <input
-          type="search"
-          id="global-search"
-          placeholder="Search everything…"
-          aria-label="Search all sections"
-          autocomplete="off"
-        />
+      <div class="topnav__side">
+        <nav class="topnav__utils" aria-label="Share and about">
+          <a class="topnav__link" href="share/" data-label="Share an item">Share an item</a>
+          <a class="topnav__link" href="about/" data-label="About the ERC">About the ERC</a>
+        </nav>
+        <div class="topnav__search">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input
+            type="search"
+            id="global-search"
+            placeholder="Search everything…"
+            aria-label="Search all sections"
+            autocomplete="off"
+          />
+        </div>
       </div>
     </div>
   </header>
@@ -69,6 +77,7 @@
           and education headlines. Curated by the
           <a href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">Texas A&amp;M Education Research Center</a>.
         </p>
+        <p class="hero__text">Have something for the Exchange? <a href="share/">Share an item »</a></p>
       </div>
       <div class="cards" id="landing-cards"></div>
       <p class="upd upd--below" id="landing-updated"></p>
@@ -116,7 +125,7 @@
   </footer>
 
   <script src="js/csv.js?v=2"></script>
-  <script src="js/app.js?v=57"></script>
+  <script src="js/app.js?v=59"></script>
   <!-- Cloudflare Web Analytics: visit counts, no cookies. The site token is public by design. -->
   <script
     type="module"

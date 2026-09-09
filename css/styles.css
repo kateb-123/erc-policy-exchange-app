@@ -116,7 +116,7 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 24px;
-  min-height: 64px;
+  min-height: 128px; /* as tall as the footer (Kate, Sep 9) */
 }
 .topnav__title {
   flex-shrink: 0;
@@ -142,8 +142,8 @@ a:hover {
 /* The ERC mark: the simple icon masked over white, crisp at any size. */
 .topnav__mark {
   display: block;
-  width: 34px;
-  height: 34px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
   background: #fff;
   -webkit-mask: url("../assets/logo/erc-icon-simple.svg") center / contain no-repeat;
@@ -186,13 +186,30 @@ a:hover {
   color: #fff;
   font-weight: 900;
 }
-.topnav__search {
+/* The right side (Kate, Sep 9): Share an item and About the ERC on one line,
+   the search under them, everything flush right. */
+.topnav__side {
   margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 1;
+  min-width: 0;
+}
+.topnav__utils {
+  display: flex;
+  gap: 28px;
+}
+.topnav__utils .topnav__link {
+  padding: 4px 0;
+}
+.topnav__search {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex: 0 1 280px;
-  min-width: 150px;
+  width: 280px;
+  max-width: 100%;
   height: 40px;
   padding: 0 12px;
   background: #fff;
@@ -228,10 +245,28 @@ a:hover {
 .topnav__menu-btn {
   display: none;
 }
-@media (max-width: 1060px) {
-  .topnav__in,
+/* Under 1100px the bar takes two rows: the title and the right side above,
+   the section links in a row under a rule. */
+@media (max-width: 1100px) {
+  .topnav__in {
+    flex-wrap: wrap;
+    min-height: 0;
+    row-gap: 0;
+  }
+  .topnav__title {
+    flex: 1 1 auto;
+    padding: 16px 0;
+  }
+  .topnav__side {
+    padding: 12px 0;
+  }
   .topnav__links {
-    gap: 18px;
+    order: 3;
+    flex: 1 1 100%;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  .topnav__links .topnav__link {
+    padding: 16px 0 13px;
   }
 }
 
@@ -264,6 +299,9 @@ a:hover {
 }
 .hero__text a:hover {
   text-decoration: underline;
+}
+.hero__text + .hero__text {
+  margin-top: 12px;
 }
 .cards {
   display: grid;
@@ -803,6 +841,31 @@ main {
   outline: none;
 }
 
+/* ---------- About the ERC (about/) ---------- */
+/* The section head carries Kate's paragraph; under it the two contact links,
+   then the newsletter and share buttons. */
+.about {
+  max-width: 820px;
+  padding-bottom: 48px;
+}
+.about__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 32px;
+  margin-bottom: 32px;
+}
+.about__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--maroon);
+  font-size: 16px;
+  text-decoration: none;
+}
+.about__link:hover {
+  text-decoration: underline;
+}
+
 /* ---------- Share form (share/) ---------- */
 /* Two columns up to 820px; every field spans both except name and email.
    Inputs are square with a 1px inset outline, 2px teal when focused. */
@@ -1080,11 +1143,13 @@ main {
   .topnav__in {
     flex-wrap: wrap;
     gap: 0 16px;
+    min-height: 0;
   }
   .topnav__title {
     flex: 1 1 auto;
     min-width: 0;
     font-size: 18px;
+    padding: 0;
   }
   .topnav__brand {
     padding: 12px 0;
@@ -1110,6 +1175,7 @@ main {
   }
   .topnav__links {
     display: none;
+    order: 0;
     flex: 1 1 100%;
     flex-direction: column;
     gap: 0;
@@ -1119,7 +1185,8 @@ main {
   .topnav.is-open .topnav__links {
     display: flex;
   }
-  .topnav__link {
+  .topnav__link,
+  .topnav__links .topnav__link {
     align-items: flex-start;
     padding: 14px 0 14px 12px;
     border-left: 3px solid transparent;
@@ -1127,8 +1194,28 @@ main {
   .topnav__link.is-active {
     border-left-color: #fff;
   }
-  .topnav__search {
+  /* Share an item and About the ERC join the open list; the search stays
+     out, full width. */
+  .topnav__side {
     flex: 1 1 100%;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+  }
+  .topnav__utils {
+    display: none;
+    flex-direction: column;
+    gap: 0;
+    padding-bottom: 8px;
+  }
+  .topnav.is-open .topnav__utils {
+    display: flex;
+  }
+  .topnav__utils .topnav__link {
+    padding: 14px 0 14px 12px;
+  }
+  .topnav__search {
+    width: 100%;
     margin: 0 0 12px;
   }
 

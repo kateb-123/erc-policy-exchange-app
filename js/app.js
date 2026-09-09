@@ -365,7 +365,8 @@ function init(rows, modified) {
  * Top navigation + landing
  * ------------------------------------------------------------ */
 // Build the top bar's section links. The site title beside them (static in
-// index.html) is the Home link.
+// index.html) is the Home link; Share an item and About the ERC sit on the
+// right, static too.
 function buildNav() {
   const el = $("#topnav");
   // Real links: every view has a URL, so middle-click, "open in new tab" and
@@ -377,7 +378,7 @@ function buildNav() {
   ).join("");
 
   el.addEventListener("click", (e) => {
-    const link = e.target.closest(".topnav__link");
+    const link = e.target.closest(".topnav__link[data-type]");
     if (!link || modifiedClick(e)) return;
     e.preventDefault();
     setType(link.dataset.type);
@@ -431,7 +432,7 @@ function countLabel(type) {
 // aria-current, with no visual change.
 function updateNavActive() {
   const inSection = state.view !== "search" && state.view !== "home";
-  $$("#topnav .topnav__link").forEach((b) => {
+  $$("#topnav .topnav__link[data-type]").forEach((b) => {
     const active = inSection && b.dataset.type === state.type;
     b.classList.toggle("is-active", active);
     if (active) b.setAttribute("aria-current", "page");

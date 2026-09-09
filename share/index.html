@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Share an item · ERC Policy Exchange</title>
   <meta name="description" content="Share an event, research, opportunity, or headline with the Texas A&amp;M Education Research Center for the ERC newsletter and the Policy Exchange." />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23500000'/%3E%3Ctext x='32' y='45' font-family='Arial,Helvetica,sans-serif' font-size='38' font-weight='800' fill='%23fff' text-anchor='middle'%3EE%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="../assets/logo/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="../assets/logo/favicon-32.png" sizes="32x32" type="image/png" />
+  <link rel="apple-touch-icon" href="../assets/logo/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -14,7 +16,7 @@
   />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- The site's one stylesheet: the bar, the footer, and the form live there. -->
-  <link rel="stylesheet" href="../css/styles.css?v=58" />
+  <link rel="stylesheet" href="../css/styles.css?v=60" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
 </head>
 <body>
@@ -37,16 +39,22 @@
         <a class="topnav__link" href="../?type=opportunity" data-label="Opportunities">Opportunities</a>
         <a class="topnav__link" href="../?type=headline" data-label="Headlines">Headlines</a>
       </nav>
-      <form class="topnav__search" action="../" method="get" role="search">
-        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-        <input
-          type="search"
-          name="q"
-          placeholder="Search everything…"
-          aria-label="Search all sections"
-          autocomplete="off"
-        />
-      </form>
+      <div class="topnav__side">
+        <nav class="topnav__utils" aria-label="Share and about">
+          <a class="topnav__link is-active" aria-current="page" href="./" data-label="Share an item">Share an item</a>
+          <a class="topnav__link" href="../about/" data-label="About the ERC">About the ERC</a>
+        </nav>
+        <form class="topnav__search" action="../" method="get" role="search">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input
+            type="search"
+            name="q"
+            placeholder="Search everything…"
+            aria-label="Search all sections"
+            autocomplete="off"
+          />
+        </form>
+      </div>
     </div>
   </header>
 
