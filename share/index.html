@@ -3,174 +3,103 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Share something — ERC</title>
+  <title>Share an item · ERC Policy Exchange</title>
+  <meta name="description" content="Share an event, research, opportunity, or headline with the Texas A&amp;M Education Research Center for the ERC newsletter and the Policy Exchange." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23500000'/%3E%3Ctext x='32' y='45' font-family='Arial,Helvetica,sans-serif' font-size='38' font-weight='800' fill='%23fff' text-anchor='middle'%3EE%3C/text%3E%3C/svg%3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700;800&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Work+Sans:wght@600;700;900&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- The site's one stylesheet: the bar, the footer, and the form live there. -->
+  <link rel="stylesheet" href="../css/styles.css?v=57" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    body {
-      font-family: 'Open Sans', sans-serif;
-      background: #f6f6f6;
-      color: #3E3E3E;
-      font-size: 0.95rem;
-      line-height: 1.7;
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px;
-    }
-    /* Cover banner — a placeholder in type until the real image lands.
-       Swap the whole .cover block for <img src="form-header.png"> when ready. */
-    .cover { width: 100%; max-width: 560px; margin: 0 0 22px; }
-    .cover .kicker {
-      font-family: 'Work Sans', sans-serif;
-      font-weight: 400;
-      font-size: clamp(1.05rem, 4.4vw, 1.75rem);
-      letter-spacing: 0.02em;
-      color: #7a2222;
-      margin: 0;
-      line-height: 1.1;
-      text-transform: uppercase;
-    }
-    .cover .headline {
-      font-family: 'Work Sans', sans-serif;
-      font-weight: 800;
-      font-size: clamp(1.9rem, 8.2vw, 3.3rem);
-      letter-spacing: -0.01em;
-      color: #500000;
-      margin: 0;
-      line-height: 0.98;
-      text-transform: uppercase;
-    }
-    .submit-card {
-      width: 100%;
-      max-width: 560px;
-      background: #fff;
-      border: 3px solid #500000;
-      box-shadow: 10px 10px 0 #500000;
-      padding: 28px 32px 36px;
-    }
-    h1 {
-      font-family: 'Work Sans', sans-serif;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #500000;
-      margin: 0 0 8px;
-    }
-    .lede { margin: 0 0 22px; }
-    .lede a { color: #500000; font-weight: 600; }
-    .lede a:hover { color: #732F2F; }
-    .field-group { margin-bottom: 20px; }
-    .field-label {
-      font-family: 'Work Sans', sans-serif;
-      font-size: 0.95rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      display: block;
-      margin-bottom: 7px;
-    }
-    .hint { font-weight: 400; font-size: 0.82rem; color: #767676; }
-    .field-input, textarea {
-      font-family: 'Open Sans', sans-serif;
-      font-size: 0.95rem;
-      color: #3E3E3E;
-      width: 100%;
-      border: 1px solid #e2e2e2;
-      border-radius: 4px;
-      padding: 10px 12px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .field-input:focus, textarea:focus {
-      border-color: #500000;
-      box-shadow: 0 0 0 3px rgba(80,0,0,0.08);
-    }
-    textarea { resize: vertical; }
-    fieldset { border: 0; padding: 0; margin: 0 0 20px; }
-    legend {
-      font-family: 'Work Sans', sans-serif;
-      font-weight: 600;
-      padding: 0;
-      margin-bottom: 7px;
-    }
-    .radio { display: block; margin: 4px 0; cursor: pointer; }
-    .radio input { accent-color: #500000; margin-right: 6px; }
-    .optin { display: flex; gap: 9px; align-items: flex-start; margin: 0 0 4px; cursor: pointer; font-size: 0.92rem; }
-    .optin input { accent-color: #500000; margin-top: 5px; flex-shrink: 0; }
-    .img-upload { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-    .btn-outline {
-      font-family: 'Work Sans', sans-serif;
-      font-size: 0.85rem; font-weight: 600;
-      color: #500000; background: #fff;
-      border: 1px solid #500000; border-radius: 4px;
-      padding: 8px 14px; cursor: pointer;
-    }
-    .btn-outline:hover { background: #fbf5f5; }
-    .linkish {
-      font-family: 'Open Sans', sans-serif; font-size: 0.85rem;
-      color: #767676; background: none; border: 0; padding: 0;
-      cursor: pointer; text-decoration: underline;
-    }
-    .img-status { font-size: 0.85rem; color: #767676; display: inline-flex; align-items: center; gap: 8px; }
-    .btn-submit {
-      display: block; width: 100%; max-width: 280px;
-      margin: 26px auto 0;
-      font-family: 'Work Sans', sans-serif;
-      font-size: 0.875rem; font-weight: 800;
-      text-transform: uppercase; letter-spacing: 0.15em;
-      background: #500000; color: #fff;
-      border: 2px solid #500000; border-radius: 6px;
-      padding: 14px 20px; cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-    }
-    .btn-submit:hover:not(:disabled) { background: #3a0000; border-color: #3a0000; }
-    .status { margin: 12px 0 0; text-align: center; font-size: 0.9rem; min-height: 1.4em; }
-    .status-error { color: #c0392b; }
-    .cf { display: flex; justify-content: center; }
-    .dots { display: inline-flex; gap: 5px; vertical-align: middle; margin-right: 8px; }
-    .dots i { width: 8px; height: 8px; border-radius: 50%; background: #a95f5f; display: inline-block; animation: pulse 1.2s ease-in-out infinite; }
-    .dots i:nth-child(2) { animation-delay: .15s; background: #8a3535; }
-    .dots i:nth-child(3) { animation-delay: .3s; background: #500000; }
-    @keyframes pulse { 0%,100% { opacity: .3; } 50% { opacity: 1; } }
-    .done-title {
-      font-family: 'Work Sans', sans-serif; font-size: 1rem;
-      font-weight: 700; color: #500000; margin: 0 0 10px;
-    }
-    .submit-done p { margin: 0 0 6px; }
-    .again-btn {
-      font-family: 'Work Sans', sans-serif; font-size: 0.85rem; font-weight: 600;
-      color: #500000; background: #fff; border: 1px solid #500000;
-      border-radius: 4px; padding: 8px 14px; margin-top: 14px; cursor: pointer;
-    }
-    .again-btn:hover { background: #fbf5f5; }
-    .footer-logo { display: block; width: 220px; margin-top: 28px; }
-    @media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; } }
-  </style>
 </head>
 <body>
-  <div class="cover">
-    <p class="kicker">Education Research Center</p>
-    <p class="headline">Share your work</p>
-  </div>
+  <a class="skip-link" href="#main">Skip to content</a>
 
-  <main class="submit-card">
-    <h1>Share something with the ERC</h1>
-    <p class="lede">Anyone can share, at Texas A&amp;M or beyond. Events, research, opportunities — if it belongs in the ERC newsletter or on the <a href="../">Policy Exchange</a>, send it here. We review everything before it is published.</p>
+  <!-- The same top bar as the Exchange, with plain links back into it (this
+       page has no app.js); the search box hands its query to the home page. -->
+  <header class="topnav">
+    <div class="topnav__in">
+      <h1 class="topnav__title">
+        <a class="topnav__brand" href="../"><span class="topnav__mark" aria-hidden="true"></span>ERC Policy Exchange</a>
+      </h1>
+      <button type="button" class="topnav__menu-btn" id="menu-btn" aria-expanded="false" aria-controls="topnav">
+        <i class="fa-solid fa-bars" aria-hidden="true"></i>
+        Menu
+      </button>
+      <nav id="topnav" class="topnav__links" aria-label="Sections">
+        <a class="topnav__link" href="../?type=research" data-label="Research">Research</a>
+        <a class="topnav__link" href="../?type=event" data-label="Events">Events</a>
+        <a class="topnav__link" href="../?type=opportunity" data-label="Opportunities">Opportunities</a>
+        <a class="topnav__link" href="../?type=headline" data-label="Headlines">Headlines</a>
+      </nav>
+      <form class="topnav__search" action="../" method="get" role="search">
+        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+        <input
+          type="search"
+          name="q"
+          placeholder="Search everything…"
+          aria-label="Search all sections"
+          autocomplete="off"
+        />
+      </form>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="section-head">
+      <h2 class="section-head__title" tabindex="-1">Share an item</h2>
+      <p class="section-head__desc">Anyone can share, at Texas A&amp;M or beyond. Events, research, opportunities, headlines: if it belongs in the ERC newsletter or on the <a href="../">Policy Exchange</a>, send it here. We review everything before it is published.</p>
+    </div>
     <div id="root"></div>
   </main>
-  <img src="erc-logo-maroon.png" alt="Texas A&amp;M University Education Research Center" class="footer-logo" />
 
+  <footer class="site-footer">
+    <div class="site-footer__inner">
+      <img
+        class="site-footer__logo"
+        src="../assets/ERC_Horizontal_MaroonText.png"
+        alt="Education Research Center, Texas A&amp;M University"
+      />
+      <div class="site-footer__links">
+        <a class="site-footer__link" href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">
+          <span class="site-footer__icon site-footer__icon--web" aria-hidden="true"></span>
+          <span>erc.cehd.tamu.edu</span>
+        </a>
+        <a class="site-footer__link" href="mailto:erc@tamu.edu">
+          <span class="site-footer__icon site-footer__icon--mail" aria-hidden="true"></span>
+          <span>erc@tamu.edu</span>
+        </a>
+        <a class="site-footer__link" href="./" aria-current="page">
+          <span class="site-footer__icon site-footer__icon--share" aria-hidden="true"></span>
+          <span>Share an item</span>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+<script>
+// The phone Menu button: same panel as the Exchange's bar.
+(() => {
+  const nav = document.querySelector('.topnav');
+  const btn = document.getElementById('menu-btn');
+  btn.addEventListener('click', () => {
+    const open = nav.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', String(open));
+  });
+})();
+</script>
 <script type="module">
 const DESK = 'https://erc-content-desk.vercel.app';
 const LISTSERV = 'https://script.google.com/macros/s/AKfycbz8neQVg5opjiTIATq8-xBhTFiA1WaDx8ST6rKAduxz0cf3LYAChNstg_UK1hoizoZ_/exec';
 
 const TYPES = [
   ['research', 'New Ed Policy Research'],
-  ['event', 'Event/Webinar'],
+  ['event', 'Event / Webinar'],
   ['opportunity', 'Opportunity'],
   ['other', 'Other'],
 ];
@@ -197,41 +126,48 @@ let picked = '';
 let mediaUrl = '';
 
 root.innerHTML = `
-  <form id="f" novalidate>
-    <div class="field-group">
-      <label class="field-label" for="t">Title</label>
-      <input class="field-input" id="t" type="text" autocomplete="off">
+  <form id="f" class="form" novalidate>
+    <div class="field field--full">
+      <label for="t">Title</label>
+      <input id="t" type="text" autocomplete="off">
     </div>
-    <div class="field-group">
-      <label class="field-label" for="d">Description <span class="hint">(paste whatever you have — dates, abstract, the whole announcement)</span></label>
+    <div class="field field--full">
+      <label for="d">Description <small>(paste whatever you have: dates, abstract, the whole announcement)</small></label>
       <textarea id="d" rows="6"></textarea>
     </div>
-    <div class="field-group">
-      <label class="field-label" for="l">Link</label>
-      <input class="field-input" id="l" type="url" autocomplete="off">
+    <div class="field field--full">
+      <label for="l">Link</label>
+      <input id="l" type="url" placeholder="https://" autocomplete="off">
     </div>
-    <fieldset><legend>Type</legend><div id="types"></div></fieldset>
-    <div class="field-group">
-      <span class="field-label">Media <span class="hint">(optional — a flyer, PDF, or picture)</span></span>
-      <div class="img-upload">
+    <fieldset class="field field--full radios">
+      <legend>Type</legend>
+      <div id="types" class="radios__list"></div>
+    </fieldset>
+    <div class="field field--full">
+      <span class="field__label">Media <small>(optional: a flyer, PDF, or picture)</small></span>
+      <div class="upload">
         <button type="button" class="btn-outline" id="pick">Upload media</button>
-        <button type="button" class="linkish" id="rm" hidden>Remove media</button>
-        <span class="img-status" id="mstat"></span>
+        <button type="button" class="btn-text btn-text--quiet" id="rm" hidden>Remove media</button>
+        <span class="upload__hint" id="mhint">PNG, JPG, or PDF under 2.5 MB</span>
+        <span class="upload__status" id="mstat"></span>
         <input type="file" id="file" accept=".png,.jpg,.jpeg,.gif,.webp,.pdf" hidden>
       </div>
     </div>
-    <div class="field-group">
-      <label class="field-label" for="n">Your name</label>
-      <input class="field-input" id="n" type="text" autocomplete="name">
+    <div class="field">
+      <label for="n">Your name</label>
+      <input id="n" type="text" autocomplete="name">
     </div>
-    <div class="field-group">
-      <label class="field-label" for="e">Your email address</label>
-      <input class="field-input" id="e" type="email" autocomplete="email">
-      <label class="optin"><input type="checkbox" id="optin"><span>Add me to the ERC newsletter.</span></label>
+    <div class="field">
+      <label for="e">Your email address</label>
+      <input id="e" type="email" autocomplete="email">
     </div>
-    <div class="cf" id="cf"></div>
-    <button type="submit" class="btn-submit" id="go">Submit</button>
-    <p class="status" id="stat"></p>
+    <label class="check field--full"><input type="checkbox" id="optin"><span>Add me to the ERC newsletter.</span></label>
+    <div class="btns field--full">
+      <button type="submit" class="btn" id="go">Submit »</button>
+      <button type="reset" class="btn-text">Clear form</button>
+    </div>
+    <p class="status field--full" id="stat" aria-live="polite"></p>
+    <div class="cf field--full" id="cf"></div>
   </form>
 `;
 
@@ -240,7 +176,7 @@ for (const [value, label] of TYPES) {
   const wrap = el('label', 'radio');
   const input = Object.assign(el('input'), { type: 'radio', name: 'type', value });
   input.addEventListener('change', () => { picked = value; });
-  wrap.append(input, ` ${label}`);
+  wrap.append(input, el('span', '', label));
   typesBox.append(wrap);
 }
 
@@ -285,15 +221,24 @@ function takeToken() {
 const form = document.getElementById('f');
 const stat = document.getElementById('stat');
 const mstat = document.getElementById('mstat');
+const mhint = document.getElementById('mhint');
 const pick = document.getElementById('pick');
 const rm = document.getElementById('rm');
 const fileIn = document.getElementById('file');
 
 const setStat = (msg, kind) => {
-  stat.className = `status${kind ? ' status-' + kind : ''}`;
+  stat.className = `status field--full${kind ? ' status--' + kind : ''}`;
   stat.replaceChildren();
   if (kind === 'busy' && msg) { stat.append(dots(), document.createTextNode(msg)); }
   else stat.textContent = msg;
+};
+// The media line shows the format hint until there is something to say.
+const setMedia = (...nodes) => {
+  mstat.replaceChildren(...nodes);
+  mhint.hidden = nodes.length > 0;
+};
+const clearMedia = () => {
+  mediaUrl = ''; setMedia(); pick.textContent = 'Upload media'; rm.hidden = true;
 };
 
 async function pdfFirstPage(file) {
@@ -313,7 +258,7 @@ async function pdfFirstPage(file) {
 const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' };
 
 pick.addEventListener('click', () => fileIn.click());
-rm.addEventListener('click', () => { mediaUrl = ''; mstat.textContent = ''; pick.textContent = 'Upload media'; rm.hidden = true; });
+rm.addEventListener('click', clearMedia);
 fileIn.addEventListener('change', async () => {
   const file = fileIn.files[0];
   if (!file) return;
@@ -322,13 +267,13 @@ fileIn.addEventListener('change', async () => {
     let blob = file;
     let ext = EXT[file.type];
     if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
-      mstat.replaceChildren(dots(), document.createTextNode('Converting the PDF…'));
+      setMedia(dots(), document.createTextNode('Converting the PDF…'));
       blob = await pdfFirstPage(file);
       ext = 'png';
     }
     if (!ext) throw new Error('Use a PNG, JPG, or PDF.');
-    if (blob.size > 2.5 * 1024 * 1024) throw new Error('Too big — keep it under 2.5 MB.');
-    mstat.replaceChildren(dots(), document.createTextNode('Uploading…'));
+    if (blob.size > 2.5 * 1024 * 1024) throw new Error('Too big. Keep it under 2.5 MB.');
+    setMedia(dots(), document.createTextNode('Uploading…'));
     const b64 = await new Promise((res, rej) => {
       const r = new FileReader();
       r.onload = () => res(String(r.result).split(',')[1] ?? '');
@@ -342,17 +287,24 @@ fileIn.addEventListener('change', async () => {
     const data = await resp.json();
     if (!data.ok) throw new Error(data.error || 'upload failed');
     mediaUrl = data.url;
-    mstat.textContent = 'Added.';
+    setMedia(document.createTextNode('Added.'));
     pick.textContent = 'Replace media';
     rm.hidden = false;
   } catch (err) {
-    mstat.textContent = err.message;
+    setMedia(document.createTextNode(err.message));
   }
   fileIn.value = '';
   pick.hidden = false;
 });
 
-const doneBox = el('div', 'submit-done');
+// "Clear form" resets the fields; the picked type and the media go with them.
+form.addEventListener('reset', () => {
+  picked = '';
+  clearMedia();
+  setStat('');
+});
+
+const doneBox = el('div', 'done');
 doneBox.hidden = true;
 root.append(doneBox);
 
@@ -371,7 +323,7 @@ form.addEventListener('submit', async event => {
   if (errors.length) return setStat(errors.join(' '), 'error');
 
   const go = document.getElementById('go');
-  go.disabled = true; go.hidden = true;
+  go.disabled = true;
   setStat('Sending', 'busy');
   try {
     const resp = await fetch(`${DESK}/api/submit`, {
@@ -404,13 +356,12 @@ form.addEventListener('submit', async event => {
       } catch { /* the submission already landed; the list can wait */ }
     }
 
-    form.reset(); picked = ''; mediaUrl = '';
-    mstat.textContent = ''; pick.textContent = 'Upload media'; rm.hidden = true;
-    setStat('');
-    const title = el('p', 'done-title', 'Thank you — the ERC has it.');
+    form.reset();
+    const title = el('h3', '', 'Thank you. The ERC has it.');
+    title.tabIndex = -1;
     doneBox.replaceChildren(title);
     doneBox.append(el('p', '', 'The team reviews every submission before anything is published.'));
-    const again = el('button', 'again-btn', 'Submit another');
+    const again = el('button', 'btn-outline', 'Submit another');
     again.type = 'button';
     again.addEventListener('click', () => {
       doneBox.hidden = true; form.hidden = false;
@@ -420,10 +371,11 @@ form.addEventListener('submit', async event => {
     });
     doneBox.append(again);
     form.hidden = true; doneBox.hidden = false;
+    title.focus();
   } catch (err) {
     setStat(err instanceof TypeError ? "Couldn't reach the server. Check your connection." : err.message, 'error');
   } finally {
-    go.disabled = false; go.hidden = false;
+    go.disabled = false;
   }
 });
 </script>
