@@ -1109,17 +1109,15 @@ main {
     background: rgba(255, 255, 255, 0.08);
   }
 
-  /* Hero stacks: the logo slot above the text, smaller, and the headline
-     drops to the section-title size so it stays on two lines. */
+  /* Phones skip the logo slot (Kate's pick B, Sep 8, 2026): the welcome text
+     leads, at the section-title size so the headline stays on two lines. */
   .hero {
     grid-template-columns: 1fr;
-    gap: 20px;
+    gap: 0;
     margin: 4px 0 28px;
   }
   .hero__logo {
-    width: 150px;
-    height: 150px;
-    font-size: 0.8rem;
+    display: none;
   }
   .intro__title {
     font-size: 1.5rem;
