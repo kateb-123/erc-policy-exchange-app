@@ -61,11 +61,12 @@
   <main id="main">
     <!-- Landing page (home view): hero + section cards. -->
     <section class="landing" id="landing" aria-label="Welcome" hidden>
-      <!-- Hero: the welcome text with the ERC icon to its right (desktop only;
-           phones skip the icon). Decorative, the heading carries the name. -->
+      <!-- Hero: the ERC icon above the welcome text, on the left of the cards
+           (phones skip the icon). Decorative, the heading carries the name. -->
       <div class="hero">
+        <div class="hero__logo"><img src="assets/erc-icon.svg" alt="" width="130" height="130" /></div>
         <div class="intro">
-          <h2 class="intro__title" tabindex="-1" data-focus-target>Howdy! Welcome to the ERC Policy Exchange</h2>
+          <h2 class="intro__title" tabindex="-1" data-focus-target>Howdy! <br />Welcome to the ERC Policy Exchange</h2>
           <p class="intro__text">
             Browse through the latest research, upcoming events, opportunities,
             and education headlines. Curated by the
@@ -73,7 +74,6 @@
           </p>
           <p class="intro__updated" id="landing-updated"></p>
         </div>
-        <div class="hero__logo"><img src="assets/erc-icon.svg" alt="" width="224" height="224" /></div>
       </div>
       <div class="cards cards--4" id="landing-cards"></div>
     </section>
