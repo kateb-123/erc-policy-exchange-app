@@ -224,11 +224,11 @@ a:hover {
 }
 
 /* ---------- Landing page ---------- */
-/* Hero (Kate's pick C, Sep 8, 2026): the ERC icon beside the welcome text in
-   two columns, the section cards under both. */
+/* Hero (Kate's pick C, Sep 8, 2026, flipped the same evening): the welcome
+   text with the ERC icon to its right, the section cards under both. */
 .hero {
   display: grid;
-  grid-template-columns: 224px 1fr;
+  grid-template-columns: 1fr 224px;
   gap: 40px;
   align-items: center;
   margin: 8px 0 40px;
@@ -259,7 +259,7 @@ a:hover {
   font-size: 1.12rem;
   color: var(--body);
   margin: 0;
-  max-width: 62ch;
+  max-width: 70ch; /* Kate: "a little wider" than the 62ch first cut */
 }
 .cards {
   display: grid;
