@@ -1,35 +1,40 @@
 /* ============================================================
  * styles.css — ERC Policy Exchange
  * ============================================================
- * Claude Design handoff (Sep 9, 2026), on the Aggie UX system: maroon
- * #4F001A bar, Work Sans headings + Open Sans body, teal links and focus,
- * square buttons and inputs, borders drawn as inset shadows (row separators
- * excepted), tinted pill tags. 16px base, sizes in px, an 8px rhythm.
+ * Claude Design handoff (Sep 2026), refreshed against Aggie UX 2.1.0: maroon
+ * #500000 bar, Work Sans headings + Open Sans body, maroon links with a 2px
+ * underline, a 4px gold focus ring, square buttons and inputs, borders drawn
+ * as inset shadows (row separators excepted), tinted pill tags. 16px base,
+ * sizes in px, an 8px rhythm.
  * ============================================================ */
 
 :root {
-  /* Aggie UX palette (the handoff's tokens). */
-  --maroon: #4F001A;
-  --maroon-dark: #3C0028;
+  /* Aggie UX 2.1.0 palette (the shipped stylesheet's tokens). */
+  --maroon: #500000;
+  --maroon-dark: #3C0000;
   --maroon-muted: #732F2F;
   --brick: #95463B;
-  --teal: #006483;
+  --teal: #1B9D92;
   --gold: #AF8846;
-  --navy: #3A567B;
+  --navy: #48597E;
   --g100: #F6F6F6;
   --g200: #EAEAEA;
   --g400: #D1D1D1;
   --g600: #535353;
   --g700: #626262;
+  --g800: #3E3E3E;
   --g900: #202020;
-  --cream: #FAF7F3;
-  --cream2: #E9E4DC;
+  --cream: #F6F6F6;
+  --cream2: #EAEAEA;
   --cream3: #D6D3C4;
   --error: #D04343;
 
-  /* The handoff's gold is too light for small text (2.9:1); this darker gold
-     from Kate's palette (6:1) carries the gold tags. */
+  /* 2.1.0's accents are named for borders, icons and decoration. Two of them
+     are too light to carry 13px tag text: gold #AF8846 reads 2.9:1 and teal
+     #1B9D92 reads 2.4:1, both under the 4.5:1 floor. These darker inks (6:1
+     and 6.4:1) carry that text; the accent itself still paints the tint. */
   --gold-ink: #7a5d10;
+  --teal-ink: #006483;
 
   --head: "Work Sans", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --sans: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -66,15 +71,21 @@ h1, h2, h3 {
   font-family: var(--head);
 }
 a {
-  color: var(--teal);
-  text-decoration: none;
+  color: var(--maroon);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
 }
 a:hover {
-  text-decoration: underline;
+  color: var(--maroon-muted);
+  text-decoration: none;
 }
+/* Gold holds contrast on white and on the maroon bar alike, so one ring
+   serves both and the bar needs no override. */
 :focus-visible {
-  outline: 3px solid var(--teal);
-  outline-offset: 2px;
+  outline: 4px solid var(--gold);
+  outline-offset: 3px;
 }
 .skip-link {
   position: absolute;
@@ -169,27 +180,28 @@ a:hover {
   text-decoration: none;
   transition: color 0.15s ease;
 }
-/* An invisible 900-weight copy of the label reserves the width the current
-   item needs, so its neighbours never shift when the section changes. */
-.topnav__link::after {
-  content: attr(data-label);
-  font-weight: 900;
-  height: 0;
-  overflow: hidden;
-  visibility: hidden;
-}
 .topnav__link:hover {
   color: #fff;
   text-decoration: none;
 }
+/* The current section is marked with a white underline. The old 900-weight
+   bump changed each label's width, so the bar reflowed as you moved between
+   sections; an underline costs no width. */
 .topnav__link.is-active {
   color: #fff;
-  font-weight: 900;
+  text-decoration: underline;
+  text-decoration-color: #fff;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
 }
-/* The right side (Kate, Sep 9): Share an item and About the ERC, flush right. */
+/* The right side: Share an item and About the ERC on the first line, the
+   global search under them, both flush right inside the bar. */
 .topnav__side {
   margin-left: auto;
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
   flex-shrink: 1;
   min-width: 0;
 }
@@ -198,30 +210,16 @@ a:hover {
   gap: 28px;
 }
 .topnav__utils .topnav__link {
-  padding: 4px 0;
-}
-/* The bar is maroon, so the site-wide teal focus ring would vanish on it. */
-.topnav :focus-visible {
-  outline-color: #fff;
+  padding: 0;
 }
 /* Mobile-only hamburger: invisible at desktop widths. */
 .topnav__menu-btn {
   display: none;
 }
-/* ---------- Search strip ----------
-   The global search in its own white strip under the bar (Kate, Sep 9): the
-   box sits flush right, outlined like the form inputs, teal when focused. */
-.subbar {
-  background: #fff;
-}
-.subbar__in {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: 12px 24px;
-  display: flex;
-  justify-content: flex-end;
-}
-.subbar__search {
+/* ---------- Global search ----------
+   In the maroon bar, flush right under the utility links: a white box the
+   height of a form input, maroon inside when focused. */
+.topnav__search {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -231,14 +229,13 @@ a:hover {
   padding: 0 12px;
   margin: 0;
   background: #fff;
-  box-shadow: inset 0 0 0 1px var(--g600);
   color: var(--g600);
 }
-.subbar__search i {
+.topnav__search i {
   font-size: 16px;
   flex-shrink: 0;
 }
-.subbar__search input {
+.topnav__search input {
   appearance: none;
   width: 100%;
   min-width: 0;
@@ -250,11 +247,11 @@ a:hover {
   font-size: 16px;
   color: var(--g900);
 }
-.subbar__search input::placeholder {
+.topnav__search input::placeholder {
   color: var(--g600);
 }
-.subbar__search:focus-within {
-  box-shadow: inset 0 0 0 2px var(--teal);
+.topnav__search:focus-within {
+  box-shadow: inset 0 0 0 2px var(--maroon);
 }
 
 /* Under 1200px the bar takes two rows: the title and the right side above,
@@ -304,14 +301,6 @@ a:hover {
   color: var(--g900);
   margin: 16px 0 0;
 }
-.hero__text a {
-  color: var(--maroon);
-  font-weight: 700;
-  text-decoration: none;
-}
-.hero__text a:hover {
-  text-decoration: underline;
-}
 /* The share line sits under the cards, tucked into their bottom padding. */
 .landing__share {
   margin: -24px 0 0;
@@ -340,7 +329,7 @@ a:hover {
   transition: box-shadow 0.15s ease;
 }
 .card:hover {
-  box-shadow: inset 0 0 0 2px var(--maroon-dark);
+  box-shadow: inset 0 0 0 2px var(--maroon);
   text-decoration: none;
 }
 .card__icon {
@@ -384,13 +373,191 @@ a:hover {
   grid-row: 1 / 3;
   grid-column: 3;
   font-size: 20px;
-  color: var(--teal);
+  color: var(--maroon);
 }
 /* The freshness line, last on the landing. */
 .upd--below {
   font-size: 14px;
   color: var(--g600);
   margin: 12px 0 48px;
+}
+
+/* ---------- Home: the What's New rail ----------
+   Claude Design handoff (Sep 22, 2026). The landing is a two-column grid: the
+   welcome text spans the top, then the rail at 55% beside the four section
+   cards at 45%. The cards set the row's height and the rail fills it, which is
+   why the viewport takes a zero basis and no fixed height of its own. */
+.home2 {
+  display: grid;
+  grid-template-columns: minmax(0, 55fr) minmax(0, 45fr);
+  gap: 32px 24px;
+  padding: 24px 0 56px;
+  align-items: start;
+}
+.home2 > .hero {
+  grid-column: 1 / -1;
+  padding: 16px 0 0;
+}
+.home2 .hero__title {
+  font-size: 32px;
+}
+.home2 .hero__text {
+  font-size: 18px;
+}
+.home2 > .rail {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.home2 > .rail .rail__vp {
+  flex: 1 1 0;
+  height: 0;
+  min-height: 0;
+}
+.home2 .cards {
+  padding-bottom: 0;
+}
+/* The four cards stack in one column beside the rail. */
+.cards--stack {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+.cards--stack .card {
+  padding: 26px 24px;
+}
+/* The share line sits under the grid on this layout, not tucked up into it. */
+.home2 + .landing__share {
+  margin: 0;
+}
+
+.rail {
+  box-shadow: inset 0 0 0 2px var(--g400);
+  border-radius: 2px;
+  background: #fff;
+}
+.rail__hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--maroon);
+  padding: 12px 16px;
+}
+.rail__hd h2 {
+  font-family: var(--head);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  white-space: nowrap;
+  margin: 0;
+}
+/* A real 44px target; the negative margin keeps it from inflating the header. */
+.rail__pause {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -8px -10px -8px 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  font-size: 15px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.rail__pause:hover {
+  color: var(--cream3);
+}
+/* A scrollable region has to be keyboard-reachable, hence the tabindex on it. */
+.rail__vp {
+  position: relative;
+  height: 430px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.rail__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rail__row {
+  padding: 14px 16px;
+  border-bottom: 1px dotted var(--g400);
+}
+.rail__sec {
+  font-family: var(--head);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--maroon-muted);
+  margin: 0;
+}
+.rail__row h3 {
+  font-family: var(--head);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  margin: 4px 0 0;
+}
+/* Three lines, then an ellipsis: the rows stay the same shape whatever the
+   headline's length. */
+.rail__row h3 a {
+  color: var(--maroon);
+  font-weight: 700;
+  text-decoration: none;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.rail__row h3 a:hover {
+  color: var(--maroon-muted);
+  text-decoration: underline;
+}
+.rail__row h3 i {
+  font-size: 11px;
+  color: var(--g600);
+}
+/* Source and date read together: both are provenance. */
+.rail__src {
+  font-family: var(--head);
+  font-size: 14px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.4;
+  color: var(--g800);
+  margin: 3px 0 0;
+}
+@media (max-width: 1100px) {
+  .home2 {
+    gap: 28px 20px;
+  }
+  .home2 .hero__title {
+    font-size: 26px;
+  }
+  .home2 .hero__text {
+    font-size: 17px;
+  }
+  .rail__row h3 {
+    font-size: 15px;
+  }
+}
+@media (max-width: 820px) {
+  .home2 {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .home2 > .rail .rail__vp {
+    height: 360px;
+    flex: 0 0 auto;
+  }
 }
 
 /* ---------- Layout ---------- */
@@ -558,7 +725,7 @@ main {
   font-family: var(--head);
   font-size: 16px;
   font-weight: 600;
-  color: var(--teal);
+  color: var(--maroon);
   padding: 0;
   cursor: pointer;
 }
@@ -637,9 +804,12 @@ main {
   color: var(--g600);
   margin-top: 4px;
 }
-/* Research: the authors. Events: time · location. Search: section · source · date. */
+/* Research: the authors. Events: time · location. Search: section · source · date.
+   16px / 1.5 is the AUX Paragraph spec, and the 1.5 is a WCAG 2.1 AA line-height
+   requirement in this system, not a preference. */
 .feed-item__meta {
-  font-size: 15px;
+  font-size: 16px;
+  line-height: 1.5;
   color: var(--g600);
   margin-top: 2px;
 }
@@ -715,12 +885,12 @@ main {
   flex-wrap: wrap;
   gap: 8px 24px;
 }
-/* The way out of a summary: a teal text action. */
+/* The way out of a summary: a maroon text action. */
 .feed-link {
   font-family: var(--head);
   font-size: 16px;
   font-weight: 600;
-  color: var(--teal);
+  color: var(--maroon);
   text-decoration: none;
 }
 .feed-link:hover {
@@ -740,13 +910,18 @@ main {
 }
 
 /* ---------- Tags ---------- */
-/* Tinted pills: the type colour as text on a 10% tint of itself. Maroon is
-   ERC's own and Texas; teal, navy, and gold are assigned per subtype in
-   app.js. */
+/* Tinted pills, kept from the handoff by choice: the subtype's accent as a
+   10% fill, its name written across it. Maroon is ERC's own and Texas; teal,
+   navy and gold are assigned per subtype in app.js.
+   Two accents are too light to be read at 13px — gold #AF8846 is 2.9:1 and
+   teal #1B9D92 is 2.4:1, both under the 4.5:1 floor — so --t paints the fill
+   and --ink writes the text. They are the same colour wherever it is dark
+   enough to serve as both. */
 .tag {
   display: inline-flex;
   align-items: center;
   --t: var(--teal);
+  --ink: var(--teal-ink);
   font-family: var(--head);
   font-size: 13px;
   font-weight: 600;
@@ -756,23 +931,84 @@ main {
   padding: 7px 14px;
   border-radius: 999px;
   white-space: nowrap;
-  color: var(--t);
+  color: var(--ink);
   background: color-mix(in srgb, var(--t) 10%, #fff);
 }
 .tag--maroon {
   --t: var(--maroon);
+  --ink: var(--maroon);
 }
 .tag--teal {
   --t: var(--teal);
+  --ink: var(--teal-ink);
 }
 .tag--navy {
   --t: var(--navy);
+  --ink: var(--navy);
 }
-/* The handoff's gold (#AF8846) reads at 2.9:1 on its tint, under the 4.5:1
-   floor for 13px text; the darker gold from Kate's palette (6:1) carries the
-   text and the tint alike. */
 .tag--gold {
-  --t: var(--gold-ink);
+  --t: var(--gold);
+  --ink: var(--gold-ink);
+}
+
+/* ---------- Headline cards ----------
+   Aggie UX News Collection. The shipped component carries a card image per
+   card; we hold no art for these headlines, so the slot is left out rather
+   than filled with a placeholder. */
+.ncol {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+  margin-bottom: 32px;
+}
+.ncard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  background: #fff;
+  box-shadow: inset 0 0 0 2px var(--g400);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.ncard .tag {
+  align-self: flex-start;
+}
+.ncard__title {
+  font-family: var(--head);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--maroon);
+  margin: 2px 0 0;
+}
+.ncard__title a {
+  color: var(--maroon);
+  text-decoration: none;
+}
+.ncard__title a:hover {
+  color: var(--maroon-muted);
+  text-decoration: underline;
+}
+.ncard__title i {
+  font-size: 13px;
+  margin-left: 6px;
+  color: var(--g600);
+}
+/* 16px / 1.5 is the AUX Paragraph spec; the 1.5 is a WCAG 2.1 AA requirement. */
+.ncard__subhead {
+  font-family: var(--head);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--g800);
+}
+.ncard p {
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--g800);
+  margin: 0;
 }
 
 /* ---------- Brief viewer ---------- */
@@ -799,7 +1035,7 @@ main {
   font-family: var(--head);
   font-size: 16px;
   font-weight: 600;
-  color: var(--teal);
+  color: var(--maroon);
   padding: 0;
 }
 .brief__back:hover,
@@ -1032,7 +1268,7 @@ main {
 }
 .field :is(input:not([type="radio"], [type="checkbox"], [type="file"]), textarea):focus {
   outline: 0;
-  box-shadow: inset 0 0 0 2px var(--teal);
+  box-shadow: inset 0 0 0 2px var(--maroon);
 }
 .radios > legend {
   margin-bottom: 12px;
@@ -1102,7 +1338,7 @@ main {
   font-family: var(--head);
   font-size: 16px;
   font-weight: 700;
-  color: var(--teal);
+  color: var(--maroon);
   padding: 16px 0;
   cursor: pointer;
 }
@@ -1216,10 +1452,6 @@ main {
   gap: 10px;
   color: var(--maroon);
   font-size: 16px;
-  text-decoration: none;
-}
-.site-footer__link:hover {
-  text-decoration: underline;
 }
 /* The glyphs paint in the link's colour through a mask. */
 .site-footer__icon {
@@ -1305,12 +1537,15 @@ main {
     border-left: 3px solid transparent;
   }
   .topnav__link.is-active {
-    border-left-color: #fff;
+    text-decoration: none;
+    border-left-color: var(--gold);
   }
   /* Share an item and About the ERC join the open list. */
   .topnav__side {
     flex: 1 1 100%;
-    padding: 0;
+    align-items: stretch;
+    gap: 0;
+    padding: 0 0 12px;
   }
   .topnav__utils {
     display: none;
@@ -1325,13 +1560,16 @@ main {
   .topnav__utils .topnav__link {
     padding: 14px 0 14px 12px;
   }
-  .subbar__search {
+  .topnav__search {
     width: 100%;
   }
 
-  /* The landing: a tighter hero, one column of cards. */
+  /* The landing: a tighter hero, one column of cards, headlines one up. */
   .hero {
     padding: 32px 0 24px;
+  }
+  .ncol {
+    grid-template-columns: 1fr;
   }
   .hero__title {
     font-size: 30px;

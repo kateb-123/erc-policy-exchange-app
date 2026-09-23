@@ -34,10 +34,9 @@
 
   <!-- Top bar (Claude Design handoff, Sep 9, 2026): the ERC mark + site title
        is the h1 and the Home link, then the section links (built by app.js);
-       Share an item and About the ERC sit at the right. The global search
-       lives in the white strip under the bar. On phones the title and the
-       Menu button share the first row and every link opens in a list under
-       them. -->
+       Share an item and About the ERC sit at the right with the global
+       search under them. On phones the title and the Menu button share the
+       first row and every link opens in a list under them. -->
   <header class="topnav">
     <div class="topnav__in">
       <h1 class="topnav__title">
@@ -50,41 +49,39 @@
       <nav id="topnav" class="topnav__links" aria-label="Sections"></nav>
       <div class="topnav__side">
         <nav class="topnav__utils" aria-label="Share and about">
-          <a class="topnav__link" href="share/" data-label="Share an item">Share an item</a>
-          <a class="topnav__link" href="about/" data-label="About the ERC">About the ERC</a>
+          <a class="topnav__link" href="share/">Share an item</a>
+          <a class="topnav__link" href="about/">About the ERC</a>
         </nav>
+        <div class="topnav__search">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input
+            type="search"
+            id="global-search"
+            placeholder="Search everything…"
+            aria-label="Search all sections"
+            autocomplete="off"
+          />
+        </div>
       </div>
     </div>
   </header>
-  <!-- The search strip (Kate, Sep 9): white, under the bar, the box flush right. -->
-  <div class="subbar">
-    <div class="subbar__in">
-      <div class="subbar__search">
-        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-        <input
-          type="search"
-          id="global-search"
-          placeholder="Search everything…"
-          aria-label="Search all sections"
-          autocomplete="off"
-        />
-      </div>
-    </div>
-  </div>
-
   <main id="main">
-    <!-- Landing page (home view): the welcome text, the four section cards,
-         then the freshness line. -->
+    <!-- Landing page (home view): the welcome text across the top, the
+         What's New rail beside the four section cards, then the freshness
+         line. The rail and the cards are both built by app.js. -->
     <section class="landing" id="landing" aria-label="Welcome" hidden>
-      <div class="hero">
-        <h2 class="hero__title" tabindex="-1" data-focus-target>Howdy! Welcome to the ERC Policy Exchange</h2>
-        <p class="hero__text">
-          Explore the latest research, upcoming events, opportunities, and
-          education news, curated by the
-          <a href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">Texas A&amp;M Education Research Center</a>.
-        </p>
+      <div class="home2">
+        <div class="hero">
+          <h2 class="hero__title" tabindex="-1" data-focus-target>Howdy! Welcome to the ERC Policy Exchange</h2>
+          <p class="hero__text">
+            Explore the latest research, upcoming events, opportunities, and
+            education news, curated by the
+            <a href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">Texas A&amp;M Education Research Center</a>.
+          </p>
+        </div>
+        <aside class="rail" id="whats-new" aria-labelledby="rail-h"></aside>
+        <div class="cards cards--stack" id="landing-cards"></div>
       </div>
-      <div class="cards" id="landing-cards"></div>
       <p class="hero__text landing__share">Have something for the Exchange? <a href="share/">Share an item »</a></p>
       <p class="upd upd--below" id="landing-updated"></p>
     </section>
@@ -131,7 +128,7 @@
   </footer>
 
   <script src="js/csv.js?v=2"></script>
-  <script src="js/app.js?v=62"></script>
+  <script src="js/app.js?v=63"></script>
   <!-- Cloudflare Web Analytics: visit counts, no cookies. The site token is public by design. -->
   <script
     type="module"

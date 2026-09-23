@@ -30,34 +30,29 @@
         Menu
       </button>
       <nav id="topnav" class="topnav__links" aria-label="Sections">
-        <a class="topnav__link" href="../?type=research" data-label="Research">Research</a>
-        <a class="topnav__link" href="../?type=event" data-label="Events">Events</a>
-        <a class="topnav__link" href="../?type=opportunity" data-label="Opportunities">Opportunities</a>
-        <a class="topnav__link" href="../?type=headline" data-label="Headlines">Headlines</a>
+        <a class="topnav__link" href="../?type=research">Research</a>
+        <a class="topnav__link" href="../?type=event">Events</a>
+        <a class="topnav__link" href="../?type=opportunity">Opportunities</a>
+        <a class="topnav__link" href="../?type=headline">Headlines</a>
       </nav>
       <div class="topnav__side">
         <nav class="topnav__utils" aria-label="Share and about">
-          <a class="topnav__link" href="../share/" data-label="Share an item">Share an item</a>
-          <a class="topnav__link is-active" aria-current="page" href="./" data-label="About the ERC">About the ERC</a>
+          <a class="topnav__link" href="../share/">Share an item</a>
+          <a class="topnav__link is-active" aria-current="page" href="./">About the ERC</a>
         </nav>
+        <form class="topnav__search" action="../" method="get" role="search">
+          <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+          <input
+            type="search"
+            name="q"
+            placeholder="Search everything…"
+            aria-label="Search all sections"
+            autocomplete="off"
+          />
+        </form>
       </div>
     </div>
   </header>
-  <div class="subbar">
-    <div class="subbar__in">
-      <form class="subbar__search" action="../" method="get" role="search">
-        <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-        <input
-          type="search"
-          name="q"
-          placeholder="Search everything…"
-          aria-label="Search all sections"
-          autocomplete="off"
-        />
-      </form>
-    </div>
-  </div>
-
   <main id="main">
     <div class="about-grid">
       <div>

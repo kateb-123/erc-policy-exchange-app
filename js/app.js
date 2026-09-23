@@ -240,6 +240,7 @@ function init(rows, modified) {
 
   buildNav();
   buildLanding();
+  buildRail();
   validateSubtype();
 
   // Back and Forward: the URL is the source of truth, so re-read it and render.
@@ -382,7 +383,7 @@ function buildNav() {
   // intercepted for the in-page route.
   el.innerHTML = NEWS_TABS.map(
     (t) => `
-    <a class="topnav__link" href="?type=${t.value}" data-type="${t.value}" data-label="${esc(t.nav)}">${esc(t.nav)}</a>`
+    <a class="topnav__link" href="?type=${t.value}" data-type="${t.value}">${esc(t.nav)}</a>`
   ).join("");
 
   el.addEventListener("click", (e) => {
@@ -420,6 +421,135 @@ function buildLanding() {
     e.preventDefault();
     setType(card.dataset.type);
   });
+}
+
+/* ------------------------------------------------------------
+ * The What's New rail (landing)
+ * ------------------------------------------------------------
+ * Claude Design handoff, Sep 22, 2026. A mixed list of the newest few items
+ * from all four sections, advancing one row at a time like a signage board.
+ * The feed is interleaved by construction rather than merged on date, so the
+ * four sections always share the rail evenly.
+ */
+const RAIL_PER = 3; // items taken from each section
+const RAIL_SECS = 4; // seconds a row is held before the list steps on
+
+// The top few of a section, in the order that section's own feed opens in
+// (soonest for Events, closing soon for Opportunities, newest elsewhere).
+function railFeed(per = RAIL_PER) {
+  const bags = NEWS_TABS.map((tab) => {
+    const items = state.items.filter(
+      (it) =>
+        (it.type || "").toLowerCase() === tab.value &&
+        !isExpired(it) &&
+        !(tab.value === "research" && isArchivedResearch(it))
+    );
+    items.sort(sortComparator(TOOLBAR_SORTS[tab.value][0]));
+    return items.slice(0, per).map((it) => ({ it, tab }));
+  });
+  const out = [];
+  for (let i = 0; i < per; i++) bags.forEach((bag) => bag[i] && out.push(bag[i]));
+  return out;
+}
+
+function railRow({ it, tab }) {
+  // Source and date read together on the foot line: both are provenance.
+  const when = it.date
+    ? formatDate(it.date)
+    : tab.value === "opportunity"
+      ? parseDeadline(it.deadline).label
+      : "";
+  const foot = [(it.source || "").trim(), when].filter(Boolean).map(esc).join(" · ");
+  const id = briefId(it);
+  const link = (it.link || "").trim();
+  // A brief opens in the in-app viewer, an outbound item in a new tab, and an
+  // item with no link of its own goes to its section.
+  const anchor = id
+    ? `<a href="?brief=${id}" data-brief="${id}" data-brief-title="${esc(it.headline)}">${esc(it.headline)}</a>`
+    : link
+      ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(it.headline)}&nbsp;${faIcon("arrow-up-right-from-square")}${NEW_TAB}</a>`
+      : `<a href="?type=${tab.value}" data-type="${tab.value}">${esc(it.headline)}</a>`;
+  return `
+    <li class="rail__row">
+      <p class="rail__sec">${esc(tab.nav)}</p>
+      <h3>${anchor}</h3>
+      ${foot ? `<p class="rail__src">${foot}</p>` : ""}
+    </li>`;
+}
+
+function buildRail() {
+  const host = $("#whats-new");
+  const rows = railFeed().map(railRow).join("");
+  if (!rows) {
+    host.hidden = true;
+    return;
+  }
+  host.hidden = false;
+  host.innerHTML = `
+    <div class="rail__hd">
+      <h2 id="rail-h">What’s New</h2>
+      <button type="button" class="rail__pause" aria-pressed="true" aria-label="Pause auto-scrolling the list" title="Pause auto-scrolling">${faIcon("pause")}</button>
+    </div>
+    <div class="rail__vp" tabindex="0" role="group" aria-label="Recent items, scrollable">
+      <ul class="rail__list" role="list">${rows}</ul>
+    </div>`;
+
+  host.addEventListener("click", (e) => {
+    if (modifiedClick(e)) return;
+    const brief = e.target.closest("a[data-brief]");
+    if (brief) {
+      e.preventDefault();
+      openBrief(brief.dataset.brief, brief.dataset.briefTitle);
+      return;
+    }
+    const section = e.target.closest("a[data-type]");
+    if (section) {
+      e.preventDefault();
+      setType(section.dataset.type);
+    }
+  });
+  initRail();
+}
+
+function initRail() {
+  const vp = $(".rail__vp");
+  const btn = $(".rail__pause");
+  if (!vp || !btn) return;
+  const rows = $$(".rail__row", vp);
+  // Motion nobody asked for: off from the start for anyone who has said so.
+  let off = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let held = false; // hover and focus hold the list without touching the button
+  let timer = null;
+
+  // A discrete one-row jump. Smooth scrollTo on an inner container is not
+  // dependable and short timers get clamped, so the list steps rather than
+  // glides.
+  function step() {
+    if (off || held) return;
+    // A list that barely overflows would only twitch and reset, never walk.
+    if (vp.scrollHeight - vp.clientHeight < 24) return;
+    const next = rows.find((r) => r.offsetTop > vp.scrollTop + 2);
+    const atEnd = vp.scrollTop + vp.clientHeight >= vp.scrollHeight - 2;
+    vp.scrollTop = atEnd || !next ? 0 : next.offsetTop;
+  }
+
+  function sync() {
+    clearInterval(timer);
+    if (!off) timer = setInterval(step, RAIL_SECS * 1000);
+    btn.setAttribute("aria-pressed", String(!off));
+    btn.innerHTML = faIcon(off ? "play" : "pause");
+    btn.title = `${off ? "Resume" : "Pause"} auto-scrolling`;
+    btn.setAttribute("aria-label", `${off ? "Resume" : "Pause"} auto-scrolling the list`);
+  }
+
+  btn.addEventListener("click", () => {
+    off = !off;
+    sync();
+  });
+  // Reading beats advancing.
+  ["pointerenter", "focusin"].forEach((ev) => vp.addEventListener(ev, () => { held = true; }));
+  ["pointerleave", "focusout"].forEach((ev) => vp.addEventListener(ev, () => { held = false; }));
+  sync();
 }
 
 // "14 upcoming", "23 recent", "8 open": how much is live in a section right now,
@@ -621,8 +751,8 @@ function activeSort() {
   return state.sort || TOOLBAR_SORTS[state.type][0];
 }
 
-function sortComparator() {
-  const { key, dir, first } = activeSort();
+function sortComparator(sort = activeSort()) {
+  const { key, dir, first } = sort;
   const mult = dir === "asc" ? 1 : -1;
   // "ERC first" / "Texas first": that subtype on top, newest first within
   // each half.
@@ -899,6 +1029,34 @@ function renderFeedCards(results, colorFor, total = results.length) {
     </div>`;
 }
 
+// Headlines as the Aggie UX News Collection: a grid of text-only cards.
+// Everything a headline carries is short enough to show at once, so these
+// cards have nothing to open — tag, title, the source line, the blurb.
+function renderHeadlineCards(results, colorFor, total = results.length) {
+  const cards = results
+    .map((it) => {
+      const subtype = (it.subtype || "").trim();
+      const source = (it.source || "").trim();
+      // Half the sheet's `medium` cells repeat the outlet instead of naming a
+      // medium, so the card drops it rather than printing "The 74 • The 74".
+      const medium = (it.medium || "").trim();
+      const subhead = [source, it.date ? formatDate(it.date) : "", medium === source ? "" : medium]
+        .filter(Boolean)
+        .map(esc)
+        .join(" • ");
+      const blurb = (it.blurb || "").trim();
+      return `
+        <article class="ncard">
+          <span class="tag ${colorFor[subtype] || "tag--teal"}">${esc(subtype || it.type || "")}</span>
+          <h3 class="ncard__title">${itemTitleLink(it, true)}</h3>
+          ${subhead ? `<span class="ncard__subhead">${subhead}</span>` : ""}
+          ${blurb ? `<p>${esc(blurb)}</p>` : ""}
+        </article>`;
+    })
+    .join("");
+  return `<div class="ncol">${cards}</div>${showMoreHTML(total)}`;
+}
+
 // "Show more" control under any list with pages left: quiet pill + a muted
 // running count, revealing PAGE_SIZE more rows in place per click.
 function showMoreHTML(total) {
@@ -1107,11 +1265,11 @@ function render() {
     return;
   }
 
-  list.innerHTML = renderFeedCards(
-    results.slice(0, state.shown),
-    colorFor,
-    results.length
-  );
+  const page = results.slice(0, state.shown);
+  list.innerHTML =
+    state.type === "headline"
+      ? renderHeadlineCards(page, colorFor, results.length)
+      : renderFeedCards(page, colorFor, results.length);
 }
 
 // Toggle one item's summary via its chevron button (the accessible expand
