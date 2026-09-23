@@ -27,15 +27,15 @@
   <!-- Font Awesome 7 Free: the same tag and hash the Content Desk uses, so both apps share one icon set. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=75" />
+  <link rel="stylesheet" href="css/styles.css?v=77" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
   <!-- Top bar (Claude Design handoff, Sep 9, 2026): the ERC mark + site title
        is the h1 and the Home link, then the section links (built by app.js);
-       About the ERC sits at the right with the global search under it
-       (Share moved to the home page's button, Kate, Sep 23). On phones the title and the Menu button share the
+       About the ERC ends that row, flush right under the global search
+       (Kate, Sep 23; Share moved to the home page's button). On phones the title and the Menu button share the
        first row and every link opens in a list under them. -->
   <header class="topnav">
     <div class="topnav__in">
@@ -46,11 +46,10 @@
         <i class="fa-solid fa-bars" aria-hidden="true"></i>
         Menu
       </button>
-      <nav id="topnav" class="topnav__links" aria-label="Sections"></nav>
+      <nav id="topnav" class="topnav__links" aria-label="Main">
+        <a class="topnav__link topnav__link--about" href="about/">About the ERC</a>
+      </nav>
       <div class="topnav__side">
-        <nav class="topnav__utils" aria-label="About">
-          <a class="topnav__link" href="about/">About the ERC</a>
-        </nav>
         <div class="topnav__search">
           <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
           <input
@@ -130,7 +129,7 @@
   </footer>
 
   <script src="js/csv.js?v=2"></script>
-  <script src="js/app.js?v=68"></script>
+  <script src="js/app.js?v=69"></script>
   <!-- Cloudflare Web Analytics: visit counts, no cookies. The site token is public by design. -->
   <script
     type="module"

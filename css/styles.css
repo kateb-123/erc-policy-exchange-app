@@ -121,17 +121,21 @@ a:hover {
   background: var(--maroon);
   color: #fff;
 }
+/* Two rows at every width (Kate, Sep 23): the title and the search, then the
+   section links under a rule with About the ERC at the far end, flush right
+   under the search. About made one row too crowded above 1200px. */
 .topnav__in {
   max-width: var(--maxw);
   margin: 0 auto;
   padding: 0 24px;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 24px;
-  min-height: 128px; /* as tall as the footer (Kate, Sep 9) */
+  gap: 0 24px;
 }
 .topnav__title {
-  flex-shrink: 0;
+  flex: 1 1 auto;
+  padding: 16px 0;
   margin: 0;
   font-size: 22px;
   font-weight: 700;
@@ -162,15 +166,20 @@ a:hover {
   mask: url("../assets/logo/erc-icon-simple.svg") center / contain no-repeat;
 }
 .topnav__links {
+  order: 3;
+  flex: 1 1 100%;
   display: flex;
-  flex-shrink: 0;
   gap: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+.topnav__link--about {
+  margin-left: auto;
 }
 .topnav__link {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
-  padding: 24px 0 21px;
+  padding: 16px 0 13px;
   font-family: var(--head);
   font-weight: 600;
   font-size: 16px;
@@ -195,23 +204,15 @@ a:hover {
   text-decoration-thickness: 2px;
   text-underline-offset: 6px;
 }
-/* The right side: Share an item and About the ERC on the first line, the
-   global search under them, both flush right inside the bar. */
+/* The right side: the global search, flush right inside the bar. */
 .topnav__side {
   margin-left: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 12px;
   flex-shrink: 1;
   min-width: 0;
-}
-.topnav__utils {
-  display: flex;
-  gap: 28px;
-}
-.topnav__utils .topnav__link {
-  padding: 0;
+  padding: 12px 0;
 }
 /* Mobile-only hamburger: invisible at desktop widths. */
 .topnav__menu-btn {
@@ -253,31 +254,6 @@ a:hover {
 }
 .topnav__search:focus-within {
   box-shadow: inset 0 0 0 2px var(--maroon);
-}
-
-/* Under 1200px the bar takes two rows: the title and the right side above,
-   the section links in a row under a rule. */
-@media (max-width: 1200px) {
-  .topnav__in {
-    flex-wrap: wrap;
-    min-height: 0;
-    row-gap: 0;
-  }
-  .topnav__title {
-    flex: 1 1 auto;
-    padding: 16px 0;
-  }
-  .topnav__side {
-    padding: 12px 0;
-  }
-  .topnav__links {
-    order: 3;
-    flex: 1 1 100%;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  .topnav__links .topnav__link {
-    padding: 16px 0 13px;
-  }
 }
 
 /* ---------- Landing page ----------
@@ -1765,25 +1741,15 @@ main {
     text-decoration: none;
     border-left-color: var(--gold);
   }
-  /* About the ERC joins the open list. */
+  /* About the ERC is the last line of the open list, not pushed right. */
+  .topnav__link--about {
+    margin-left: 0;
+  }
   .topnav__side {
     flex: 1 1 100%;
     align-items: stretch;
     gap: 0;
     padding: 0 0 12px;
-  }
-  .topnav__utils {
-    display: none;
-    flex: 1 1 100%;
-    flex-direction: column;
-    gap: 0;
-    padding-bottom: 8px;
-  }
-  .topnav.is-open .topnav__utils {
-    display: flex;
-  }
-  .topnav__utils .topnav__link {
-    padding: 14px 0 14px 12px;
   }
   /* Its own row, as tall as the Menu button. */
   .topnav__search {
