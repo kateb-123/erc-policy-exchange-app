@@ -223,20 +223,24 @@ function writeURL(push = false) {
 function init(rows, modified) {
   state.items = rows;
 
-  // Freshness cue: when the CSV itself was last touched (the server's
-  // Last-Modified — on GitHub Pages that's the last deploy that changed it).
-  // Fallback: the most recent item date that isn't in the future.
+  // Last update: when the CSV itself was last touched (the server's
+  // Last-Modified, the last deploy that changed it). Fallback: the newest
+  // research or headline date that isn't in the future; event dates and
+  // deadlines are not publish dates.
+  const LONG = { year: "numeric", month: "long", day: "numeric" };
   const mod = modified ? new Date(modified) : null;
+  const newest = state.items
+    .filter((it) => /^(research|headline)$/i.test(it.type || ""))
+    .map((it) => it.date)
+    .filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d || "") && d <= TODAY)
+    .reduce((m, d) => (d > m ? d : m), "");
   const stamp =
     mod && !isNaN(mod)
-      ? mod.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
-      : formatDate(
-          state.items
-            .map((it) => it.date)
-            .filter((d) => d && d <= TODAY)
-            .reduce((m, d) => (d > m ? d : m), "")
-        );
-  $("#landing-updated").textContent = stamp ? `Updated ${stamp}` : "";
+      ? mod.toLocaleDateString("en-US", { ...LONG, timeZone: "America/Chicago" })
+      : newest
+        ? new Date(`${newest}T12:00:00`).toLocaleDateString("en-US", LONG)
+        : "";
+  $("#landing-updated").textContent = stamp ? `Last update: ${stamp}` : "";
 
   buildNav();
   buildLanding();
@@ -407,35 +411,33 @@ function buildLanding() {
   const el = $("#landing-cards");
   el.innerHTML = NEWS_TABS.map(
     (t) => `
-    <a class="card" href="?type=${t.value}" data-type="${t.value}">
-      <span class="card__icon" aria-hidden="true"><span class="card__glyph" ${iconMask(t.icon)}></span></span>
-      <h3 class="card__title">${esc(t.label)}</h3>
-      <span class="card__count">${esc(countLabel(t.value))}</span>
-      <i class="fa-solid fa-chevron-right card__arr" aria-hidden="true"></i>
-    </a>`
+    <a class="slab-btn" href="?type=${t.value}" data-type="${t.value}">${esc(t.nav)} <small>${esc(countLabel(t.value))}</small></a>`
   ).join("");
 
   el.addEventListener("click", (e) => {
-    const card = e.target.closest(".card");
-    if (!card || modifiedClick(e)) return;
+    const btn = e.target.closest(".slab-btn");
+    if (!btn || modifiedClick(e)) return;
     e.preventDefault();
-    setType(card.dataset.type);
+    setType(btn.dataset.type);
   });
 }
 
 /* ------------------------------------------------------------
  * New & upcoming (landing)
  * ------------------------------------------------------------
- * Claude Design handoff, Sep 22, 2026. The left half of the landing, cut in
- * two: a hero over the list that feeds it. The list is the index — clicking a
- * row shows it in the hero — and the selection also walks on its own, so the
- * box turns over for a reader who never touches it.
+ * Claude Design handoff, home v2 (Sep 23, 2026): a featured card beside the
+ * list that feeds it. The list is the index: picking a row shows it in the
+ * card and stops the walk. Left alone, the list walks a row at a time and the
+ * card follows. Phones hide the list and step the card by hand.
  *
- * "New & upcoming" rather than "What's New" (Kate, Sep 22): a conference
- * deadline three weeks out is not new, and the box holds those too.
+ * Kate's calls over the handoff (Sep 22 and 23): "New & upcoming" rather than
+ * "What's New", since a conference deadline three weeks out is not new; and
+ * 8 seconds a row rather than 4, since the card holds about 40 words.
  */
 const WN_PER = 3; // items taken from each section
 const WN_TURN_MS = 8000; // how long one item is held before the list moves on
+const WN_FADE_MS = 250;
+const wnWait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // The top few of a section, in the order that section's own feed opens in
 // (soonest for Events, closing soon for Opportunities, newest elsewhere).
@@ -465,47 +467,71 @@ const wnWhen = (it, tab) =>
       ? parseDeadline(it.deadline).label
       : "";
 
-// A Drive link is a PDF viewer, not an image — only a direct image file can go
-// in the hero's picture slot.
+// A Drive link is a PDF viewer, not an image: only a direct image file can go
+// in the card.
 const wnImage = (it) => {
   const raw = (it.infographic || "").trim();
   return /\.(jpe?g|png|webp|gif|avif)$/i.test(raw) ? raw : "";
 };
 
-function wnFeatHTML({ it, tab }) {
-  const art = wnImage(it);
-  const when = wnWhen(it, tab);
-  const source = (it.source || "").trim();
-  const blurb = (it.blurb || "").trim();
-  const id = briefId(it);
-  const link = (it.link || "").trim();
-  // The way out takes the section's own wording, the same as an opened row.
-  const label = DETAIL_LINK_LABEL[tab.value] || "Read more";
-  const out = id
-    ? `<a class="ctalink" href="?brief=${id}" data-brief="${id}" data-brief-title="${esc(it.headline)}">Read the full brief »</a>`
-    : link
-      ? `<a class="ctalink" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(label)} »&nbsp;${faIcon("arrow-up-right-from-square")}${NEW_TAB}</a>`
-      : `<a class="ctalink" href="?type=${tab.value}" data-type="${tab.value}">See all ${esc(tab.nav.toLowerCase())} »</a>`;
-  // The picture is decorative: the headline names the talk and the speaker, so
-  // the portrait repeats nothing and carries an empty alt.
-  return `
-    ${art ? `<img class="feat__art" src="${esc(art)}" alt="" loading="lazy">` : ""}
-    <div class="feat__body">
-      <p class="feat__kicker"><span class="rail__sec">${esc(tab.nav)}</span>${
-        when ? `<span class="feat__date">${esc(when)}</span>` : ""
-      }</p>
-      <h3>${esc(it.headline)}</h3>
-      ${source ? `<p class="feat__src">${esc(source)}</p>` : ""}
-      ${blurb ? `<p class="feat__blurb">${esc(blurb)}</p>` : ""}
-      ${out}
-    </div>`;
+// The sheet has no shape column, so the picture says what it is: wide art runs
+// as a band under the text, square and portrait sit beside it. Each picture is
+// measured once; one that will not load stays out of the card.
+const wnShapes = new Map();
+function wnShape(url) {
+  if (!url) return Promise.resolve("");
+  if (!wnShapes.has(url))
+    wnShapes.set(
+      url,
+      new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const ratio = img.naturalWidth / img.naturalHeight;
+          resolve(ratio >= 1.25 ? "wide" : ratio >= 0.9 ? "sq" : "pt");
+        };
+        img.onerror = () => resolve("");
+        img.src = url;
+      })
+    );
+  return wnShapes.get(url);
 }
 
-function wnRowHTML({ it, tab }, i, current) {
-  const foot = [(it.source || "").trim(), wnWhen(it, tab)].filter(Boolean).map(esc).join(" · ");
+function wnFeatHTML({ it, tab }, shape) {
+  const title = esc(it.headline);
+  const id = briefId(it);
+  const link = (it.link || "").trim();
+  // The headline is the card's one way out.
+  const a = id
+    ? `<a href="?brief=${id}" data-brief="${id}" data-brief-title="${title}">${title}</a>`
+    : link
+      ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${title} ${faIcon("arrow-up-right-from-square")}${NEW_TAB}</a>`
+      : `<a href="?type=${tab.value}" data-type="${tab.value}">${title}</a>`;
+  // Source and date share one line: a long source gives way, the date (or
+  // an opportunity's deadline) never does.
+  const from = (it.source || "").trim();
+  const when = wnWhen(it, tab);
+  const sub =
+    (from ? `<span class="feat__from">${esc(from)}</span>` : "") +
+    (when ? `<span class="feat__when">${from ? "&nbsp;• " : ""}${esc(when)}</span>` : "");
+  const blurb = (it.blurb || "").trim();
+  const sec = `<p class="feat__sec">${esc(tab.nav)}</p>`;
+  const txt = `
+    <div class="feat__txt">
+      <h3>${a}</h3>
+      ${sub ? `<p class="feat__src">${sub}</p>` : ""}
+      ${blurb ? `<p class="feat__b">${esc(blurb)}</p>` : ""}
+    </div>`;
+  if (!shape) return sec + txt;
+  // The picture is decorative: the headline names the talk and the speaker.
+  const fig = `<figure class="feat__media"><img src="${esc(wnImage(it))}" alt=""></figure>`;
+  return shape === "wide" ? sec + txt + fig : `${sec}<div class="feat__row">${fig}${txt}</div>`;
+}
+
+function wnRowHTML({ it, tab }, i) {
+  const foot = [(it.source || "").trim(), wnWhen(it, tab)].filter(Boolean).map(esc).join(" • ");
   return `
     <li class="rail__row">
-      <button type="button" class="rail__pick" data-i="${i}" aria-current="${current}">
+      <button type="button" class="rail__pick" data-i="${i}" aria-label="Show in the featured card: ${esc(it.headline)}">
         <span class="rail__sec">${esc(tab.nav)}</span>
         <span class="rail__hd-line">${esc(it.headline)}</span>
         ${foot ? `<span class="rail__src">${foot}</span>` : ""}
@@ -514,26 +540,28 @@ function wnRowHTML({ it, tab }, i, current) {
 }
 
 function buildWhatsNew() {
-  const host = $("#whats-new");
+  const band = $("#whats-new");
   const list = whatsNewFeed();
   if (!list.length) {
-    host.hidden = true;
+    band.hidden = true;
     return;
   }
-  host.hidden = false;
-  host.innerHTML = `
-    <article class="feat" id="wn-feat" aria-live="polite">${wnFeatHTML(list[0])}</article>
+  band.hidden = false;
+  $("#wn-split").innerHTML = `
+    <article class="feat no-art" id="wn-feat" aria-live="off">${wnFeatHTML(list[0], "")}</article>
+    <div class="caro" role="group" aria-label="Browse new and upcoming items">
+      <button type="button" class="caro__btn" data-step="-1" aria-label="Previous item">${faIcon("chevron-left")}</button>
+      <span class="caro__count" aria-live="polite"><b>1</b> / ${list.length}</span>
+      <button type="button" class="caro__btn" data-step="1" aria-label="Next item">${faIcon("chevron-right")}</button>
+    </div>
     <div class="rail">
-      <div class="rail__hd">
-        <h2 id="wn-h">New &amp; upcoming</h2>
-        <button type="button" class="rail__pause" aria-pressed="true" aria-label="Pause the list moving on its own" title="Pause">${faIcon("pause")}</button>
+      <button type="button" class="rail__pause"></button>
+      <div class="rail__vp" role="group" aria-label="New and upcoming items">
+        <ul class="rail__list" role="list">${list.map(wnRowHTML).join("")}</ul>
       </div>
-      <div class="rail__vp"><ul class="rail__list" role="list">${
-        list.map((r, i) => wnRowHTML(r, i, i === 0)).join("")
-      }</ul></div>
     </div>`;
 
-  // The hero's own links still route through the app.
+  // The card's own links still route through the app.
   $("#wn-feat").addEventListener("click", (e) => {
     if (modifiedClick(e)) return;
     const brief = e.target.closest("a[data-brief]");
@@ -552,58 +580,143 @@ function buildWhatsNew() {
 }
 
 function initWhatsNew(list) {
+  const split = $("#wn-split");
   const feat = $("#wn-feat");
-  const vp = $(".rail__vp");
-  const btn = $(".rail__pause");
-  if (!feat || !vp || !btn) return;
+  const vp = $(".rail__vp", split);
+  const btn = $(".rail__pause", split);
+  const count = $(".caro__count b", split);
+  const rows = $$(".rail__row", vp);
   const picks = $$(".rail__pick", vp);
+  const phone = matchMedia("(max-width: 820px)");
+  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
   // Motion nobody asked for: off from the start for anyone who has said so.
-  let off = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let held = false; // hover and focus hold it without touching the button
+  let off = calm;
+  let held = false; // a pointer or focus on the card or the list holds it
   let at = 0;
-  let timer = null;
+  let timer = 0;
+  let glide = 0;
+  let turn = 0; // a slow picture must not land over a newer pick
 
-  function select(i, bringIntoView) {
+  list.forEach(({ it }) => wnShape(wnImage(it)));
+
+  async function show(i, { fade = true } = {}) {
     at = (i + list.length) % list.length;
-    picks.forEach((b, n) => b.setAttribute("aria-current", String(n === at)));
-    feat.innerHTML = wnFeatHTML(list[at]);
-    if (bringIntoView) picks[at].scrollIntoView({ block: "nearest" });
+    rows.forEach((r, n) => r.classList.toggle("is-current", n === at));
+    picks.forEach((b, n) =>
+      n === at ? b.setAttribute("aria-current", "true") : b.removeAttribute("aria-current")
+    );
+    count.textContent = at + 1;
+    if (!phone.matches) glideTo(rows[at], !fade);
+    const mine = ++turn;
+    const shape = await Promise.race([wnShape(wnImage(list[at].it)), wnWait(1500).then(() => "")]);
+    if (mine !== turn) return;
+    const paint = () => {
+      feat.className = `feat ${shape ? `has-${shape}` : "no-art"}`;
+      feat.innerHTML = wnFeatHTML(list[at], shape);
+    };
+    if (!fade || calm) return paint();
+    feat.classList.add("is-out");
+    await wnWait(WN_FADE_MS);
+    if (mine === turn) paint();
+  }
+
+  // The list glides rather than jumps (Kate, Sep 22: the jump read as
+  // "powerpoint circa 95"). The row goes to the top while there is list below
+  // it; at the end the list rests and the outline walks down the last rows,
+  // so all twelve get their turn.
+  function glideTo(row, instant) {
+    cancelAnimationFrame(glide);
+    const from = vp.scrollTop;
+    const to = Math.min(row.offsetTop, vp.scrollHeight - vp.clientHeight);
+    if (instant || calm || Math.abs(to - from) < 2) {
+      vp.scrollTop = to;
+      return;
+    }
+    const ms = Math.min(900, 350 + Math.abs(to - from) / 4);
+    const t0 = performance.now();
+    const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / ms);
+      vp.scrollTop = from + (to - from) * ease(t);
+      if (t < 1) glide = requestAnimationFrame(step);
+    };
+    glide = requestAnimationFrame(step);
+  }
+  // A hand on the wheel wins over the glide.
+  ["wheel", "touchstart", "pointerdown"].forEach((ev) =>
+    vp.addEventListener(ev, () => cancelAnimationFrame(glide), { passive: true })
+  );
+
+  // Nothing turns over on a phone, behind a section, in a hidden tab, or
+  // while someone is reading; each of those waits a full turn after.
+  function schedule() {
+    clearTimeout(timer);
+    if (!off) timer = setTimeout(tick, WN_TURN_MS);
+  }
+  function tick() {
+    if (!held && !phone.matches && !$("#landing").hidden && !document.hidden) show(at + 1);
+    schedule();
   }
 
   // A stop is not optional: WCAG 2.2.2 asks for one on anything that moves by
-  // itself for more than five seconds.
+  // itself for more than five seconds. The label says what a press will do,
+  // and a card that turns over by itself is not read aloud.
   function sync() {
-    clearInterval(timer);
-    if (!off)
-      timer = setInterval(() => {
-        // Nothing to turn over while the landing is hidden behind a section.
-        if (!held && !$("#landing").hidden) select(at + 1, true);
-      }, WN_TURN_MS);
-    btn.setAttribute("aria-pressed", String(!off));
     btn.innerHTML = faIcon(off ? "play" : "pause");
-    btn.title = off ? "Play" : "Pause";
-    btn.setAttribute("aria-label", off ? "Let the list move on its own again" : "Pause the list moving on its own");
+    btn.title = off ? "Resume auto-scrolling" : "Pause auto-scrolling";
+    btn.setAttribute("aria-label", `${btn.title} the list`);
+    feat.setAttribute("aria-live", off || phone.matches ? "polite" : "off");
+    schedule();
   }
-
   btn.addEventListener("click", () => {
     off = !off;
     sync();
   });
+
+  // Picking a row means "stay on this one".
   vp.addEventListener("click", (e) => {
     const b = e.target.closest(".rail__pick");
-    if (b) select(Number(b.dataset.i), false);
+    if (!b) return;
+    off = true;
+    sync();
+    show(Number(b.dataset.i));
   });
   // Up and down walk the list without leaving the keyboard.
   vp.addEventListener("keydown", (e) => {
     if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
     e.preventDefault();
-    select(at + (e.key === "ArrowDown" ? 1 : -1), true);
-    picks[at].focus();
+    off = true;
+    sync();
+    show(at + (e.key === "ArrowDown" ? 1 : -1));
+    picks[at].focus({ preventScroll: true });
   });
-  // Reading beats turning.
-  ["pointerenter", "focusin"].forEach((ev) => vp.addEventListener(ev, () => { held = true; }));
-  ["pointerleave", "focusout"].forEach((ev) => vp.addEventListener(ev, () => { held = false; }));
+  $$(".caro__btn", split).forEach((b) =>
+    b.addEventListener("click", () => show(at + Number(b.dataset.step)))
+  );
+
+  // Reading beats turning, on the card as much as on the list.
+  split.addEventListener("pointerenter", () => {
+    held = true;
+  });
+  split.addEventListener("pointerleave", () => {
+    held = false;
+    schedule();
+  });
+  split.addEventListener("focusin", () => {
+    held = true;
+  });
+  split.addEventListener("focusout", (e) => {
+    if (split.contains(e.relatedTarget)) return;
+    held = false;
+    schedule();
+  });
+  phone.addEventListener("change", () => {
+    feat.setAttribute("aria-live", off || phone.matches ? "polite" : "off");
+    if (!phone.matches) glideTo(rows[at], true);
+  });
+
   sync();
+  show(0, { fade: false });
 }
 
 // "14 upcoming", "23 recent", "8 open": how much is live in a section right now,
@@ -880,8 +993,6 @@ const DETAIL_LINK_LABEL = {
 
 // Shared helpers for the feed templates.
 const SEP = `<span class="feed-meta-sep" aria-hidden="true">·</span>`;
-const iconMask = (file) =>
-  `style="-webkit-mask-image:url('assets/${file}');mask-image:url('assets/${file}')"`;
 // ext = show the ↗ outbound marker. On expandable rows the row opens in place
 // while the title leaves the site, so the title needs its own cue (phones have
 // no hover underline). Link-only rows already carry a row-level ↗.

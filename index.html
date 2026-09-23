@@ -27,7 +27,7 @@
   <!-- Font Awesome 7 Free: the same tag and hash the Content Desk uses, so both apps share one icon set. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=72" />
+  <link rel="stylesheet" href="css/styles.css?v=74" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -66,25 +66,27 @@
     </div>
   </header>
   <main id="main">
-    <!-- Landing page (home view): the welcome text across the top, then New &
-         upcoming beside the four section cards, then the freshness line. The
-         left column is cut in half — a hero over the list that feeds it — and
-         both it and the cards are built by app.js. -->
+    <!-- Landing page (home view), Claude Design home v2 (Sep 23, 2026): the
+         welcome over the four section buttons with Share beside them, then New
+         & upcoming on a gray band, a featured card beside the list that feeds
+         it. The buttons, the card and the list are built by app.js. -->
     <section class="landing" id="landing" aria-label="Welcome" hidden>
-      <div class="home2">
-        <div class="hero">
-          <h2 class="hero__title" tabindex="-1" data-focus-target>Howdy! Welcome to the ERC Policy Exchange</h2>
-          <p class="hero__text">
-            Explore the latest research, upcoming events, opportunities, and
-            education news, curated by the
-            <a href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">Texas A&amp;M Education Research Center</a>.
-          </p>
+      <div class="button-slab">
+        <h2 class="slab-title" tabindex="-1" data-focus-target>Howdy! Welcome to the ERC Policy Exchange</h2>
+        <p class="slab-lede">Browse through the latest research, upcoming events, opportunities, and education headlines.</p>
+        <div class="button-group" id="landing-cards"></div>
+        <div class="slab-intro">
+          <a class="slab-cta" href="share/">Share an item</a>
+          <div class="slab-intro__meta">
+            <p class="slab-meta" id="landing-updated"></p>
+            <p class="slab-meta">Curated by the <a href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">Texas A&amp;M Education Research Center</a>.</p>
+          </div>
         </div>
-        <aside class="wn" id="whats-new" aria-labelledby="wn-h"></aside>
-        <div class="cards cards--stack" id="landing-cards"></div>
       </div>
-      <p class="hero__text landing__share">Have something for the Exchange? <a href="share/">Share an item »</a></p>
-      <p class="upd upd--below" id="landing-updated"></p>
+      <section class="home2-band" id="whats-new" aria-labelledby="wn-h">
+        <h2 class="split__hd" id="wn-h">New &amp; upcoming</h2>
+        <div class="home2-split" id="wn-split"></div>
+      </section>
     </section>
 
     <!-- Section view: title + one line, Quick Search + sort, the feed. -->
@@ -129,7 +131,7 @@
   </footer>
 
   <script src="js/csv.js?v=2"></script>
-  <script src="js/app.js?v=65"></script>
+  <script src="js/app.js?v=68"></script>
   <!-- Cloudflare Web Analytics: visit counts, no cookies. The site token is public by design. -->
   <script
     type="module"
