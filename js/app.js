@@ -54,9 +54,17 @@ const NEWS_TABS = [
   },
 ];
 
-// Today (YYYY-MM-DD). Upcoming Events drop off automatically once their date
-// passes, so the feed stays current with no manual pruning.
-const TODAY = new Date().toISOString().slice(0, 10);
+// Today (YYYY-MM-DD) in College Station, not UTC and not the reader's own
+// clock. The ERC's day is what these dates mean: read in UTC, an event on the
+// 22nd disappears at 7pm Texas time while the day is still going. Upcoming
+// Events drop off automatically once their date passes, so the feed stays
+// current with no manual pruning.
+const ERC_TIMEZONE = "America/Chicago";
+const ercDate = (when = new Date()) =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: ERC_TIMEZONE, year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(when);
+const TODAY = ercDate();
 const isPastEvent = (it) =>
   (it.type || "").toLowerCase() === "event" && (it.date || "") < TODAY;
 
@@ -67,7 +75,7 @@ const isPastEvent = (it) =>
 const CUTOFF = (() => {
   const d = new Date();
   d.setDate(d.getDate() - 60);
-  return d.toISOString().slice(0, 10);
+  return ercDate(d);
 })();
 const isStaleHeadline = (it) =>
   (it.type || "").toLowerCase() === "headline" && (it.date || "") < CUTOFF;
