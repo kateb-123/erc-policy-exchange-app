@@ -432,7 +432,7 @@ function buildLanding() {
  * Claude Design handoff, home v2 (Sep 23, 2026): a featured card beside the
  * list that feeds it. The list is the index: picking a row shows it in the
  * card and stops the walk. Left alone, the list walks a row at a time and the
- * card follows. Phones hide the list and step the card by hand.
+ * card follows. Arrows under the card step it by hand; phones hide the list.
  *
  * Kate's calls over the handoff (Sep 22 and 23): "New & upcoming" rather than
  * "What's New", since a conference deadline three weeks out is not new; and
@@ -694,8 +694,13 @@ function initWhatsNew(list) {
     show(at + (e.key === "ArrowDown" ? 1 : -1));
     picks[at].focus({ preventScroll: true });
   });
+  // The arrows step the card, and stop the walk the way a pick does.
   $$(".caro__btn", split).forEach((b) =>
-    b.addEventListener("click", () => show(at + Number(b.dataset.step)))
+    b.addEventListener("click", () => {
+      off = true;
+      sync();
+      show(at + Number(b.dataset.step));
+    })
   );
 
   // Reading beats turning, on the card as much as on the list.

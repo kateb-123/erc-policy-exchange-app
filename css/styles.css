@@ -390,9 +390,22 @@ a:hover {
 .home2-split {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 32px 24px;
+  gap: 12px 24px;
   align-items: stretch;
   padding-top: 16px;
+}
+/* The card with its arrows under it on the left; the list beside both. */
+.home2-split > .feat {
+  grid-column: 1;
+  grid-row: 1;
+}
+.home2-split > .caro {
+  grid-column: 1;
+  grid-row: 2;
+}
+.home2-split > .rail {
+  grid-column: 2;
+  grid-row: 1 / span 2;
 }
 
 /* The featured card takes the list's height. Its one link is the headline,
@@ -660,9 +673,10 @@ a:hover {
   color: var(--g600);
 }
 
-/* Phones get the card and a pair of arrows instead of the list. */
+/* Previous, "n / 12", next under the card at every width (Kate, Sep 23);
+   on phones they are the only way through, since the list is hidden. */
 .caro {
-  display: none;
+  display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
@@ -714,9 +728,6 @@ a:hover {
   }
   .rail {
     display: none;
-  }
-  .caro {
-    display: flex;
   }
   .feat {
     min-height: 250px;
