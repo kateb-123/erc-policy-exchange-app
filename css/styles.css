@@ -384,13 +384,14 @@ a:hover {
 
 /* ---------- Home: the What's New rail ----------
    Claude Design handoff (Sep 22, 2026). The landing is a two-column grid: the
-   welcome text spans the top, then the rail at 55% beside the four section
-   cards at 45%. The cards set the row's height and the rail fills it, which is
-   why the viewport takes a zero basis and no fixed height of its own. */
+   welcome text spans the top, then the rail beside the four section cards, the
+   two columns even (Kate, Sep 22) with a wider gutter between them. The cards
+   set the row's height and the rail fills it, which is why the viewport takes
+   a zero basis and no fixed height of its own. */
 .home2 {
   display: grid;
-  grid-template-columns: minmax(0, 55fr) minmax(0, 45fr);
-  gap: 32px 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 32px 40px;
   padding: 24px 0 56px;
   align-items: start;
 }
@@ -537,7 +538,7 @@ a:hover {
 }
 @media (max-width: 1100px) {
   .home2 {
-    gap: 28px 20px;
+    gap: 28px 32px;
   }
   .home2 .hero__title {
     font-size: 26px;

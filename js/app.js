@@ -521,21 +521,41 @@ function initRail() {
   let held = false; // hover and focus hold the list without touching the button
   let timer = null;
 
-  // A discrete one-row jump. Smooth scrollTo on an inner container is not
-  // dependable and short timers get clamped, so the list steps rather than
-  // glides.
+  // The list glides to the next row rather than cutting to it. Native smooth
+  // scrolling is not dependable on an inner container, so the easing is driven
+  // by hand: a cubic in-out, slow at both ends, so each row settles. The
+  // rewind to the top covers more ground, so it takes proportionally longer,
+  // to a ceiling.
+  let glide = null;
+  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+  function glideTo(target) {
+    cancelAnimationFrame(glide);
+    const from = vp.scrollTop;
+    const distance = target - from;
+    if (!distance) return;
+    const ms = Math.min(1200, Math.max(500, Math.abs(distance) * 1.1));
+    const start = performance.now();
+    const frame = (now) => {
+      const t = Math.min(1, (now - start) / ms);
+      vp.scrollTop = from + distance * ease(t);
+      if (t < 1) glide = requestAnimationFrame(frame);
+    };
+    glide = requestAnimationFrame(frame);
+  }
+
   function step() {
     if (off || held) return;
     // A list that barely overflows would only twitch and reset, never walk.
     if (vp.scrollHeight - vp.clientHeight < 24) return;
     const next = rows.find((r) => r.offsetTop > vp.scrollTop + 2);
     const atEnd = vp.scrollTop + vp.clientHeight >= vp.scrollHeight - 2;
-    vp.scrollTop = atEnd || !next ? 0 : next.offsetTop;
+    glideTo(atEnd || !next ? 0 : next.offsetTop);
   }
 
   function sync() {
     clearInterval(timer);
-    if (!off) timer = setInterval(step, RAIL_SECS * 1000);
+    if (off) cancelAnimationFrame(glide);
+    else timer = setInterval(step, RAIL_SECS * 1000);
     btn.setAttribute("aria-pressed", String(!off));
     btn.innerHTML = faIcon(off ? "play" : "pause");
     btn.title = `${off ? "Resume" : "Pause"} auto-scrolling`;
@@ -547,7 +567,12 @@ function initRail() {
     sync();
   });
   // Reading beats advancing.
-  ["pointerenter", "focusin"].forEach((ev) => vp.addEventListener(ev, () => { held = true; }));
+  ["pointerenter", "focusin"].forEach((ev) =>
+    vp.addEventListener(ev, () => {
+      held = true;
+      cancelAnimationFrame(glide); // hand the scroll straight back to the reader
+    })
+  );
   ["pointerleave", "focusout"].forEach((ev) => vp.addEventListener(ev, () => { held = false; }));
   sync();
 }
