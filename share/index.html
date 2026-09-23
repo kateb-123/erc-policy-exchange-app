@@ -65,7 +65,7 @@
   <main id="main">
     <div class="section-head">
       <h2 class="section-head__title" tabindex="-1">Share an item</h2>
-      <p class="section-head__desc">Anyone can share, at Texas A&amp;M or beyond. Events, research, opportunities, headlines: if it belongs in the ERC newsletter or on the <a href="../">Policy Exchange</a>, send it here. We review everything before it is published.</p>
+      <p class="section-head__desc">Send the ERC an event, a paper, an opportunity or a headline for the newsletter and the <a href="../">Policy Exchange</a>. We review everything before it goes out.</p>
     </div>
     <div id="root"></div>
   </main>
@@ -143,7 +143,7 @@ root.innerHTML = `
       <input id="t" type="text" autocomplete="off">
     </div>
     <div class="field field--full">
-      <label for="d">Description <small>(paste whatever you have: dates, abstract, the whole announcement)</small></label>
+      <label for="d">Description <small>(dates, an abstract, or the whole announcement)</small></label>
       <textarea id="d" rows="6"></textarea>
     </div>
     <div class="field field--full">
@@ -327,7 +327,7 @@ form.addEventListener('submit', async event => {
   const errors = [];
   if (!picked) errors.push('Pick a type.');
   if (!link) errors.push('Add a link.');
-  else if (!/^https?:\/\//i.test(link)) errors.push('That link needs to be a normal web link.');
+  else if (!/^https?:\/\//i.test(link)) errors.push('The link needs to start with http:// or https://.');
   if (!name) errors.push('Add your name.');
   if (!email) errors.push('Add your email address.');
   else if (!/^\S+@\S+\.\S+$/.test(email)) errors.push("That email address doesn't look right.");
@@ -353,7 +353,7 @@ form.addEventListener('submit', async event => {
       }),
     });
     const data = await resp.json();
-    if (!data.ok) throw new Error((data.errors ?? ['Something went wrong.']).join(' '));
+    if (!data.ok) throw new Error((data.errors ?? ['Something went wrong. Try again.']).join(' '));
 
     // Opt-in only: never subscribe anyone who did not tick the box. It goes
     // through the desk like the submission, so the list's address stays out
@@ -368,10 +368,10 @@ form.addEventListener('submit', async event => {
     }
 
     form.reset();
-    const title = el('h3', '', 'Thank you. The ERC has it.');
+    const title = el('h3', '', 'Received.');
     title.tabIndex = -1;
     doneBox.replaceChildren(title);
-    doneBox.append(el('p', '', 'The team reviews every submission before anything is published.'));
+    doneBox.append(el('p', '', 'We review every submission before it goes out.'));
     const again = el('button', 'btn-outline', 'Submit another');
     again.type = 'button';
     again.addEventListener('click', () => {

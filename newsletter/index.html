@@ -209,7 +209,7 @@ form.addEventListener('submit', async event => {
       body: JSON.stringify({ name, email, turnstile_token: await takeToken() }),
     });
     const data = await resp.json();
-    if (!data.ok) throw new Error((data.errors ?? ['Something went wrong.']).join(' '));
+    if (!data.ok) throw new Error((data.errors ?? ['Something went wrong. Try again.']).join(' '));
     form.reset();
     setStat('');
     const title = el('h3', '', 'Thank you. You are on the list.');
