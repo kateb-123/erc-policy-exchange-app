@@ -1765,7 +1765,7 @@ main {
     text-decoration: none;
     border-left-color: var(--gold);
   }
-  /* Share an item and About the ERC join the open list. */
+  /* About the ERC joins the open list. */
   .topnav__side {
     flex: 1 1 100%;
     align-items: stretch;

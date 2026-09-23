@@ -27,15 +27,15 @@
   <!-- Font Awesome 7 Free: the same tag and hash the Content Desk uses, so both apps share one icon set. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=74" />
+  <link rel="stylesheet" href="css/styles.css?v=75" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
 
   <!-- Top bar (Claude Design handoff, Sep 9, 2026): the ERC mark + site title
        is the h1 and the Home link, then the section links (built by app.js);
-       Share an item and About the ERC sit at the right with the global
-       search under them. On phones the title and the Menu button share the
+       About the ERC sits at the right with the global search under it
+       (Share moved to the home page's button, Kate, Sep 23). On phones the title and the Menu button share the
        first row and every link opens in a list under them. -->
   <header class="topnav">
     <div class="topnav__in">
@@ -48,8 +48,7 @@
       </button>
       <nav id="topnav" class="topnav__links" aria-label="Sections"></nav>
       <div class="topnav__side">
-        <nav class="topnav__utils" aria-label="Share and about">
-          <a class="topnav__link" href="share/">Share an item</a>
+        <nav class="topnav__utils" aria-label="About">
           <a class="topnav__link" href="about/">About the ERC</a>
         </nav>
         <div class="topnav__search">
