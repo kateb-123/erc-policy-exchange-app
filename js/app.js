@@ -240,7 +240,7 @@ function init(rows, modified) {
 
   buildNav();
   buildLanding();
-  buildRail();
+  buildWhatsNew();
   validateSubtype();
 
   // Back and Forward: the URL is the source of truth, so re-read it and render.
@@ -424,19 +424,22 @@ function buildLanding() {
 }
 
 /* ------------------------------------------------------------
- * The What's New rail (landing)
+ * New & upcoming (landing)
  * ------------------------------------------------------------
- * Claude Design handoff, Sep 22, 2026. A mixed list of the newest few items
- * from all four sections, advancing one row at a time like a signage board.
- * The feed is interleaved by construction rather than merged on date, so the
- * four sections always share the rail evenly.
+ * Claude Design handoff, Sep 22, 2026. The left half of the landing, cut in
+ * two: a hero over the list that feeds it. The list is the index — clicking a
+ * row shows it in the hero — and the selection also walks on its own, so the
+ * box turns over for a reader who never touches it.
+ *
+ * "New & upcoming" rather than "What's New" (Kate, Sep 22): a conference
+ * deadline three weeks out is not new, and the box holds those too.
  */
-const RAIL_PER = 3; // items taken from each section
-const RAIL_SECS = 4; // seconds a row is held before the list steps on
+const WN_PER = 3; // items taken from each section
+const WN_TURN_MS = 8000; // how long one item is held before the list moves on
 
 // The top few of a section, in the order that section's own feed opens in
 // (soonest for Events, closing soon for Opportunities, newest elsewhere).
-function railFeed(per = RAIL_PER) {
+function whatsNewFeed(per = WN_PER) {
   const bags = NEWS_TABS.map((tab) => {
     const items = state.items.filter(
       (it) =>
@@ -447,54 +450,91 @@ function railFeed(per = RAIL_PER) {
     items.sort(sortComparator(TOOLBAR_SORTS[tab.value][0]));
     return items.slice(0, per).map((it) => ({ it, tab }));
   });
+  // Round-robin, so the four sections share the box evenly and it is mixed by
+  // construction rather than merged on date.
   const out = [];
   for (let i = 0; i < per; i++) bags.forEach((bag) => bag[i] && out.push(bag[i]));
   return out;
 }
 
-function railRow({ it, tab }) {
-  // Source and date read together on the foot line: both are provenance.
-  const when = it.date
+// Opportunities are judged on their deadline, everything else on its date.
+const wnWhen = (it, tab) =>
+  it.date
     ? formatDate(it.date)
     : tab.value === "opportunity"
       ? parseDeadline(it.deadline).label
       : "";
-  const foot = [(it.source || "").trim(), when].filter(Boolean).map(esc).join(" · ");
+
+// A Drive link is a PDF viewer, not an image — only a direct image file can go
+// in the hero's picture slot.
+const wnImage = (it) => {
+  const raw = (it.infographic || "").trim();
+  return /\.(jpe?g|png|webp|gif|avif)$/i.test(raw) ? raw : "";
+};
+
+function wnFeatHTML({ it, tab }) {
+  const art = wnImage(it);
+  const when = wnWhen(it, tab);
+  const source = (it.source || "").trim();
+  const blurb = (it.blurb || "").trim();
   const id = briefId(it);
   const link = (it.link || "").trim();
-  // A brief opens in the in-app viewer, an outbound item in a new tab, and an
-  // item with no link of its own goes to its section.
-  const anchor = id
-    ? `<a href="?brief=${id}" data-brief="${id}" data-brief-title="${esc(it.headline)}">${esc(it.headline)}</a>`
+  // The way out takes the section's own wording, the same as an opened row.
+  const label = DETAIL_LINK_LABEL[tab.value] || "Read more";
+  const out = id
+    ? `<a class="ctalink" href="?brief=${id}" data-brief="${id}" data-brief-title="${esc(it.headline)}">Read the full brief »</a>`
     : link
-      ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(it.headline)}&nbsp;${faIcon("arrow-up-right-from-square")}${NEW_TAB}</a>`
-      : `<a href="?type=${tab.value}" data-type="${tab.value}">${esc(it.headline)}</a>`;
+      ? `<a class="ctalink" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(label)} »&nbsp;${faIcon("arrow-up-right-from-square")}${NEW_TAB}</a>`
+      : `<a class="ctalink" href="?type=${tab.value}" data-type="${tab.value}">See all ${esc(tab.nav.toLowerCase())} »</a>`;
+  // The picture is decorative: the headline names the talk and the speaker, so
+  // the portrait repeats nothing and carries an empty alt.
+  return `
+    ${art ? `<img class="feat__art" src="${esc(art)}" alt="" loading="lazy">` : ""}
+    <div class="feat__body">
+      <p class="feat__kicker"><span class="rail__sec">${esc(tab.nav)}</span>${
+        when ? `<span class="feat__date">${esc(when)}</span>` : ""
+      }</p>
+      <h3>${esc(it.headline)}</h3>
+      ${source ? `<p class="feat__src">${esc(source)}</p>` : ""}
+      ${blurb ? `<p class="feat__blurb">${esc(blurb)}</p>` : ""}
+      ${out}
+    </div>`;
+}
+
+function wnRowHTML({ it, tab }, i, current) {
+  const foot = [(it.source || "").trim(), wnWhen(it, tab)].filter(Boolean).map(esc).join(" · ");
   return `
     <li class="rail__row">
-      <p class="rail__sec">${esc(tab.nav)}</p>
-      <h3>${anchor}</h3>
-      ${foot ? `<p class="rail__src">${foot}</p>` : ""}
+      <button type="button" class="rail__pick" data-i="${i}" aria-current="${current}">
+        <span class="rail__sec">${esc(tab.nav)}</span>
+        <span class="rail__hd-line">${esc(it.headline)}</span>
+        ${foot ? `<span class="rail__src">${foot}</span>` : ""}
+      </button>
     </li>`;
 }
 
-function buildRail() {
+function buildWhatsNew() {
   const host = $("#whats-new");
-  const rows = railFeed().map(railRow).join("");
-  if (!rows) {
+  const list = whatsNewFeed();
+  if (!list.length) {
     host.hidden = true;
     return;
   }
   host.hidden = false;
   host.innerHTML = `
-    <div class="rail__hd">
-      <h2 id="rail-h">What’s New</h2>
-      <button type="button" class="rail__pause" aria-pressed="true" aria-label="Pause auto-scrolling the list" title="Pause auto-scrolling">${faIcon("pause")}</button>
-    </div>
-    <div class="rail__vp" tabindex="0" role="group" aria-label="Recent items, scrollable">
-      <ul class="rail__list" role="list">${rows}</ul>
+    <article class="feat" id="wn-feat" aria-live="polite">${wnFeatHTML(list[0])}</article>
+    <div class="rail">
+      <div class="rail__hd">
+        <h2 id="wn-h">New &amp; upcoming</h2>
+        <button type="button" class="rail__pause" aria-pressed="true" aria-label="Pause the list moving on its own" title="Pause">${faIcon("pause")}</button>
+      </div>
+      <div class="rail__vp"><ul class="rail__list" role="list">${
+        list.map((r, i) => wnRowHTML(r, i, i === 0)).join("")
+      }</ul></div>
     </div>`;
 
-  host.addEventListener("click", (e) => {
+  // The hero's own links still route through the app.
+  $("#wn-feat").addEventListener("click", (e) => {
     if (modifiedClick(e)) return;
     const brief = e.target.closest("a[data-brief]");
     if (brief) {
@@ -508,71 +548,60 @@ function buildRail() {
       setType(section.dataset.type);
     }
   });
-  initRail();
+  initWhatsNew(list);
 }
 
-function initRail() {
+function initWhatsNew(list) {
+  const feat = $("#wn-feat");
   const vp = $(".rail__vp");
   const btn = $(".rail__pause");
-  if (!vp || !btn) return;
-  const rows = $$(".rail__row", vp);
+  if (!feat || !vp || !btn) return;
+  const picks = $$(".rail__pick", vp);
   // Motion nobody asked for: off from the start for anyone who has said so.
   let off = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  let held = false; // hover and focus hold the list without touching the button
+  let held = false; // hover and focus hold it without touching the button
+  let at = 0;
   let timer = null;
 
-  // The list glides to the next row rather than cutting to it. Native smooth
-  // scrolling is not dependable on an inner container, so the easing is driven
-  // by hand: a cubic in-out, slow at both ends, so each row settles. The
-  // rewind to the top covers more ground, so it takes proportionally longer,
-  // to a ceiling.
-  let glide = null;
-  const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
-  function glideTo(target) {
-    cancelAnimationFrame(glide);
-    const from = vp.scrollTop;
-    const distance = target - from;
-    if (!distance) return;
-    const ms = Math.min(1200, Math.max(500, Math.abs(distance) * 1.1));
-    const start = performance.now();
-    const frame = (now) => {
-      const t = Math.min(1, (now - start) / ms);
-      vp.scrollTop = from + distance * ease(t);
-      if (t < 1) glide = requestAnimationFrame(frame);
-    };
-    glide = requestAnimationFrame(frame);
+  function select(i, bringIntoView) {
+    at = (i + list.length) % list.length;
+    picks.forEach((b, n) => b.setAttribute("aria-current", String(n === at)));
+    feat.innerHTML = wnFeatHTML(list[at]);
+    if (bringIntoView) picks[at].scrollIntoView({ block: "nearest" });
   }
 
-  function step() {
-    if (off || held) return;
-    // A list that barely overflows would only twitch and reset, never walk.
-    if (vp.scrollHeight - vp.clientHeight < 24) return;
-    const next = rows.find((r) => r.offsetTop > vp.scrollTop + 2);
-    const atEnd = vp.scrollTop + vp.clientHeight >= vp.scrollHeight - 2;
-    glideTo(atEnd || !next ? 0 : next.offsetTop);
-  }
-
+  // A stop is not optional: WCAG 2.2.2 asks for one on anything that moves by
+  // itself for more than five seconds.
   function sync() {
     clearInterval(timer);
-    if (off) cancelAnimationFrame(glide);
-    else timer = setInterval(step, RAIL_SECS * 1000);
+    if (!off)
+      timer = setInterval(() => {
+        // Nothing to turn over while the landing is hidden behind a section.
+        if (!held && !$("#landing").hidden) select(at + 1, true);
+      }, WN_TURN_MS);
     btn.setAttribute("aria-pressed", String(!off));
     btn.innerHTML = faIcon(off ? "play" : "pause");
-    btn.title = `${off ? "Resume" : "Pause"} auto-scrolling`;
-    btn.setAttribute("aria-label", `${off ? "Resume" : "Pause"} auto-scrolling the list`);
+    btn.title = off ? "Play" : "Pause";
+    btn.setAttribute("aria-label", off ? "Let the list move on its own again" : "Pause the list moving on its own");
   }
 
   btn.addEventListener("click", () => {
     off = !off;
     sync();
   });
-  // Reading beats advancing.
-  ["pointerenter", "focusin"].forEach((ev) =>
-    vp.addEventListener(ev, () => {
-      held = true;
-      cancelAnimationFrame(glide); // hand the scroll straight back to the reader
-    })
-  );
+  vp.addEventListener("click", (e) => {
+    const b = e.target.closest(".rail__pick");
+    if (b) select(Number(b.dataset.i), false);
+  });
+  // Up and down walk the list without leaving the keyboard.
+  vp.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    e.preventDefault();
+    select(at + (e.key === "ArrowDown" ? 1 : -1), true);
+    picks[at].focus();
+  });
+  // Reading beats turning.
+  ["pointerenter", "focusin"].forEach((ev) => vp.addEventListener(ev, () => { held = true; }));
   ["pointerleave", "focusout"].forEach((ev) => vp.addEventListener(ev, () => { held = false; }));
   sync();
 }

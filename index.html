@@ -27,7 +27,7 @@
   <!-- Font Awesome 7 Free: the same tag and hash the Content Desk uses, so both apps share one icon set. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=71" />
+  <link rel="stylesheet" href="css/styles.css?v=72" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -66,9 +66,10 @@
     </div>
   </header>
   <main id="main">
-    <!-- Landing page (home view): the welcome text across the top, the
-         What's New rail beside the four section cards, then the freshness
-         line. The rail and the cards are both built by app.js. -->
+    <!-- Landing page (home view): the welcome text across the top, then New &
+         upcoming beside the four section cards, then the freshness line. The
+         left column is cut in half — a hero over the list that feeds it — and
+         both it and the cards are built by app.js. -->
     <section class="landing" id="landing" aria-label="Welcome" hidden>
       <div class="home2">
         <div class="hero">
@@ -79,7 +80,7 @@
             <a href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">Texas A&amp;M Education Research Center</a>.
           </p>
         </div>
-        <aside class="rail" id="whats-new" aria-labelledby="rail-h"></aside>
+        <aside class="wn" id="whats-new" aria-labelledby="wn-h"></aside>
         <div class="cards cards--stack" id="landing-cards"></div>
       </div>
       <p class="hero__text landing__share">Have something for the Exchange? <a href="share/">Share an item »</a></p>
@@ -128,7 +129,7 @@
   </footer>
 
   <script src="js/csv.js?v=2"></script>
-  <script src="js/app.js?v=64"></script>
+  <script src="js/app.js?v=65"></script>
   <!-- Cloudflare Web Analytics: visit counts, no cookies. The site token is public by design. -->
   <script
     type="module"
