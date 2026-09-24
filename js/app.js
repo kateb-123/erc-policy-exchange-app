@@ -522,9 +522,9 @@ function buildLanding() {
 
   if (el.dataset.wired) return;
   el.dataset.wired = "1";
-  // Up to 1200px New & Upcoming shows first, so it comes first in the page
-  // too: Tab, screen readers and the Home heading meet it before the welcome
-  // (Sep 24 review, WCAG 2.4.3). Wider, the welcome is the left column.
+  // Up to 1200px New & Upcoming shows before the section buttons, so it
+  // comes first in the page too: Tab and screen readers meet it first (Sep 24
+  // review, WCAG 2.4.3). Wider, the buttons are the left column.
   const bandFirst = matchMedia("(max-width: 1200px)");
   const orderHome = () => {
     const land = $("#landing");
