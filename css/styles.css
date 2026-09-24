@@ -1060,6 +1060,13 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   overflow: hidden;
   margin: 0;
   font: 600 calc(50 * var(--u)) / 1.12 var(--head);
+  color: var(--maroon);
+}
+/* Grey bodies under the band for every card but the callouts (Kate, Sep 24:
+   "for all except the callout ones like submit"): the Share card and the
+   photo card's block keep the maroon ground. */
+#wn-feat .hc .hc-share .hc__ttl,
+#wn-feat .hc .hc__blk .hc__ttl {
   color: #fff;
 }
 #wn-feat .hc .hc__ttl a,
@@ -1090,12 +1097,16 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 #wn-feat .hc .hc__meta {
   margin: 0;
   font: 400 calc(24 * var(--u)) / 1.4 var(--head);
+  color: var(--g800);
+}
+#wn-feat .hc .hc-share .hc__meta,
+#wn-feat .hc .hc__blk .hc__meta {
   color: var(--cream);
 }
 #wn-feat .hc .hc__img {
   margin: 0;
   overflow: hidden;
-  background: #5c1010;
+  background: var(--g200);
 }
 #wn-feat .hc .hc__img img {
   display: block;
@@ -1106,16 +1117,16 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 #wn-feat .hc .hc__slot {
   display: grid;
   place-items: center;
-  outline: calc(3 * var(--u)) dashed var(--cream);
+  outline: calc(3 * var(--u)) dashed var(--g400);
   outline-offset: calc(-12 * var(--u));
   font: 600 calc(20 * var(--u)) / 1.2 var(--head);
-  color: var(--cream);
+  color: var(--g600);
 }
 /* 1a ERC event: text on maroon, the 4:5 portrait at full height on the right. */
 #wn-feat .hc .hc-erc {
   display: grid;
   grid-template-columns: calc(800 * var(--u)) calc(400 * var(--u));
-  background: var(--maroon);
+  background: var(--g100);
 }
 #wn-feat .hc .hc-erc .hc__col,
 #wn-feat .hc .hc-date .hc__col {
@@ -1137,27 +1148,26 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 #wn-feat .hc .hc__fact b {
   font: 600 calc(80 * var(--u)) / 1 var(--head);
   letter-spacing: -0.02em;
+  color: var(--maroon);
 }
 #wn-feat .hc .hc__fact span {
   font: 400 calc(17 * var(--u)) / 1.3 var(--head);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--cream);
+  color: var(--maroon-muted);
 }
 #wn-feat .hc .hc-erc .hc__ttl {
   font-size: calc(44 * var(--u));
   -webkit-line-clamp: 2;
 }
 #wn-feat .hc .hc-erc .hc__blurb {
-  color: var(--cream);
   -webkit-line-clamp: 3;
 }
 /* 4a Upcoming event: the date carries the card. */
 #wn-feat .hc .hc-date {
   display: grid;
   grid-template-columns: calc(340 * var(--u)) 1fr;
-  background: #fff;
-  box-shadow: inset 0 0 0 calc(2 * var(--u)) var(--g400);
+  background: var(--g100);
 }
 #wn-feat .hc .hc-date .hc__col {
   padding: calc(56 * var(--u)) calc(72 * var(--u)) calc(48 * var(--u)) calc(64 * var(--u));
@@ -1243,7 +1253,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   flex-direction: column;
   gap: calc(22 * var(--u));
   padding: calc(44 * var(--u)) calc(72 * var(--u)) calc(44 * var(--u));
-  background: var(--maroon);
+  background: var(--g100);
 }
 #wn-feat .hc .hc-type .hc__ttl {
   max-width: calc(860 * var(--u));
@@ -1259,7 +1269,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   right: calc(56 * var(--u));
   width: calc(196 * var(--u));
   height: calc(196 * var(--u));
-  background-image: radial-gradient(circle, var(--maroon-muted) calc(3.5 * var(--u)), transparent calc(4 * var(--u)));
+  background-image: radial-gradient(circle, var(--g400) calc(3.5 * var(--u)), transparent calc(4 * var(--u)));
   background-size: calc(28 * var(--u)) calc(28 * var(--u));
 }
 /* 2b Research: a light card, maroon rule on top, the landscape band under the text. */
@@ -1267,7 +1277,6 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   display: flex;
   flex-direction: column;
   background: var(--g100);
-  border-top: calc(14 * var(--u)) solid var(--maroon);
 }
 #wn-feat .hc .hc-band .hc__col {
   display: flex;
