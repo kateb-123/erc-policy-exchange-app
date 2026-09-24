@@ -785,6 +785,16 @@ a:hover {
     flex: none;
   }
 }
+/* The narrowest phones: "OPPORTUNITIES" ran 3px past its button at 320px
+   (Sep 23 audit); a step smaller with a little less side room, it fits. */
+@media (max-width: 340px) {
+  .button-group .slab-btn {
+    padding-left: 12px;
+    padding-right: 12px;
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+}
 @media (max-width: 640px) {
   .button-slab {
     margin-top: 24px;
