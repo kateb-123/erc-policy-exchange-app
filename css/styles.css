@@ -844,22 +844,25 @@ a:hover {
    under it (app.js moves the band ahead in the page at 1200px, so the
    reading order matches). */
 @media (min-width: 1201px) {
+  /* A bit roomier, with more space above, below and between the columns to
+     break up the text (Kate, Sep 24). The space above and below grows with
+     the window's height, so a 703px laptop window keeps its fit. */
   #landing:not([hidden]) {
     display: grid;
     grid-template-columns: clamp(320px, 28vw, 400px) minmax(0, 1fr);
-    gap: 48px;
+    gap: 64px;
     align-items: stretch;
-    margin: 24px 0 48px;
+    margin: clamp(32px, 6vh, 72px) 0 clamp(48px, 9vh, 104px);
   }
   .button-slab {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 20px;
     margin: 0;
     padding: 0;
   }
   .slab-title {
-    font-size: 24px;
+    font-size: 28px;
   }
   /* The welcome line stays one line in the column: it is 18.3 times its
      font size wide, and the column is 28vw (320 to 400px). */
@@ -868,7 +871,7 @@ a:hover {
     white-space: nowrap;
   }
   .slab-lede {
-    font-size: 15px;
+    font-size: 16px;
     line-height: 1.5;
     margin: -4px 0 0;
   }
@@ -876,12 +879,12 @@ a:hover {
     flex: 1 1 auto;
     grid-template-columns: 1fr;
     grid-auto-rows: 1fr;
-    gap: 12px;
+    gap: 14px;
   }
   .slab-btn,
   .slab-cta {
-    min-height: 44px;
-    padding: 12px 16px;
+    min-height: 52px;
+    padding: 14px 20px;
   }
   .slab-cta {
     justify-content: center;
@@ -897,16 +900,26 @@ a:hover {
     align-items: flex-start;
   }
   .slab-meta {
-    font-size: 13px;
+    font-size: 14px;
   }
   .home2-band {
     margin: 0;
+    padding: 32px 36px 40px;
   }
-  /* A shorter card and list so the band fits the window. 360px holds the
-     tallest card: a picture card with its clamped title and teaser. */
+  .split__hd {
+    font-size: 26px;
+  }
+  .home2-split {
+    padding-top: 20px;
+  }
+  .rail__pick {
+    padding: 18px 22px;
+  }
+  /* The card and list fit the window. 400px holds the tallest card: a
+     picture card with its clamped title and teaser, at the narrowest. */
   .feat,
   .rail__vp {
-    min-height: 360px;
+    min-height: 400px;
   }
 }
 @media (max-width: 1200px) {
