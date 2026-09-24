@@ -1979,8 +1979,8 @@ main {
   .feed-more {
     padding: 16px 0;
   }
-  /* Headlines' cards, the same: no frame, a rule between, the summary held
-     to three lines. */
+  /* Headlines' cards, the same: no frame, a rule between, the whole summary
+     (Sep 23 audit: three lines hid the rest with nothing to open). */
   .ncol {
     gap: 0;
   }
@@ -1996,12 +1996,6 @@ main {
   }
   .ncard__title {
     font-size: 18px;
-  }
-  .ncard p {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
   .brief {
     padding: 32px 0;

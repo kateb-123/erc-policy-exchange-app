@@ -79,8 +79,15 @@ const CUTOFF = (() => {
 })();
 const isStaleHeadline = (it) =>
   (it.type || "").toLowerCase() === "headline" && (it.date || "") < CUTOFF;
+// A partial date counts as the last day it could mean, so a paper dated only
+// "2026" is not filed as the oldest thing on the site. The ERC's own research
+// never moves to the Archive (Kate, Sep 23: it all belongs on the Research tab).
+const endOfPeriod = (d) =>
+  /^\d{4}$/.test(d) ? `${d}-12-31` : /^\d{4}-\d{2}$/.test(d) ? `${d}-31` : d;
 const isArchivedResearch = (it) =>
-  (it.type || "").toLowerCase() === "research" && (it.date || "") < CUTOFF;
+  (it.type || "").toLowerCase() === "research" &&
+  (it.subtype || "").trim().toLowerCase() !== "erc research" &&
+  endOfPeriod(it.date || "") < CUTOFF;
 
 // Feeds reveal this many rows at a time ("Show more" pages in the rest).
 const PAGE_SIZE = 15;
@@ -96,6 +103,8 @@ const state = {
   q: "",
   sort: null, // {key,dir} once a sort action is chosen; null = per-tab default
   searchFrom: null, // where to return when the global search box is cleared
+  briefFrom: null, // the view a brief was opened from, for its way back
+  ready: false, // true once the data is in and the page's handlers are live
 };
 
 /* ------------------------------------------------------------
@@ -222,6 +231,11 @@ function readURL() {
   }
   state.subtype = p.get("subtype") || "all";
   state.archive = p.get("archive") === "1";
+  // A chosen sort rides in the address (?sort=1), so Back and a shared link
+  // keep it, and one section's sort never carries into another.
+  const sorts = TOOLBAR_SORTS[state.type] || [];
+  const si = Number(p.get("sort"));
+  state.sort = si > 0 && sorts[si] ? sorts[si] : null;
 }
 
 // push = a new history entry (view or section changes, so Back returns here);
@@ -237,6 +251,8 @@ function writeURL(push = false) {
     p.set("type", state.type);
     if (state.subtype !== "all") p.set("subtype", state.subtype);
     if (state.type === "research" && state.archive) p.set("archive", "1");
+    const si = (TOOLBAR_SORTS[state.type] || []).indexOf(state.sort);
+    if (si > 0) p.set("sort", String(si));
   }
   const qs = p.toString();
   const url = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
@@ -270,7 +286,6 @@ function init(rows, modified) {
         : "";
   $("#landing-updated").textContent = stamp ? `Last update: ${stamp}` : "";
 
-  buildNav();
   buildLanding();
   buildWhatsNew();
   validateSubtype();
@@ -281,6 +296,7 @@ function init(rows, modified) {
     validateSubtype();
     state.shown = PAGE_SIZE;
     state.searchFrom = null;
+    state.briefFrom = null;
     $("#global-search").value = state.q;
     closeMenu();
     render();
@@ -290,6 +306,7 @@ function init(rows, modified) {
   // Global search (top strip): typing searches every section at once; clearing
   // returns to wherever you were (landing or a section).
   const gs = $("#global-search");
+  const typedEarly = gs.value;
   gs.value = state.q;
   gs.addEventListener("input", (e) => {
     const q = e.target.value;
@@ -353,23 +370,7 @@ function init(rows, modified) {
       $("#opp-toolbar")
     ).find((el) => el.offsetParent !== null);
     if (again && !again.disabled) again.focus();
-  });
-
-  // Mobile hamburger: toggles the collapsed nav panel (CSS shows the button
-  // and hides the links only under the mobile breakpoint).
-  $("#menu-btn").addEventListener("click", () => {
-    const open = $(".topnav").classList.toggle("is-open");
-    $("#menu-btn").setAttribute("aria-expanded", String(open));
-  });
-  // The open panel also closes on Escape and on a tap anywhere outside the strip.
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && $(".topnav").classList.contains("is-open")) {
-      closeMenu();
-      $("#menu-btn").focus();
-    }
-  });
-  document.addEventListener("click", (e) => {
-    if ($(".topnav").classList.contains("is-open") && !e.target.closest(".topnav")) closeMenu();
+    else focusHeading();
   });
 
   // One delegated listener covers every feed row ever rendered: the caret
@@ -379,10 +380,21 @@ function init(rows, modified) {
     // "Show more": reveal the next page in place (works in sections + search).
     const moreBtn = e.target.closest("[data-more]");
     if (moreBtn) {
+      // The list is rebuilt longer: rows the reader opened stay open, and
+      // focus lands on the first new row, not on the next button below them.
+      const before = state.shown;
+      const open = $$('.feed-item[data-expanded="true"] .feed-expand', $("#news-list")).map((b) =>
+        b.getAttribute("aria-controls")
+      );
       state.shown += PAGE_SIZE;
       render();
-      const again = $("#news-list").querySelector("[data-more]");
-      if (again) again.focus();
+      open.forEach((id) => {
+        const b = $(`.feed-expand[aria-controls="${id}"]`);
+        if (b) toggleDetail(b);
+      });
+      const first = $$("#news-list .feed-item, #news-list .ncard")[before];
+      const target = first && first.querySelector("a[href], button");
+      if (target) target.focus({ preventScroll: true });
       return;
     }
     const briefLink = e.target.closest("a[data-brief]");
@@ -392,7 +404,7 @@ function init(rows, modified) {
       return;
     }
     if (e.target.closest(".brief__back")) {
-      setType("research");
+      leaveBrief();
       return;
     }
     const caretBtn = e.target.closest(".feed-expand");
@@ -414,7 +426,31 @@ function init(rows, modified) {
     }
   });
 
+  state.ready = true;
   render();
+  if (typedEarly.trim() && typedEarly !== state.q) {
+    gs.value = typedEarly;
+    gs.dispatchEvent(new Event("input"));
+  }
+}
+
+// The phone Menu: the button opens and closes the panel; Escape and a tap
+// outside the bar close it too. Wired in boot, so it works while the data
+// is still on its way.
+function wireMenu() {
+  $("#menu-btn").addEventListener("click", () => {
+    const open = $(".topnav").classList.toggle("is-open");
+    $("#menu-btn").setAttribute("aria-expanded", String(open));
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && $(".topnav").classList.contains("is-open")) {
+      closeMenu();
+      $("#menu-btn").focus();
+    }
+  });
+  document.addEventListener("click", (e) => {
+    if ($(".topnav").classList.contains("is-open") && !e.target.closest(".topnav")) closeMenu();
+  });
 }
 
 /* ------------------------------------------------------------
@@ -435,12 +471,12 @@ function buildNav() {
 
   el.addEventListener("click", (e) => {
     const link = e.target.closest(".topnav__link[data-type]");
-    if (!link || modifiedClick(e)) return;
+    if (!link || modifiedClick(e) || !state.ready) return;
     e.preventDefault();
     setType(link.dataset.type);
   });
   $(".topnav__brand").addEventListener("click", (e) => {
-    if (modifiedClick(e)) return;
+    if (modifiedClick(e) || !state.ready) return;
     e.preventDefault();
     setHome();
   });
@@ -556,7 +592,7 @@ function wnFeatHTML({ it, tab }, shape) {
   const sub =
     (from ? `<span class="feat__from">${esc(from)}</span>` : "") +
     (when ? `<span class="feat__when">${from ? "&nbsp;• " : ""}${esc(when)}</span>` : "");
-  const blurb = (it.blurb || "").trim();
+  const blurb = cleanBlurb(it.blurb);
   const sec = `<p class="feat__sec">${esc(tab.nav)}</p>`;
   const txt = `
     <div class="feat__txt">
@@ -1024,14 +1060,8 @@ function relativeDays(iso, isDeadline) {
 // Events sort by the moment ahead; Research and Headlines can pull ERC's own
 // or Texas to the top.
 const TOOLBAR_SORTS = {
-  opportunity: [
-    { label: "Closing soon", key: "deadline", dir: "asc" },
-    { label: "Newest posted", key: "date", dir: "desc" },
-  ],
-  event: [
-    { label: "Soonest", key: "date", dir: "asc" },
-    { label: "Newest posted", key: "date", dir: "desc" },
-  ],
+  opportunity: [{ label: "Closing soon", key: "deadline", dir: "asc" }],
+  event: [{ label: "Soonest", key: "date", dir: "asc" }],
   headline: [
     { label: "Newest", key: "date", dir: "desc" },
     { label: "Texas first", key: "sub", dir: "desc", first: "texas" },
@@ -1048,6 +1078,24 @@ const DETAIL_LINK_LABEL = {
   event: "Register at the source",
   research: "Open at the source",
   headline: "Read at the source",
+};
+
+// Scraped summaries can end in the feed's own tails ("… more →", "The post …
+// appeared first on …"); those never show. The ellipsis stays: the summary
+// really was cut.
+const cleanBlurb = (s) =>
+  String(s || "")
+    .replace(/\s*The post [\s\S]*? appeared first on [\s\S]*$/, "")
+    .replace(/\s*more\s*→\s*$/, "")
+    .trim();
+// The sheet's medium codes read as words; "online" says nothing and goes, and
+// a medium that only repeats the outlet ("The 74 • The 74") is left off.
+const MEDIUM_WORDS = { online: "", tv: "TV", radio: "Radio", newspaper: "Newspaper", magazine: "Magazine" };
+const mediumLabel = (raw, source) => {
+  const m = (raw || "").trim();
+  if (!m || fold(m) === fold(source)) return "";
+  const key = m.toLowerCase();
+  return key in MEDIUM_WORDS ? MEDIUM_WORDS[key] : m;
 };
 
 // Shared helpers for the feed templates.
@@ -1099,9 +1147,15 @@ const itemDetailLink = (it) => {
 // "A, B, C, D…" → "A, B, C, et al." for the collapsed row (full list shows in
 // the expanded detail when truncated).
 function shortAuthors(raw) {
-  const names = raw
-    .replace(/\s*&\s*/g, ", ")
-    .split(/,\s*/)
+  // "Burdick-Will, J., & Stein, M. L." is two people: a list written
+  // "Last, F." splits after each set of initials, any other on commas and "&".
+  const apa = /,\s*(?:[A-Z]\.\s*)+(?:,|$)/.test(raw);
+  const names = (
+    apa
+      ? raw.split(/\.\s*,\s*(?:&\s*)?/).map((s, i, a) => (i < a.length - 1 ? `${s}.` : s))
+      : raw.replace(/\s*&\s*/g, ", ").split(/,\s*/)
+  )
+    .map((s) => s.trim())
     .filter(Boolean);
   if (names.length <= 3) return { text: raw, truncated: false };
   return { text: names.slice(0, 3).join(", ") + ", et al.", truncated: true };
@@ -1115,7 +1169,9 @@ function renderToolbar() {
   const items = liveItemsOfType(state.type);
   const cur = activeSort();
 
-  const sortHTML = (TOOLBAR_SORTS[state.type] || [])
+  // A section with one order (Events, Opportunities) shows no sort choice.
+  const sorts = TOOLBAR_SORTS[state.type] || [];
+  const sortHTML = (sorts.length > 1 ? sorts : [])
     .map(
       (s, i) =>
         `<button type="button" class="tsort${s === cur ? " is-active" : ""}" data-sort="${i}" aria-pressed="${s === cur}">${esc(s.label)}</button>`
@@ -1157,7 +1213,7 @@ function renderToolbar() {
   // sideways, "All" first and Archive last (Kate, Sep 23). CSS shows this row
   // or the buttons above by width; both answer to the same click handler.
   const chips = [
-    `<button type="button" class="chip" data-subtype="all" aria-pressed="${state.subtype === "all"}">All</button>`,
+    `<button type="button" class="chip" data-subtype="all" aria-pressed="${state.subtype === "all" && !state.archive}">All</button>`,
     ...subs.map(
       (v) =>
         `<button type="button" class="chip" data-subtype="${esc(v)}" aria-pressed="${state.subtype === v}">${esc(v)}</button>`
@@ -1171,8 +1227,21 @@ function renderToolbar() {
   // The count node is persistent (it is the live region screen readers track),
   // so detach it before the rebuild and seat it at the head of the sort row.
   const count = $("#news-count");
+  // The chip row is rebuilt on every change: it keeps its scroll within a
+  // section, and the chosen chip stays in view (Sep 23 audit).
+  const oldRow = $(".chips", bar);
+  const keep = oldRow && bar.dataset.for === state.type ? oldRow.scrollLeft : 0;
   bar.innerHTML = chipRow + catGroup + sortGroup;
+  bar.dataset.for = state.type;
   if (count) bar.querySelector(".tgroup--sort").prepend(count);
+  const row = $(".chips", bar);
+  row.scrollLeft = keep;
+  const on = $$('.chip[aria-pressed="true"]', row)[0];
+  if (on) {
+    const r = row.getBoundingClientRect();
+    const c = on.getBoundingClientRect();
+    if (c.left < r.left || c.right > r.right) row.scrollLeft += c.left - r.left - 24;
+  }
 }
 
 // Every section renders as rows: the tag above the title, the source and a
@@ -1202,7 +1271,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
       const dateHTML = rv.label
         ? `<span class="feed-date">${esc(rv.label)}${
             soonText
-              ? `<span class="feed-date__soon"> · ${esc(soonText)}</span><span class="sr-only"> closing soon</span>`
+              ? `<span class="feed-date__soon"> · ${esc(soonText)}</span>${isOpp ? `<span class="sr-only"> closing soon</span>` : ""}`
               : ""
           }</span>`
         : "";
@@ -1211,7 +1280,8 @@ function renderFeedCards(results, colorFor, total = results.length) {
       // the same line un-truncates in place on open, so nothing jumps around.
       let metaHTML = "";
       if (state.type === "research") {
-        const a = shortAuthors((it.authors || "").trim());
+        const authors = (it.authors || "").trim();
+        const a = shortAuthors(fold(authors) === fold(source) ? "" : authors);
         if (a.text)
           metaHTML = a.truncated
             ? `<div class="feed-item__meta"><span class="authors-short">${esc(a.text)}</span><span class="authors-full">${esc(it.authors)}</span></div>`
@@ -1222,9 +1292,11 @@ function renderFeedCards(results, colorFor, total = results.length) {
         if (when) metaHTML = `<div class="feed-item__meta">${when}</div>`;
       }
       // The summary: the blurb, the way out to the source (or a brief's in-app
-      // viewer), and an infographic when the sheet's `infographic` cell holds
-      // a link (a Drive link opens in the viewer, any other in a new tab).
-      const infographic = (it.infographic || "").trim();
+      // viewer), and, on Research, an infographic when the sheet's
+      // `infographic` cell holds a link (a Drive link opens in the viewer, any
+      // other in a new tab). Events keep their card picture in that column,
+      // so they get no link (Sep 23 audit: it opened a bare image file).
+      const infographic = state.type === "research" ? (it.infographic || "").trim() : "";
       const igId = driveId(infographic);
       const infographicHTML = infographic
         ? igId
@@ -1232,7 +1304,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
           : `<a class="feed-link" href="${esc(infographic)}" target="_blank" rel="noopener noreferrer">View infographic »${NEW_TAB}</a>`
         : "";
       const actions = [itemDetailLink(it), infographicHTML].filter(Boolean).join("");
-      const blurb = (it.blurb || "").trim();
+      const blurb = cleanBlurb(it.blurb);
       const detailHTML =
         blurb || actions
           ? `<div class="feed-item__detail" id="${detailId}" hidden>${
@@ -1240,7 +1312,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
             }${actions ? `<div class="feed-actions">${actions}</div>` : ""}</div>`
           : "";
       const toggleHTML = detailHTML
-        ? `<button type="button" class="feed-expand" aria-expanded="false" aria-controls="${detailId}" aria-label="Show details">${chevronIcon()}</button>`
+        ? `<button type="button" class="feed-expand" aria-expanded="false" aria-controls="${detailId}" aria-label="Show details: ${esc(it.headline)}">${chevronIcon()}</button>`
         : "";
       return `
         <li class="feed-item" data-expanded="false">
@@ -1275,14 +1347,12 @@ function renderHeadlineCards(results, colorFor, total = results.length) {
     .map((it) => {
       const subtype = (it.subtype || "").trim();
       const source = (it.source || "").trim();
-      // Half the sheet's `medium` cells repeat the outlet instead of naming a
-      // medium, so the card drops it rather than printing "The 74 • The 74".
-      const medium = (it.medium || "").trim();
-      const subhead = [source, it.date ? formatDate(it.date) : "", medium === source ? "" : medium]
+      const medium = mediumLabel(it.medium, source);
+      const subhead = [source, it.date ? formatDate(it.date) : "", medium]
         .filter(Boolean)
         .map(esc)
         .join(" • ");
-      const blurb = (it.blurb || "").trim();
+      const blurb = cleanBlurb(it.blurb);
       return `
         <article class="ncard">
           <span class="tag ${colorFor[subtype] || "tag--teal"}">${esc(subtype || it.type || "")}</span>
@@ -1403,6 +1473,23 @@ function renderSearch() {
 
 // In-app viewer for an ERC Research Brief: title + authors up top, the PDF in
 // Drive's embeddable /preview iframe, with an escape hatch out to Drive.
+// A brief's way back goes where the reader came from (Sep 23 audit: it always
+// opened the fresh Research list); one opened straight from a link goes to
+// Research.
+function briefBackLabel() {
+  const from = state.briefFrom;
+  if (!from) return "Back to Research";
+  if (from.view === "search") return "Back to search results";
+  if (from.view === "home") return "Back to the home page";
+  if (from.type === "research" && from.archive) return "Back to the Archive";
+  const tab = NEWS_TABS.find((t) => t.value === from.type);
+  return `Back to ${tab ? tab.nav : "Research"}`;
+}
+function leaveBrief() {
+  if (state.briefFrom) history.back();
+  else setType("research");
+}
+
 function renderBrief() {
   const it = state.items.find((x) => briefId(x) === state.brief);
   // Title: the matching brief row when there is one; otherwise whatever the
@@ -1417,7 +1504,7 @@ function renderBrief() {
     <div class="brief">
       <h2 class="section-head__title brief__title" tabindex="-1" data-focus-target>${esc(label)}</h2>
       <div class="brief__bar">
-        <button type="button" class="brief__back">${faIcon("arrow-left")}Back to Research</button>
+        <button type="button" class="brief__back">${faIcon("arrow-left")}${esc(briefBackLabel())}</button>
         <a class="brief__open" href="${driveView}" target="_blank" rel="noopener noreferrer">Open in Google Drive ${faIcon("arrow-up-right-from-square")}</a>
       </div>
       <p class="state state--loading brief__loading" role="status">Loading the brief…</p>
@@ -1435,6 +1522,7 @@ function renderBrief() {
 }
 
 function openBrief(id, title) {
+  state.briefFrom = { view: state.view, type: state.type, archive: state.archive };
   state.view = "brief";
   state.brief = id;
   state.briefTitle = title || "";
@@ -1515,10 +1603,17 @@ function render() {
   });
 
   if (results.length === 0) {
+    // Filters are built from what is there, so an empty list is an empty
+    // section; say that, and where a reader can help.
+    const what = archiveMode
+      ? "Nothing in the Archive yet."
+      : state.subtype !== "all"
+        ? `Nothing in ${state.subtype} right now.`
+        : `No ${headTab.nav.toLowerCase()} listed right now.`;
     list.innerHTML = `
       <div class="state">
-        <strong>${archiveMode ? "Nothing in the archive yet" : "No matching updates"}</strong>
-        Try clearing filters or picking a different category.
+        <strong>${esc(what)}</strong>
+        ${archiveMode ? "" : `Know of one? <a href="share/">Share it with the ERC</a>.`}
       </div>`;
     return;
   }
@@ -1561,6 +1656,9 @@ async function loadCSV(path) {
 
 async function boot() {
   readURL();
+  buildNav();
+  wireMenu();
+  $("#section").hidden = false;
   try {
     const { rows, modified } = await loadCSV(NEWS_CSV);
     init(rows, modified);
@@ -1568,8 +1666,12 @@ async function boot() {
     // Visitors get plain words and a way out; the local-server hint appears
     // only when the page was opened from the file system, where fetch() is blocked.
     const local = window.location.protocol === "file:";
+    $("#landing").hidden = true;
+    $("#section").hidden = false;
+    $("#section-head").hidden = true;
+    $("#opp-toolbar").hidden = true;
     $("#news-list").innerHTML = `
-      <div class="state">
+      <div class="state" role="alert">
         <strong>We couldn't load the latest items</strong>
         ${
           local
@@ -1577,7 +1679,7 @@ async function boot() {
             : 'Refresh the page to try again. If it keeps happening, email <a href="mailto:erc@tamu.edu">erc@tamu.edu</a>.'
         }
         <div class="feed-actions state__actions"><button type="button" class="feed-link state__retry">Try again</button></div>
-        <span class="state__hint">(${esc(err.message)})</span>
+        ${local ? `<span class="state__hint">(${esc(err.message)})</span>` : ""}
       </div>`;
     $(".state__retry").addEventListener("click", () => window.location.reload());
     console.error(err);
