@@ -831,14 +831,16 @@ a:hover {
 }
 
 /* The highlight first (Kate, Sep 24: "i wish the highlight ... was the first
-   thing you saw"). Laptops: the welcome is a 320px column beside the band,
-   as tall as it, the four buttons stretched to fill it; the whole top fits
-   a 1426x703 laptop window. Narrower: the band first, the welcome under it.
-   The page keeps the welcome first in its code, the laptop reading order. */
+   thing you saw"). Laptops: the welcome is a column beside the band, up to
+   400px wide so the band is a little narrower (Kate, Sep 24), and as tall
+   as the band, the four buttons stretched to fill it; the whole top fits a
+   1426x703 laptop window. Narrower screens: the band first, the welcome
+   under it. The page keeps the welcome first in its code, the laptop
+   reading order. */
 @media (min-width: 1201px) {
   #landing:not([hidden]) {
     display: grid;
-    grid-template-columns: 320px minmax(0, 1fr);
+    grid-template-columns: clamp(320px, 28vw, 400px) minmax(0, 1fr);
     gap: 32px;
     align-items: stretch;
     margin: 24px 0 48px;
