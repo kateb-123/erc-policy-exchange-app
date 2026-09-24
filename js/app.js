@@ -564,9 +564,9 @@ function whatsNewFeed(per = WN_PER) {
   // construction rather than merged on date.
   const out = [];
   for (let i = 0; i < per; i++) bags.forEach((bag) => bag[i] && out.push(bag[i]));
-  // The admin door's pins and one-off cards go first while their dates last
-  // (Kate, Sep 23), then the round-robin; twelve in all, unless there are
-  // more pins and cards than that.
+  // The admin door's pins and one-off cards are the whole rotation while
+  // their dates last (Kate, Sep 24: "ONLY the six I told you"); the
+  // round-robin of twelve shows only when nothing is pinned.
   const tabOf = (it) => NEWS_TABS.find((t) => t.value === (it.type || "").toLowerCase());
   const pinned = state.featured.pins
     .filter((p) => (p.until || "") >= TODAY)
@@ -591,9 +591,7 @@ function whatsNewFeed(per = WN_PER) {
       tab: { value: "", nav: c.label || "ERC" },
     }));
   const front = [...pinned, ...cards];
-  const taken = new Set(pinned.map((x) => itemKey(x.it)));
-  const rest = out.filter((x) => !taken.has(itemKey(x.it)));
-  const list = [...front, ...rest].slice(0, Math.max(per * NEWS_TABS.length, front.length));
+  const list = front.length ? front : out.slice(0, per * NEWS_TABS.length);
   // An item carries the hero card the editor chose for it, if any.
   list.forEach((e) => {
     if (!e.it.card) e.hero = heroOf(itemKey(e.it));
