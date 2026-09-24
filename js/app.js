@@ -741,14 +741,13 @@ function heroCardHTML(entry) {
     : "";
   const blurb = cleanBlurb(it.blurb);
 
-  // The ERC card: the day large beside the month, weekday and time (the
-  // design system's factoid: a big number with a short label), then the
-  // title, the place, and the event's own words (Kate's pick B, Sep 24).
+  // The ERC card: a small maroon tile with the month over the day, the
+  // weekday and time beside it (Kate's pick C, Sep 24), then the title, the
+  // place, and the event's own words.
   const fact = date
-    ? `<div class="hc__fact" aria-hidden="true"><b>${date.getUTCDate()}</b><span>${esc(hcFmt(date, { month: "short" }))}<br>${hcLine([
-        hcFmt(date, { weekday: "long" }),
-        (it.time || "").trim(),
-      ])}</span></div>`
+    ? `<div class="hc__fact" aria-hidden="true"><span class="hc__tile"><small>${esc(hcFmt(date, { month: "short" }))}</small><b>${date.getUTCDate()}</b></span><span class="hc__fline">${esc(
+        hcFmt(date, { weekday: "long" })
+      )}${it.time ? `<small>${esc(it.time.trim())}</small>` : ""}</span></div>`
     : "";
   const ercV = (url) => `
     <div class="hc__v hc-erc${url ? "" : " hc__v--slot"}"><div class="hc__col">${fact}${head}
