@@ -595,6 +595,17 @@ a:hover {
 .rail__pause:hover {
   background: var(--g200);
 }
+/* The pause lives with the arrows (Sep 24, layout G): beside them, not over
+   the list. Phones never turn over by themselves, so they have none. */
+.caro .rail__pause {
+  position: static;
+  z-index: auto;
+}
+@media (max-width: 820px) {
+  .caro .rail__pause {
+    display: none;
+  }
+}
 .rail__vp {
   position: relative;
   flex: 1 1 0;
@@ -808,20 +819,16 @@ a:hover {
 }
 
 /* The highlight first (Kate, Sep 24: "i wish the highlight ... was the first
-   thing you saw"). Laptops: the welcome is a column beside the band, up to
-   400px wide so the band is a little narrower (Kate, Sep 24), and as tall
-   as the band, the four buttons stretched to fill it; the whole top fits a
-   1426x703 laptop window. Narrower screens: the band first, the welcome
-   under it (app.js moves the band ahead in the page at 1200px, so the
-   reading order matches). */
+   thing you saw"). Laptops: layout G, her pick of eight: New & Upcoming as
+   her hero cards on the left, the four sections and Share as a list on the
+   right, the whole top on one 1426 x 703 laptop screen. Narrower screens: the
+   band first, the buttons under it. The page lists the band first, so the
+   reading order matches at every width. */
 @media (min-width: 1201px) {
-  /* A bit roomier, with more space above, below and between the columns to
-     break up the text (Kate, Sep 24). The space above and below grows with
-     the window's height, so a 703px laptop window keeps its fit. */
   #landing:not([hidden]) {
     display: grid;
-    grid-template-columns: clamp(320px, 28vw, 400px) minmax(0, 1fr);
-    gap: 0 64px;
+    grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 400px);
+    gap: 0 48px;
     align-items: stretch;
     margin: 0 0 clamp(48px, 9vh, 104px);
   }
@@ -830,10 +837,58 @@ a:hover {
     grid-column: 1 / -1;
     padding: clamp(32px, 6vh, 72px) 0 clamp(24px, 4vh, 48px);
   }
+  /* The hero: the heading with the arrows, count and pause on one line, her
+     card under it. The list beside the card is not shown here. */
+  .home2-band {
+    grid-column: 1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    row-gap: 12px;
+    margin: 0;
+    padding: 0;
+    background: none;
+  }
+  .split__hd {
+    font-size: 26px;
+  }
+  #wn-split {
+    display: contents;
+  }
+  #wn-split > .caro {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    position: static;
+    z-index: auto;
+    margin: 0 -10px 0 0;
+    background: none;
+  }
+  #wn-split > .rail {
+    display: none;
+  }
+  #wn-feat {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    display: block;
+    min-height: 0;
+    padding: 0;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  #wn-feat > :not(.hc):not(.admin-edit) {
+    display: none;
+  }
+  /* The sections: rows split by rules, each its icon, name, count and a
+     chevron, as tall as the hero between them; Share under the list. */
   .button-slab {
+    grid-column: 2;
+    grid-row: 2;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     margin: 0;
     padding: 0;
   }
@@ -841,21 +896,44 @@ a:hover {
     flex: 1 1 auto;
     grid-template-columns: 1fr;
     grid-auto-rows: 1fr;
-    gap: 14px;
+    gap: 0;
+    border-top: 1px solid var(--g400);
   }
-  .slab-btn,
-  .slab-cta {
-    min-height: 52px;
-    padding: 14px 20px;
+  .slab-btn {
+    justify-content: flex-start;
+    gap: 16px;
+    min-height: 0;
+    padding: 8px 4px;
+    box-shadow: none;
+    border-bottom: 1px solid var(--g400);
+    font-size: 18px;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .slab-btn:hover {
+    background: var(--g100);
+    color: var(--maroon);
+  }
+  .slab-btn .slab-btn__icon {
+    display: block;
+  }
+  .slab-btn small {
+    margin-left: auto;
+    font-size: 15px;
+    color: var(--g600);
+  }
+  .slab-btn .slab-btn__go {
+    display: inline-block;
+    font-size: 13px;
+    color: var(--maroon);
+  }
+  .slab-intro {
+    align-items: stretch;
   }
   .slab-cta {
     justify-content: center;
-  }
-  /* Share full width at the column's foot. */
-  .slab-intro {
-    align-items: stretch;
-    gap: 12px;
-    text-align: left;
+    min-height: 52px;
+    padding: 14px 20px;
   }
   /* The update and credit lines under both columns, "Curated by" on its
      own line (Kate, Sep 24). */
@@ -866,26 +944,309 @@ a:hover {
   .slab-meta {
     font-size: 14px;
   }
-  .home2-band {
-    margin: 0;
-    padding: 32px 36px 40px;
-  }
-  .split__hd {
-    font-size: 26px;
-  }
-  .home2-split {
-    padding-top: 20px;
-  }
-  .rail__pick {
-    padding: 18px 22px;
-  }
-  /* The card and list fit the window. 400px holds the tallest card: a
-     picture card with its clamped title and teaser, at the narrowest. */
-  .feat,
-  .rail__vp {
-    min-height: 400px;
+}
+/* The section list's icons (laptops only): the section's Aggie UX glyph in
+   maroon on a gray square. */
+.slab-btn__icon,
+.slab-btn__go {
+  display: none;
+}
+.slab-btn__icon {
+  position: relative;
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  background: var(--g100);
+}
+.slab-btn__icon::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  background: var(--maroon);
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
+.slab-btn[data-type="research"] { --icon: url(../assets/aggie/book-open.svg); }
+.slab-btn[data-type="event"] { --icon: url(../assets/aggie/calendar.svg); }
+.slab-btn[data-type="opportunity"] { --icon: url(../assets/aggie/hand-holding-dollar.svg); }
+.slab-btn[data-type="headline"] { --icon: url(../assets/aggie/newspaper.svg); }
+
+/* ---------- Hero cards ----------
+   Kate's 1200 x 500 card templates (design_handoff_hero_cards, Sep 24),
+   dark versions, drawn at any width: the frame is 12:5 and a container, and
+   every size is N * --u, one design pixel (100cqw / 1200). Shown on laptops;
+   narrower screens keep the text card. */
+#wn-feat .hc {
+  display: none;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 12 / 5;
+  container-type: inline-size;
+  overflow: hidden;
+}
+#wn-feat .hc .hc__in {
+  --u: calc(100cqw / 1200);
+  --cream: #D6D3C4;
+  position: absolute;
+  inset: 0;
+  font-family: var(--head);
+  text-wrap: pretty;
+}
+#wn-feat .hc .hc__v {
+  position: absolute;
+  inset: 0;
+}
+#wn-feat .hc .hc__v--slot {
+  display: none !important;
+}
+/* An editor sees the photo layout with its empty slot instead. */
+html.admin-on #wn-feat .hc:has(.hc__v--slot) .hc__v:not(.hc__v--slot) {
+  display: none !important;
+}
+html.admin-on #wn-feat .hc .hc__v--slot {
+  display: grid !important;
+}
+html.admin-on #wn-feat .hc .hc__v--slot.hc-band {
+  display: flex !important;
+}
+html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
+  display: block !important;
+}
+#wn-feat .hc .hc__sup {
+  margin: 0;
+  font: 400 calc(18 * var(--u)) / 1.3 var(--head);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+#wn-feat .hc .hc__ttl {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  margin: 0;
+  font: 600 calc(50 * var(--u)) / 1.12 var(--head);
+  color: #fff;
+}
+#wn-feat .hc .hc__ttl a,
+#wn-feat .hc .hc__ttl .feat__plain {
+  display: inline;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+  color: inherit;
+  text-decoration: none;
+}
+/* The headline's link covers the card, so the card is one click. */
+#wn-feat .hc .hc__ttl a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+#wn-feat .hc:hover .hc__ttl a {
+  text-decoration: underline;
+  text-decoration-thickness: calc(3 * var(--u));
+  text-underline-offset: calc(6 * var(--u));
+}
+#wn-feat .hc .hc__ttl a i {
+  font-size: 0.5em;
+  vertical-align: 0.35em;
+  margin-left: 0.3em;
+}
+#wn-feat .hc .hc__meta {
+  margin: 0;
+  font: 400 calc(24 * var(--u)) / 1.4 var(--head);
+  color: var(--cream);
+}
+#wn-feat .hc .hc__img {
+  margin: 0;
+  overflow: hidden;
+  background: #5c1010;
+}
+#wn-feat .hc .hc__img img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+#wn-feat .hc .hc__slot {
+  display: grid;
+  place-items: center;
+  outline: calc(3 * var(--u)) dashed var(--cream);
+  outline-offset: calc(-12 * var(--u));
+  font: 600 calc(20 * var(--u)) / 1.2 var(--head);
+  color: var(--cream);
+}
+/* 1a ERC event: text on maroon, the 4:5 portrait at full height on the right. */
+#wn-feat .hc .hc-erc {
+  display: grid;
+  grid-template-columns: calc(800 * var(--u)) calc(400 * var(--u));
+  background: var(--maroon);
+}
+#wn-feat .hc .hc-erc .hc__col,
+#wn-feat .hc .hc-date .hc__col {
+  display: flex;
+  flex-direction: column;
+  gap: calc(20 * var(--u));
+  min-width: 0;
+  padding: calc(56 * var(--u)) calc(64 * var(--u)) calc(48 * var(--u));
+}
+/* 4a Upcoming event: the date carries the card. */
+#wn-feat .hc .hc-date {
+  display: grid;
+  grid-template-columns: calc(340 * var(--u)) 1fr;
+  background: #fff;
+  box-shadow: inset 0 0 0 calc(2 * var(--u)) var(--g400);
+}
+#wn-feat .hc .hc-date .hc__col {
+  padding: calc(56 * var(--u)) calc(72 * var(--u)) calc(48 * var(--u)) calc(64 * var(--u));
+}
+#wn-feat .hc .hc-date .hc__sup {
+  color: var(--maroon-muted);
+}
+#wn-feat .hc .hc-date .hc__ttl {
+  color: var(--maroon);
+}
+#wn-feat .hc .hc-date .hc__meta {
+  color: var(--g800);
+}
+#wn-feat .hc .hc__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--maroon);
+  color: #fff;
+}
+#wn-feat .hc .hc__k {
+  margin-bottom: calc(18 * var(--u));
+  font: 400 calc(18 * var(--u)) / 1 var(--head);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+#wn-feat .hc .hc__m {
+  font: 600 calc(40 * var(--u)) / 1 var(--head);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+#wn-feat .hc .hc__d {
+  font: 600 calc(150 * var(--u)) / 1 var(--head);
+}
+/* 3a Opportunity, and anything with no photo: type only, the dot grid. */
+#wn-feat .hc .hc-type {
+  display: flex;
+  flex-direction: column;
+  gap: calc(22 * var(--u));
+  padding: calc(64 * var(--u)) calc(72 * var(--u)) calc(52 * var(--u));
+  background: var(--maroon);
+}
+#wn-feat .hc .hc-type .hc__ttl {
+  max-width: calc(860 * var(--u));
+  font-size: calc(60 * var(--u));
+  -webkit-line-clamp: 2;
+}
+#wn-feat .hc .hc-type .hc__meta {
+  max-width: calc(760 * var(--u));
+}
+#wn-feat .hc .hc__dots {
+  position: absolute;
+  top: calc(56 * var(--u));
+  right: calc(56 * var(--u));
+  width: calc(196 * var(--u));
+  height: calc(196 * var(--u));
+  background-image: radial-gradient(circle, var(--maroon-muted) calc(3.5 * var(--u)), transparent calc(4 * var(--u)));
+  background-size: calc(28 * var(--u)) calc(28 * var(--u));
+}
+/* 2b Research: a light card, maroon rule on top, the landscape band under the text. */
+#wn-feat .hc .hc-band {
+  display: flex;
+  flex-direction: column;
+  background: var(--g100);
+  border-top: calc(14 * var(--u)) solid var(--maroon);
+}
+#wn-feat .hc .hc-band .hc__col {
+  display: flex;
+  flex-direction: column;
+  gap: calc(12 * var(--u));
+  padding: calc(36 * var(--u)) calc(72 * var(--u)) calc(28 * var(--u));
+}
+#wn-feat .hc .hc-band .hc__sup {
+  color: var(--maroon-muted);
+}
+#wn-feat .hc .hc-band .hc__ttl {
+  font-size: calc(40 * var(--u));
+  -webkit-line-clamp: 2;
+  color: var(--maroon);
+}
+#wn-feat .hc .hc-band .hc__meta {
+  font-size: calc(21 * var(--u));
+  font-style: italic;
+  color: var(--g800);
+}
+#wn-feat .hc .hc-band .hc__img {
+  flex: 1 1 auto;
+}
+#wn-feat .hc .hc-band .hc__slot {
+  color: var(--maroon-muted);
+  outline-color: var(--g500);
+  background: var(--g200);
+}
+/* 5a Headline or one-off card with a photo: the photo full bleed, the
+   maroon block bottom left, growing upward with the headline. */
+#wn-feat .hc .hc-photo .hc__img--full {
+  position: absolute;
+  inset: 0;
+}
+#wn-feat .hc .hc__blk {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(14 * var(--u));
+  width: calc(780 * var(--u));
+  max-height: 100%;
+  padding: calc(36 * var(--u)) calc(48 * var(--u)) calc(40 * var(--u)) calc(56 * var(--u));
+  background: var(--maroon);
+}
+#wn-feat .hc .hc__blk .hc__ttl {
+  font-size: calc(42 * var(--u));
+}
+#wn-feat .hc .hc__blk .hc__meta {
+  font-size: calc(21 * var(--u));
+}
+/* Longer titles step down so they show whole (the title rules, Sep 24). */
+#wn-feat .hc[data-len="mid"] .hc__ttl {
+  font-size: calc(42 * var(--u));
+  -webkit-line-clamp: 4;
+}
+#wn-feat .hc[data-len="long"] .hc__ttl {
+  font-size: calc(36 * var(--u));
+  -webkit-line-clamp: 5;
+}
+#wn-feat .hc[data-len="mid"] .hc-type .hc__ttl {
+  font-size: calc(48 * var(--u));
+  -webkit-line-clamp: 4;
+}
+#wn-feat .hc[data-len="long"] .hc-type .hc__ttl {
+  font-size: calc(40 * var(--u));
+  -webkit-line-clamp: 5;
+}
+#wn-feat .hc[data-len="mid"] .hc-band .hc__ttl,
+#wn-feat .hc[data-len="long"] .hc-band .hc__ttl {
+  font-size: calc(34 * var(--u));
+  -webkit-line-clamp: 3;
+}
+#wn-feat .hc[data-len="long"] .hc__blk .hc__ttl {
+  font-size: calc(36 * var(--u));
+}
+@media (min-width: 1201px) {
+  #wn-feat .hc {
+    display: block;
   }
 }
+
 @media (max-width: 1200px) {
   #landing:not([hidden]) {
     display: flex;

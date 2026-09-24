@@ -445,7 +445,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=4").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=5").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -517,24 +517,11 @@ function buildLanding() {
   const el = $("#landing-cards");
   el.innerHTML = NEWS_TABS.map(
     (t) => `
-    <a class="slab-btn" href="?type=${t.value}" data-type="${t.value}">${esc(t.nav)} <small>${esc(countLabel(t.value))}</small></a>`
+    <a class="slab-btn" href="?type=${t.value}" data-type="${t.value}"><span class="slab-btn__icon" aria-hidden="true"></span><span class="slab-btn__name">${esc(t.nav)}</span> <small>${esc(countLabel(t.value))}</small>${faIcon("chevron-right", "slab-btn__go")}</a>`
   ).join("");
 
   if (el.dataset.wired) return;
   el.dataset.wired = "1";
-  // Up to 1200px New & Upcoming shows before the section buttons, so it
-  // comes first in the page too: Tab and screen readers meet it first (Sep 24
-  // review, WCAG 2.4.3). Wider, the buttons are the left column.
-  const bandFirst = matchMedia("(max-width: 1200px)");
-  const orderHome = () => {
-    const land = $("#landing");
-    const band = $("#whats-new");
-    const slab = $(".button-slab", land);
-    if (bandFirst.matches) land.insertBefore(band, slab);
-    else land.insertBefore(slab, band);
-  };
-  bandFirst.addEventListener("change", orderHome);
-  orderHome();
   el.addEventListener("click", (e) => {
     const btn = e.target.closest(".slab-btn");
     if (!btn || modifiedClick(e)) return;
@@ -642,18 +629,23 @@ const wnLen = (it) => {
   return n <= 60 ? "short" : n <= 100 ? "mid" : "long";
 };
 
-function wnFeatHTML({ it, tab }, shape) {
+// The headline is a card's one way out: a brief opens in the site, an item at
+// its source, a one-off card with no link in its section, if it has one.
+function wnTitleLink({ it, tab }) {
   const title = esc(it.headline);
   const id = briefId(it);
   const link = (it.link || "").trim();
-  // The headline is the card's one way out.
-  const a = id
+  return id
     ? `<a href="?brief=${id}" data-brief="${id}" data-brief-title="${title}">${title}</a>`
     : link
       ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${title} ${faIcon("arrow-up-right-from-square")}${NEW_TAB}</a>`
       : tab.value
         ? `<a href="?type=${tab.value}" data-type="${tab.value}">${title}</a>`
         : `<span class="feat__plain">${title}</span>`;
+}
+
+function wnFeatHTML({ it, tab }, shape) {
+  const a = wnTitleLink({ it, tab });
   // Source and date share one line: a long source gives way, the date (or
   // an opportunity's deadline) never does.
   const from = (it.source || "").trim();
@@ -673,6 +665,87 @@ function wnFeatHTML({ it, tab }, shape) {
   // The picture is decorative: the headline names the talk and the speaker.
   const fig = `<figure class="feat__media"><img src="${esc(wnImage(it))}" alt=""></figure>`;
   return sec + txt + fig;
+}
+
+/* ---------- Hero cards (Kate's 1200 x 500 designs, Sep 24) ----------
+   On laptops New & Upcoming shows each item as one of her dark card
+   templates, drawn with real text in a 12:5 frame that scales with the page
+   (styles.css .hc). The item picks the template: an event with a photo is
+   the ERC card (a 4:5 portrait on the right), any other dated event the date
+   panel, research with a picture the landscape band, a headline or one-off
+   card with a picture the photo with a maroon block, and the rest the
+   type-only card. A card that could hold a photo but has none also carries
+   that photo layout with an empty slot, shown only to a signed-in editor
+   (html.admin-on), so she sees where a picture would go; visitors never see
+   an empty slot. */
+const HC_SUPER = { research: "New research", event: "Upcoming event", opportunity: "Opportunity", headline: "Headlines" };
+const hcDate = (iso) => {
+  const [y, m, d] = (iso || "").split("-").map(Number);
+  return y && m && d ? new Date(Date.UTC(y, m - 1, d)) : null;
+};
+const hcFmt = (date, opts) => date.toLocaleDateString("en-US", { timeZone: "UTC", ...opts });
+const hcLine = (parts) => parts.filter(Boolean).map(esc).join(" · ");
+
+function heroCardHTML(entry) {
+  const { it, tab } = entry;
+  const kind = tab.value;
+  const img = wnImage(it);
+  const src = (it.source || "").trim();
+  const date = hcDate(it.date);
+  const erc = kind === "event" && (/^erc\b/i.test(it.subtype || "") || src === "ERC" || /^ERC\b/.test(it.headline || ""));
+  const sup = esc(kind ? (erc ? "ERC event" : HC_SUPER[kind]) : tab.nav || "ERC");
+  const head = `<p class="hc__sup">${sup}</p><h3 class="hc__ttl">${wnTitleLink(entry)}</h3>`;
+  const pic = (url, cls, label) =>
+    url
+      ? `<figure class="hc__img ${cls}"><img src="${esc(url)}" alt=""></figure>`
+      : `<div class="hc__img ${cls} hc__slot"><span>${label}</span></div>`;
+  const deadline = parseDeadline(it.deadline).label.replace(/^Due /, "");
+  const meta =
+    kind === "research"
+      ? hcLine([src, date && hcFmt(date, { month: "long", year: "numeric" })])
+      : kind === "opportunity"
+        ? hcLine([src, deadline && (deadline === "Rolling" ? "Rolling deadline" : `Apply by ${deadline}`)])
+        : kind === "headline" || kind === "event"
+          ? hcLine([src, date && formatDate(it.date)])
+          : esc(cleanBlurb(it.blurb).slice(0, 140));
+  const when = date
+    ? hcLine([hcFmt(date, { weekday: "long", month: "long", day: "numeric" }), (it.time || "").trim()])
+    : "";
+
+  const ercV = (url) => `
+    <div class="hc__v hc-erc${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}
+      <p class="hc__meta">${hcLine([src === "ERC" ? "Education Research Center" : src])}<br>${hcLine([
+        date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
+        (it.time || "").trim(),
+        (it.location || "").trim(),
+      ])}</p></div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
+  const dateV = () => `
+    <div class="hc__v hc-date"><div class="hc__panel" aria-hidden="true"><span class="hc__k">Upcoming</span>
+      <span class="hc__m">${esc(hcFmt(date, { month: "short" }))}</span><span class="hc__d">${date.getUTCDate()}</span></div>
+      <div class="hc__col">${head}<p class="hc__meta">${hcLine([src, (it.location || "").trim() || "Online"])}<br>${when}</p></div></div>`;
+  const typeV = () => `
+    <div class="hc__v hc-type"><div class="hc__dots" aria-hidden="true"></div>${head}<p class="hc__meta">${meta}</p></div>`;
+  const bandV = (url) => `
+    <div class="hc__v hc-band${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p></div>${pic(url, "hc__img--band", "Landscape photo")}</div>`;
+  const photoV = (url) => `
+    <div class="hc__v hc-photo${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--full", "Photo 1200 x 500")}
+      <div class="hc__blk">${head}<p class="hc__meta">${meta}</p></div></div>`;
+
+  let main;
+  let slot = "";
+  if (kind === "event") {
+    main = img ? ercV(img) : date ? dateV() : typeV();
+    if (!img) slot = ercV("");
+  } else if (kind === "research") {
+    main = img ? bandV(img) : typeV();
+    if (!img) slot = bandV("");
+  } else if (kind === "headline" || !kind) {
+    main = img ? photoV(img) : typeV();
+    if (!img) slot = photoV("");
+  } else {
+    main = typeV();
+  }
+  return `<div class="hc" data-len="${wnLen(it)}"><div class="hc__in">${main}${slot}</div></div>`;
 }
 
 function wnRowHTML(entry, i) {
@@ -700,15 +773,15 @@ function buildWhatsNew() {
   }
   band.hidden = false;
   $("#wn-split").innerHTML = `
-    <article class="feat no-art" id="wn-feat" data-len="${wnLen(list[0].it)}" aria-live="off">${wnFeatHTML(list[0], "")}</article>
+    <article class="feat no-art" id="wn-feat" data-len="${wnLen(list[0].it)}" aria-live="off">${wnFeatHTML(list[0], "")}${heroCardHTML(list[0])}</article>
     <div class="caro" role="group" aria-label="Browse new and upcoming items">
       <button type="button" class="caro__btn" data-step="-1" aria-label="Previous item">${faIcon("chevron-left")}</button>
       <span class="caro__count" aria-live="off" aria-atomic="true"><b>1</b> / ${list.length}</span>
       <button type="button" class="caro__btn" data-step="1" aria-label="Next item">${faIcon("chevron-right")}</button>
+      <button type="button" class="rail__pause"></button>
     </div>
     <div class="rail">
       <span id="wn-pick-hint" hidden>Shows this item in the featured card</span>
-      <button type="button" class="rail__pause"></button>
       <div class="rail__vp" role="group" aria-label="New and upcoming items">
         <ul class="rail__list" role="list">${list.map(wnRowHTML).join("")}</ul>
       </div>
@@ -773,7 +846,7 @@ function initWhatsNew(list) {
       feat.className = `feat ${shape ? `has-${shape}` : "no-art"}`;
       feat.dataset.key = wnKey(list[at]);
       feat.dataset.len = wnLen(list[at].it);
-      feat.innerHTML = wnFeatHTML(list[at], shape);
+      feat.innerHTML = wnFeatHTML(list[at], shape) + heroCardHTML(list[at]);
     };
     if (!fade || calm) return paint();
     feat.classList.add("is-out");

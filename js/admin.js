@@ -49,6 +49,8 @@ async function start() {
     return;
   }
   buildBar();
+  // The hero cards show their empty photo slots to an editor.
+  document.documentElement.classList.add('admin-on');
   watch();
   ['pointerdown', 'keydown'].forEach((ev) => document.addEventListener(ev, stayAwake, true));
   stayAwake();
@@ -70,6 +72,7 @@ function goQuiet() {
   if (observer) observer.disconnect();
   if (dialog && dialog.open) dialog.close();
   document.querySelectorAll('.admin-bar, .admin-edit').forEach((n) => n.remove());
+  document.documentElement.classList.remove('admin-on');
   api('logout', {});
   toast('Editing turned off after 10 minutes without use. Sign in again to edit.');
 }
