@@ -120,7 +120,7 @@ function call(handler, { method = 'POST', headers = {}, body, deps }) {
     assert.strictEqual(r.status, 403);
     r = await call(A.handleLogin, { body: { password: env.ADMIN_PASSWORD }, deps: { env, pause: async () => {} } });
     assert.strictEqual(r.status, 200);
-    const c = r.headers['set-cookie']; assert.ok(/exa_admin=[^;]+; HttpOnly; Path=\/; Max-Age=43200; Secure; SameSite=Strict/.test(c[0])); assert.ok(/^exa_admin_on=1;/.test(c[1]));
+    const c = r.headers['set-cookie']; assert.ok(/exa_admin=[^;]+; HttpOnly; Path=\/; Max-Age=600; Secure; SameSite=Strict/.test(c[0])); assert.ok(/^exa_admin_on=1;/.test(c[1]));
   });
   const login = await call(A.handleLogin, { body: { password: env.ADMIN_PASSWORD }, deps: { env, pause: async () => {} } });
   const cookie = login.headers['set-cookie'].map((c) => c.split(';')[0]).join('; ');
@@ -183,8 +183,13 @@ function call(handler, { method = 'POST', headers = {}, body, deps }) {
     const r = await call(A.handleSave, { headers: { cookie }, body: { op: 'hide', key: 'k' }, deps: { env, gh: { ready: false } } });
     assert.strictEqual(r.status, 503);
   });
-  await okA('session and logout', async () => {
+  await okA('session and logout; checks and saves renew the 10 minutes', async () => {
     let r = await call(A.handleSession, { method: 'GET', headers: { cookie }, deps: { env } }); assert.strictEqual(r.body.ok, true);
+    assert.ok(/^exa_admin=[^;]+; HttpOnly; Path=\/; Max-Age=600;/.test(r.headers['set-cookie'][0]));
+    const s = await call(A.handleSave, { headers: { cookie }, body: { op: 'hide', key: 'k' }, deps: { env, gh: fakeGh({ 'data/news.csv': csv }) } });
+    assert.strictEqual(s.status, 200); assert.ok(/Max-Age=600/.test([].concat(s.headers['set-cookie'])[0]));
+    const expired = A.sign({ exp: Math.floor(Date.now() / 1000) - 1 }, A.sessionSecret(env));
+    r = await call(A.handleSession, { method: 'GET', headers: { cookie: `exa_admin=${expired}` }, deps: { env } }); assert.strictEqual(r.body.ok, false);
     r = await call(A.handleSession, { method: 'GET', deps: { env } }); assert.strictEqual(r.body.ok, false);
     r = await call(A.handleLogout, {}); assert.ok(r.headers['set-cookie'].every((c) => /Max-Age=0/.test(c)));
   });

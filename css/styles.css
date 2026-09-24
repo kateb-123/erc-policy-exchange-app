@@ -2081,7 +2081,7 @@ main {
   align-items: center;
   gap: 8px 16px;
   padding: 8px 24px;
-  background: var(--g900);
+  background: #0091ff; /* Kate's pick, Sep 24: the editor is only hers */
   color: #fff;
   font-family: var(--head);
   font-size: 14px;

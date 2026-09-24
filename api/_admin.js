@@ -33,7 +33,9 @@ const crypto = require('crypto');
 
 const SESSION_COOKIE = 'exa_admin'; // HttpOnly: the sign-in itself
 const HINT_COOKIE = 'exa_admin_on'; // readable: tells the page to load the editor
-const SESSION_SECONDS = 12 * 60 * 60;
+// Editing turns off after 10 minutes without use (Kate, Sep 24). Every
+// session check and every save renews it, so it only runs out when idle.
+const SESSION_SECONDS = 10 * 60;
 const CSV_PATH = 'data/news.csv';
 const FEATURED_PATH = 'data/featured.json';
 const COLUMNS = [
@@ -475,7 +477,8 @@ async function handleLogin(req, res, { env = process.env, pause = wait } = {}) {
 }
 
 function handleSession(req, res, { env = process.env } = {}) {
-  return send(res, 200, { ok: signedIn(req, env) });
+  const ok = signedIn(req, env);
+  return send(res, 200, { ok }, ok ? sessionCookies(sessionSecret(env)) : undefined);
 }
 
 function handleLogout(req, res) {
@@ -487,6 +490,7 @@ async function handleSave(req, res, { env = process.env, gh = github(env) } = {}
   if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'Use POST.' });
   if (!fromThisSite(req)) return send(res, 403, { ok: false, error: 'Save from the site itself.' });
   if (!signedIn(req, env)) return send(res, 401, { ok: false, error: 'Your sign-in ran out. Sign in again.' });
+  res.setHeader('Set-Cookie', sessionCookies(sessionSecret(env))); // a save is use: renew the 10 minutes
   if (!gh.ready) {
     return send(res, 503, { ok: false, error: "The admin door can't save yet: its GitHub key goes in Vercel's settings." });
   }

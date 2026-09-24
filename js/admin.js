@@ -10,9 +10,9 @@
  * minute). This page shows it at once.
  * ============================================================ */
 const X = window.Exchange;
-if (X) start();
 
 async function api(path, body) {
+  lastRenew = Date.now(); // every call renews the sign-in on the server
   try {
     const res = await fetch(`/api/admin/${path}`, {
       method: body ? 'POST' : 'GET',
@@ -28,7 +28,20 @@ async function api(path, body) {
   }
 }
 
+// The editor is for a laptop or desktop (Kate, Sep 24: no editing on a
+// phone); at phone widths it doesn't load at all.
+const PHONE = '(max-width: 780px)';
+// Editing turns off after 10 minutes without use (Kate, Sep 24). A click or a
+// key anywhere on the page is use; while there is use the sign-in is renewed
+// at most once a minute, and after 10 quiet minutes the editor goes away and
+// the sign-in ends.
+const IDLE_MS = 10 * 60 * 1000;
+let idleTimer = 0;
+let lastRenew = 0;
+let observer = null;
+
 async function start() {
+  if (matchMedia(PHONE).matches) return;
   const session = await api('session');
   if (!session.ok) {
     // An old hint with no sign-in behind it: forget it.
@@ -37,6 +50,28 @@ async function start() {
   }
   buildBar();
   watch();
+  ['pointerdown', 'keydown'].forEach((ev) => document.addEventListener(ev, stayAwake, true));
+  stayAwake();
+}
+
+function stayAwake() {
+  clearTimeout(idleTimer);
+  idleTimer = setTimeout(goQuiet, IDLE_MS);
+  if (Date.now() - lastRenew > 60 * 1000) {
+    api('session').then((s) => {
+      if (!s.ok) goQuiet();
+    });
+  }
+}
+
+function goQuiet() {
+  clearTimeout(idleTimer);
+  ['pointerdown', 'keydown'].forEach((ev) => document.removeEventListener(ev, stayAwake, true));
+  if (observer) observer.disconnect();
+  if (dialog && dialog.open) dialog.close();
+  document.querySelectorAll('.admin-bar, .admin-edit').forEach((n) => n.remove());
+  api('logout', {});
+  toast('Editing turned off after 10 minutes without use. Sign in again to edit.');
 }
 
 /* ---------- Small helpers ---------- */
@@ -118,10 +153,10 @@ function watch() {
   decorate();
   // The observer already batches changes; adding a button triggers one more
   // pass, which finds nothing left to do.
-  const obs = new MutationObserver(decorate);
+  observer = new MutationObserver(decorate);
   ['#news-list', '#wn-split'].forEach((sel) => {
     const root = $(sel);
-    if (root) obs.observe(root, { childList: true, subtree: true });
+    if (root) observer.observe(root, { childList: true, subtree: true });
   });
 }
 
@@ -476,3 +511,6 @@ function openHidden() {
   d.showModal();
   close.focus();
 }
+
+// Start last, once everything above is defined.
+if (X) start();
