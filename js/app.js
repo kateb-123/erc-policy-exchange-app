@@ -1405,9 +1405,10 @@ function renderFeedCards(results, colorFor, total = results.length) {
     </div>`;
 }
 
-// Headlines as the Aggie UX News Collection: a grid of text-only cards.
-// Everything a headline carries is short enough to show at once, so these
-// cards have nothing to open — tag, title, the source line, the blurb.
+// Headlines as the Aggie UX News Collection: a grid of text-only cards with
+// nothing to open — tag, title, the source line. No teaser: the outlets' ledes
+// ran 2 to 10 lines and 9 of 43 stopped mid-sentence (Kate, Sep 23). The blurb
+// stays in the data, so search still reads it.
 function renderHeadlineCards(results, colorFor, total = results.length) {
   const cards = results
     .map((it) => {
@@ -1418,13 +1419,11 @@ function renderHeadlineCards(results, colorFor, total = results.length) {
         .filter(Boolean)
         .map(esc)
         .join(" • ");
-      const blurb = cleanBlurb(it.blurb);
       return `
         <article class="ncard" data-key="${esc(itemKey(it))}">
           <span class="tag ${colorFor[subtype] || "tag--teal"}">${esc(subtype || it.type || "")}</span>
           <h3 class="ncard__title">${itemTitleLink(it, true)}</h3>
           ${subhead ? `<span class="ncard__subhead">${subhead}</span>` : ""}
-          ${blurb ? `<p>${esc(blurb)}</p>` : ""}
         </article>`;
     })
     .join("");

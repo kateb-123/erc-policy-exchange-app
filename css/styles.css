@@ -1287,12 +1287,6 @@ main {
   line-height: 1.5;
   color: var(--g800);
 }
-.ncard p {
-  font-size: 16px;
-  line-height: 1.5;
-  color: var(--g800);
-  margin: 0;
-}
 
 /* ---------- Brief viewer ---------- */
 /* One ERC Research Brief, embedded in place via Drive's /preview iframe. */
@@ -2019,8 +2013,7 @@ main {
   .feed-more {
     padding: 16px 0;
   }
-  /* Headlines' cards, the same: no frame, a rule between, the whole summary
-     (Sep 23 audit: three lines hid the rest with nothing to open). */
+  /* Headlines' cards, the same: no frame, a rule between. */
   .ncol {
     gap: 0;
   }
