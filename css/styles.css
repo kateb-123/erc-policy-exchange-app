@@ -379,6 +379,15 @@ a:hover {
   align-items: flex-start;
   gap: 2px;
 }
+/* A rule under the welcome and one under the credit lines close the home
+   section in (Kate, Sep 24). */
+#landing .home-head {
+  border-bottom: 2px solid var(--g400);
+}
+#landing .home-meta {
+  padding-bottom: 20px;
+  border-bottom: 2px solid var(--g400);
+}
 .slab-meta {
   font-size: 14px;
   line-height: 1.4;
@@ -835,7 +844,11 @@ a:hover {
   /* The welcome heads the whole page, over both columns (Kate, Sep 24). */
   #landing .home-head {
     grid-column: 1 / -1;
-    padding: clamp(32px, 6vh, 72px) 0 clamp(20px, 3vh, 48px);
+    padding: clamp(24px, 4vh, 72px) 0 clamp(20px, 3vh, 48px);
+  }
+  #landing .home2-band,
+  #landing .button-slab {
+    margin-top: 14px;
   }
   /* The hero: the heading, her card, then the arrows, count and pause
      centered under it (Kate, Sep 24: next to the heading "looks weird"). The
@@ -898,7 +911,6 @@ a:hover {
     grid-template-columns: 1fr;
     grid-auto-rows: 1fr;
     gap: 0;
-    border-top: 1px solid var(--g400);
   }
   .slab-btn {
     justify-content: flex-start;
@@ -1254,7 +1266,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
     flex-direction: column;
   }
   .home2-band {
-    margin: 8px 0 24px;
+    margin: 24px 0 24px;
   }
   .button-slab {
     margin: 16px 0 20px;
