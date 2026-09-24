@@ -733,8 +733,8 @@ function heroCardHTML(entry) {
       ? [(it.authors || "").trim() && esc(it.authors.trim()), hcLine([src, date && hcFmt(date, { month: "long", year: "numeric" })])]
           .filter(Boolean)
           .join("<br>")
-      : kind === "opportunity"
-        ? hcLine([src, deadline && (deadline === "Rolling" ? "Rolling deadline" : `Apply by ${deadline}`)])
+      : kind === "opportunity" // the deadline on its own line (Kate, Sep 24)
+        ? [src && esc(src), deadline && esc(deadline === "Rolling" ? "Rolling deadline" : `Apply by ${deadline}`)].filter(Boolean).join("<br>")
         : kind === "headline" || kind === "event"
           ? hcLine([src, date && formatDate(it.date)])
           : esc(cleanBlurb(it.blurb).slice(0, 140));
