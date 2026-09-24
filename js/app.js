@@ -306,13 +306,16 @@ function init(rows, modified) {
     }
     render();
     writeURL();
-    const again = $("#opp-toolbar").querySelector(
+    // The chips and the buttons carry the same data attributes; land on the
+    // copy this width shows.
+    const again = $$(
       btn.dataset.sort != null
         ? `[data-sort="${btn.dataset.sort}"]`
         : btn.dataset.archive != null
           ? "[data-archive]"
-          : `[data-subtype="${CSS.escape(btn.dataset.subtype)}"]`
-    );
+          : `[data-subtype="${CSS.escape(btn.dataset.subtype)}"]`,
+      $("#opp-toolbar")
+    ).find((el) => el.offsetParent !== null);
     if (again && !again.disabled) again.focus();
   });
 
@@ -1099,11 +1102,25 @@ function renderToolbar() {
     <div class="tgroup tgroup--show" role="group" aria-label="Quick search by category">
       <span class="tgroup__label">Quick search</span>${catBtns}${clearBtn}${archiveBtn}
     </div>`;
+  // Phones get the same choices as one row of filter chips that slides
+  // sideways, "All" first and Archive last (Kate, Sep 23). CSS shows this row
+  // or the buttons above by width; both answer to the same click handler.
+  const chips = [
+    `<button type="button" class="chip" data-subtype="all" aria-pressed="${state.subtype === "all"}">All</button>`,
+    ...subs.map(
+      (v) =>
+        `<button type="button" class="chip" data-subtype="${esc(v)}" aria-pressed="${state.subtype === v}">${esc(v)}</button>`
+    ),
+    state.type === "research"
+      ? `<button type="button" class="chip chip--archive" data-archive aria-pressed="${state.archive}">${faIcon("box-archive")} Archive</button>`
+      : "",
+  ].join("");
+  const chipRow = `<div class="chips" role="group" aria-label="Quick search by category">${chips}</div>`;
 
   // The count node is persistent (it is the live region screen readers track),
   // so detach it before the rebuild and seat it at the head of the sort row.
   const count = $("#news-count");
-  bar.innerHTML = catGroup + sortGroup;
+  bar.innerHTML = chipRow + catGroup + sortGroup;
   if (count) bar.querySelector(".tgroup--sort").prepend(count);
 }
 

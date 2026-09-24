@@ -939,6 +939,10 @@ main {
   text-decoration: none;
   pointer-events: none;
 }
+/* Phones' filter chips (see renderToolbar): hidden until the phone width. */
+.chips {
+  display: none;
+}
 .tgroup--sort {
   margin-left: auto;
   gap: 24px;
@@ -1104,11 +1108,8 @@ main {
   color: var(--maroon);
   font-size: 14px;
 }
-/* The opened row: a maroon edge on the left (Kate, Sep 9), the summary
-   running the row's full width. */
-.feed-item[data-expanded="true"] {
-  box-shadow: inset 4px 0 0 var(--maroon);
-}
+/* The opened row's summary runs the row's full width. No left edge (Kate,
+   Sep 23); the chevron turning over is the sign it is open. */
 .feed-item__detail {
   margin-top: 16px;
 }
@@ -1814,6 +1815,56 @@ main {
   .feat.has-pt .feat__media {
     width: 120px;
     min-height: 150px;
+  }
+
+  /* The filter chips replace the buttons: one row that slides sideways, the
+     chosen chip filled maroon. The row runs to the screen's edges, with room
+     above and below for the focus ring. */
+  .tgroup--show {
+    display: none;
+  }
+  .chips {
+    display: flex;
+    flex: 0 0 calc(100% + 48px);
+    gap: 8px;
+    margin: -6px -24px 2px;
+    padding: 8px 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chips::-webkit-scrollbar {
+    display: none;
+  }
+  .chips::after {
+    content: "";
+    flex: 0 0 8px;
+  }
+  .chip {
+    flex: 0 0 auto;
+    height: 44px;
+    padding: 0 18px;
+    border: 0;
+    border-radius: 22px;
+    background: var(--g100);
+    box-shadow: inset 0 0 0 1px var(--g400);
+    color: var(--g900);
+    font-family: var(--head);
+    font-size: 15px;
+    font-weight: 500;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .chip--archive {
+    background: #fff;
+    color: var(--g700);
+  }
+  .chip[aria-pressed="true"] {
+    background: var(--maroon);
+    box-shadow: none;
+    color: #fff;
+  }
+  .chip:focus-visible {
+    outline-offset: 2px;
   }
 
   /* Sections: tighter head, the count and sorts flush left, rows stack with
