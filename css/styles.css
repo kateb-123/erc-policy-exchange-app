@@ -314,6 +314,11 @@ a:hover {
   margin: 0;
   text-wrap: pretty;
 }
+/* "Howdy!" on its own line, the welcome on the next (Kate, Sep 24). */
+.slab-title__hi,
+.slab-title__to {
+  display: block;
+}
 .slab-lede {
   grid-column: 1 / -1;
   font-size: 17px;
@@ -856,8 +861,8 @@ a:hover {
    400px wide so the band is a little narrower (Kate, Sep 24), and as tall
    as the band, the four buttons stretched to fill it; the whole top fits a
    1426x703 laptop window. Narrower screens: the band first, the welcome
-   under it. The page keeps the welcome first in its code, the laptop
-   reading order. */
+   under it (app.js moves the band ahead in the page at 1200px, so the
+   reading order matches). */
 @media (min-width: 1201px) {
   #landing:not([hidden]) {
     display: grid;
@@ -875,6 +880,12 @@ a:hover {
   }
   .slab-title {
     font-size: 24px;
+  }
+  /* The welcome line stays one line in the column: it is 18.3 times its
+     font size wide, and the column is 28vw (320 to 400px). */
+  .slab-title__to {
+    font-size: clamp(18px, 1.5vw, 21px);
+    white-space: nowrap;
   }
   .slab-lede {
     font-size: 15px;
@@ -930,7 +941,6 @@ a:hover {
     flex-direction: column;
   }
   .home2-band {
-    order: -1;
     margin: 32px 0 24px;
   }
   .button-slab {
@@ -2236,7 +2246,13 @@ main {
   z-index: 2;
   margin: 0;
 }
+/* A one-off card with no link: clamped like a linked title, so it can't
+   grow the card (Sep 24 review). */
 .feat__plain {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   color: var(--maroon);
 }
 .admin-dlg {

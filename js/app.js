@@ -522,6 +522,19 @@ function buildLanding() {
 
   if (el.dataset.wired) return;
   el.dataset.wired = "1";
+  // Up to 1200px New & Upcoming shows first, so it comes first in the page
+  // too: Tab, screen readers and the Home heading meet it before the welcome
+  // (Sep 24 review, WCAG 2.4.3). Wider, the welcome is the left column.
+  const bandFirst = matchMedia("(max-width: 1200px)");
+  const orderHome = () => {
+    const land = $("#landing");
+    const band = $("#whats-new");
+    const slab = $(".button-slab", land);
+    if (bandFirst.matches) land.insertBefore(band, slab);
+    else land.insertBefore(slab, band);
+  };
+  bandFirst.addEventListener("change", orderHome);
+  orderHome();
   el.addEventListener("click", (e) => {
     const btn = e.target.closest(".slab-btn");
     if (!btn || modifiedClick(e)) return;

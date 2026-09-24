@@ -27,7 +27,7 @@
   <!-- Font Awesome 7 Free: the same tag and hash the Content Desk uses, so both apps share one icon set. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=91" />
+  <link rel="stylesheet" href="css/styles.css?v=92" />
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -72,7 +72,7 @@
          by app.js. -->
     <section class="landing" id="landing" aria-label="Welcome" hidden>
       <div class="button-slab">
-        <h2 class="slab-title" tabindex="-1" data-focus-target>Howdy! Welcome to the ERC Policy Exchange</h2>
+        <h2 class="slab-title" tabindex="-1" data-focus-target><span class="slab-title__hi">Howdy!</span> <span class="slab-title__to">Welcome to the ERC Policy Exchange</span></h2>
         <p class="slab-lede">Browse through the latest research, upcoming events, opportunities, and education headlines.</p>
         <div class="button-group" id="landing-cards"></div>
         <div class="slab-intro">
@@ -84,7 +84,7 @@
         </div>
       </div>
       <section class="home2-band" id="whats-new" aria-labelledby="wn-h">
-        <h2 class="split__hd" id="wn-h">New &amp; Upcoming</h2>
+        <h2 class="split__hd" id="wn-h" tabindex="-1" data-focus-target>New &amp; Upcoming</h2>
         <div class="home2-split" id="wn-split"></div>
       </section>
     </section>
@@ -140,7 +140,7 @@
   </footer>
 
   <script src="js/csv.js?v=2"></script>
-  <script src="js/app.js?v=77"></script>
+  <script src="js/app.js?v=78"></script>
   <!-- Cloudflare Web Analytics: visit counts, no cookies. The site token is public by design. -->
   <script
     type="module"
