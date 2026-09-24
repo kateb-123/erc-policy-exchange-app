@@ -112,7 +112,7 @@ function buildBar() {
   const bar = el('div', { class: 'admin-bar', role: 'region', 'aria-label': 'Admin' });
   bar.append(
     el('span', { class: 'admin-bar__on' }, 'Editing is on'),
-    el('button', { type: 'button', 'data-admin': 'card' }, 'Add to New & upcoming'),
+    el('button', { type: 'button', 'data-admin': 'card' }, 'Add to New & Upcoming'),
     el('button', { type: 'button', 'data-admin': 'hidden' }, 'Hidden items'),
     el('button', { type: 'button', 'data-admin': 'out' }, 'Sign out')
   );
@@ -239,7 +239,7 @@ function openItem(key) {
 
   const pin = pinOf(key);
   const pinBox = el('fieldset', { class: 'admin-pin' });
-  pinBox.append(el('legend', {}, 'New & upcoming'));
+  pinBox.append(el('legend', {}, 'New & Upcoming'));
   const pinOn = el('input', { type: 'checkbox', id: 'a-pin' });
   pinOn.checked = !!pin;
   const pinUntil = el('input', { type: 'date', id: 'a-until', min: X.TODAY });
@@ -360,9 +360,9 @@ function openCard(id) {
   const existing = id ? X.state.featured.cards.find((c) => c.id === id) : null;
   const d = makeDialog();
   const form = el('form', { class: 'admin-form', novalidate: true });
-  form.append(el('h2', { id: 'admin-dlg-h' }, existing ? 'Edit card' : 'Add to New & upcoming'));
+  form.append(el('h2', { id: 'admin-dlg-h' }, existing ? 'Edit card' : 'Add to New & Upcoming'));
   form.append(
-    el('p', { class: 'admin-hint' }, 'A card that shows only in New & upcoming, first in line, until the day you pick. To put an item that is already on the site there, open it with Edit and pin it.')
+    el('p', { class: 'admin-hint' }, 'A card that shows only in New & Upcoming, first in line, until the day you pick. To put an item that is already on the site there, open it with Edit and pin it.')
   );
   const grid = el('div', { class: 'admin-grid' });
   const inputs = {
@@ -408,7 +408,7 @@ function openCard(id) {
   const live = X.state.featured.cards.filter((c) => !existing || c.id !== existing.id);
   if (live.length) {
     const box = el('div', { class: 'admin-list' });
-    box.append(el('h3', {}, 'Cards now in New & upcoming'));
+    box.append(el('h3', {}, 'Cards now in New & Upcoming'));
     const ul = el('ul');
     live.forEach((c) => {
       const li = el('li');
