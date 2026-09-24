@@ -215,28 +215,35 @@ a:hover {
   display: none;
 }
 /* ---------- Global search ----------
-   In the maroon bar, flush right under the utility links: a white box the
-   height of a form input, maroon inside when focused. */
+   In the maroon bar, flush right: a white box the height of a form input,
+   with the gold ring when focused. The input fills the whole box, so a tap
+   anywhere in it lands (Sep 23 audit: only a 24px strip did); the magnifier
+   sits over the input and lets taps through. */
 .topnav__search {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: stretch;
   width: 320px;
   max-width: 100%;
   height: 40px;
-  padding: 0 12px;
+  padding: 0;
   margin: 0;
   background: #fff;
   color: var(--g600);
 }
 .topnav__search i {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 16px;
-  flex-shrink: 0;
+  pointer-events: none;
 }
 .topnav__search input {
   appearance: none;
   width: 100%;
   min-width: 0;
+  padding: 0 14px 0 44px;
   border: 0;
   outline: 0;
   border-radius: 0;

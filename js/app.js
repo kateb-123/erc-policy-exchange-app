@@ -138,9 +138,37 @@ function formatDate(iso) {
   });
 }
 
-function matches(haystack, needle) {
-  return haystack.toLowerCase().includes(needle.toLowerCase().trim());
+// Search matches words, not one run of letters (Sep 23 audit: "Texas
+// vouchers" found nothing and "AI" found "said"). Every word of the query has
+// to start a word somewhere in the item, in any order, so "vouchers" also
+// finds "voucher". A word of three letters or fewer has to match a whole word,
+// so "AI" no longer finds "aid". Case, accents and curly quotes don't matter.
+const fold = (s) =>
+  String(s || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\u2018\u2019\u02bc]/g, "'");
+const stem = (w) =>
+  w.length <= 4
+    ? w
+    : /(ss|x|z|ch|sh)es$/.test(w)
+      ? w.slice(0, -2)
+      : /ies$/.test(w)
+        ? w.slice(0, -3)
+        : /[^s]s$/.test(w)
+          ? w.slice(0, -1)
+          : w;
+function searchTerms(q) {
+  return fold(q)
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean)
+    .map((w) => new RegExp(w.length <= 3 ? `\\b${w}\\b` : `\\b${stem(w)}`));
 }
+const hasAll = (text, terms) => {
+  const t = fold(text);
+  return terms.every((re) => re.test(t));
+};
 
 // Interpret an Opportunity's `deadline` cell.
 //   "2026-07-29" → a firm date: sortable, expirable, shows "Due Jul 29, 2026".
@@ -256,6 +284,7 @@ function init(rows, modified) {
     $("#global-search").value = state.q;
     closeMenu();
     render();
+    focusHeading();
   });
 
   // Global search (top strip): typing searches every section at once; clearing
@@ -264,6 +293,7 @@ function init(rows, modified) {
   gs.value = state.q;
   gs.addEventListener("input", (e) => {
     const q = e.target.value;
+    const entering = !!q.trim() && state.view !== "search";
     state.shown = PAGE_SIZE; // a new query starts at the first page
     if (q.trim()) {
       if (state.view !== "search") {
@@ -280,7 +310,13 @@ function init(rows, modified) {
       }
     }
     render();
-    writeURL();
+    writeURL(entering);
+  });
+  // F11: Enter or a phone's Search key closes the keyboard over the results;
+  // the results are already on the page.
+  $("#global-search-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    gs.blur();
   });
 
   // Card-tab toolbar: sort text actions + category "view" buttons. The
@@ -369,6 +405,10 @@ function init(rows, modified) {
     const caret = row.querySelector(".feed-expand");
     if (caret) toggleDetail(caret);
     const linkItem = row.closest(".feed-item--link");
+    if (linkItem && linkItem.dataset.briefRow) {
+      openBrief(linkItem.dataset.briefRow, linkItem.dataset.briefTitle);
+      return;
+    }
     if (linkItem && linkItem.dataset.href) {
       window.open(linkItem.dataset.href, "_blank", "noopener");
     }
@@ -917,17 +957,14 @@ function liveItemsOfType(type) {
  * ------------------------------------------------------------ */
 function filter() {
   const { type, subtype, q } = state;
+  const terms = searchTerms(q);
   const out = state.items.filter((it) => {
     const typeOk = (it.type || "").toLowerCase() === type;
     if (!typeOk || isExpired(it)) return false; // past events / deadlines / stale headlines drop off
     // Research: fresh feed vs Archive view, never both at once.
     if (type === "research" && isArchivedResearch(it) !== state.archive) return false;
     const subOk = subtype === "all" || (it.subtype || "").trim() === subtype;
-    const qOk =
-      !q.trim() ||
-      matches(it.headline || "", q) ||
-      matches(it.blurb || "", q) ||
-      matches(it.source || "", q);
+    const qOk = !terms.length || hasAll([it.headline, it.blurb, it.source].join(" "), terms);
     return subOk && qOk;
   });
   out.sort(sortComparator());
@@ -1283,14 +1320,19 @@ function renderSearch() {
   head.hidden = false;
   head.innerHTML = `<h2 class="section-head__title" tabindex="-1" data-focus-target>Search results</h2>`;
   head.append($("#news-count"));
+  const terms = searchTerms(q);
+  const fields = (it) => [it.headline, it.blurb, it.source, it.authors, it.topic, it.subtype].join("\n");
+  // How far from today, by the date a reader goes by: an opportunity's
+  // deadline, anything else's own date. Year-only dates go last.
+  const distance = (it) => {
+    const iso = (it.type || "").toLowerCase() === "opportunity" ? parseDeadline(it.deadline).iso : it.date || "";
+    return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? Math.abs(daysUntil(iso)) : Infinity;
+  };
   const results = state.items
-    .filter((it) => !isExpired(it))
-    .filter((it) =>
-      [it.headline, it.blurb, it.source, it.authors, it.topic, it.subtype].some(
-        (f) => matches(f || "", q)
-      )
-    )
-    .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    .filter((it) => !isExpired(it) && hasAll(fields(it), terms))
+    .map((it) => ({ it, title: hasAll(it.headline, terms), far: distance(it) }))
+    .sort((a, b) => b.title - a.title || a.far - b.far || (b.it.date || "").localeCompare(a.it.date || ""))
+    .map((r) => r.it);
 
   $("#news-count").innerHTML = `<strong>${results.length}</strong> ${
     results.length === 1 ? "result" : "results"
@@ -1315,22 +1357,37 @@ function renderSearch() {
       const link = (it.link || "").trim();
       const source = (it.source || "").trim();
       const titleHTML = itemTitleLink(it);
+      // The date a reader goes by: an opportunity's deadline, else its own.
+      const when =
+        (it.type || "").toLowerCase() === "opportunity"
+          ? parseDeadline(it.deadline).label
+          : it.date
+            ? formatDate(it.date)
+            : "";
       const meta = [
         `<span class="feed-cat">${esc(sectionLabel[(it.type || "").toLowerCase()] || it.type)}</span>`,
         source ? `<span class="feed-source">${esc(source)}</span>` : "",
-        it.date ? `<span class="feed-meta-date">${formatDate(it.date)}</span>` : "",
+        when ? `<span class="feed-meta-date">${esc(when)}</span>` : "",
       ]
         .filter(Boolean)
         .join(SEP);
+      // An ERC brief opens in the site's own viewer from anywhere on its row,
+      // the way its title does, never in Drive.
+      const bid = briefId(it);
+      const rowTarget = bid
+        ? ` data-brief-row="${bid}" data-brief-title="${esc(it.headline)}"`
+        : link
+          ? ` data-href="${esc(link)}"`
+          : "";
       return `
-        <li class="feed-item feed-item--link"${link ? ` data-href="${esc(link)}"` : ""}>
+        <li class="feed-item feed-item--link"${rowTarget}>
           <div class="feed-item__row">
             <div class="feed-item__body">
               <h3 class="feed-item__title">${titleHTML}</h3>
               <div class="feed-item__meta">${meta}</div>
             </div>
             <div class="feed-item__side">
-              ${link ? `${faIcon("arrow-up-right-from-square", "feed-goto")}` : ""}
+              ${link && !bid ? `${faIcon("arrow-up-right-from-square", "feed-goto")}` : ""}
             </div>
           </div>
         </li>`;

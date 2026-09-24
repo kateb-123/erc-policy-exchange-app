@@ -49,16 +49,17 @@
       </button>
       <nav id="topnav" class="topnav__links" aria-label="Sections"></nav>
       <div class="topnav__side">
-        <div class="topnav__search">
+        <form class="topnav__search" id="global-search-form" action="./" method="get" role="search">
           <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
           <input
             type="search"
             id="global-search"
+            name="q"
             placeholder="Search everything…"
             aria-label="Search all sections"
             autocomplete="off"
           />
-        </div>
+        </form>
       </div>
     </div>
   </header>
