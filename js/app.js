@@ -445,7 +445,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=3").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=4").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -615,9 +615,10 @@ const wnImage = (it) => {
   return /\.(jpe?g|png|webp|gif|avif)$/i.test(raw) ? raw : "";
 };
 
-// The sheet has no shape column, so the picture says what it is: wide art runs
-// as a band under the text, square and portrait sit beside it. Each picture is
-// measured once; one that will not load stays out of the card.
+// Every picture runs under the text in one landscape frame, 1200 x 500 (Kate,
+// Sep 24: "the landscape one looks best ... that will be the only
+// dimensions. under."). Each picture is loaded once; one that will not load
+// stays out of the card.
 const wnShapes = new Map();
 function wnShape(url) {
   if (!url) return Promise.resolve("");
@@ -626,10 +627,7 @@ function wnShape(url) {
       url,
       new Promise((resolve) => {
         const img = new Image();
-        img.onload = () => {
-          const ratio = img.naturalWidth / img.naturalHeight;
-          resolve(ratio >= 1.25 ? "wide" : ratio >= 0.9 ? "sq" : "pt");
-        };
+        img.onload = () => resolve("wide");
         img.onerror = () => resolve("");
         img.src = url;
       })
@@ -674,7 +672,7 @@ function wnFeatHTML({ it, tab }, shape) {
   if (!shape) return sec + txt;
   // The picture is decorative: the headline names the talk and the speaker.
   const fig = `<figure class="feat__media"><img src="${esc(wnImage(it))}" alt=""></figure>`;
-  return shape === "wide" ? sec + txt + fig : `${sec}<div class="feat__row">${fig}${txt}</div>`;
+  return sec + txt + fig;
 }
 
 function wnRowHTML(entry, i) {

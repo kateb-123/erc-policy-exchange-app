@@ -177,7 +177,7 @@ const FIELDS = [
   ['medium', 'Medium', 'text', 'Headlines only: radio, TV, newspaper, magazine.'],
   ['topic', 'Topic', 'text'],
   ['blurb', 'Summary', 'area'],
-  ['infographic', 'Picture or infographic link', 'url', 'A direct link to a picture (ending .jpg or .png), or a Google Drive file.'],
+  ['infographic', 'Picture or infographic link', 'url', 'A direct link to a picture (ending .jpg or .png), or a Google Drive file. New & Upcoming shows pictures at 1200 x 500 pixels.'],
 ];
 const SECTIONS = [
   ['research', 'Research'],
@@ -399,7 +399,7 @@ function openCard(id) {
     fieldRow('c-label', 'Label', inputs.label, 'The small word over the title, for example ERC or Announcement.'),
     fieldRow('c-until', 'Show until', inputs.until),
     fieldRow('c-blurb', 'Summary', inputs.blurb),
-    fieldRow('c-image', 'Picture link', inputs.image, 'Optional. A direct link to a picture ending .jpg or .png.'),
+    fieldRow('c-image', 'Picture link', inputs.image, 'Optional. A direct link to a picture ending .jpg or .png, 1200 x 500 pixels.'),
   ];
   rows[0].classList.add('admin-field--wide');
   rows[0].append(titleCount(inputs.headline));
