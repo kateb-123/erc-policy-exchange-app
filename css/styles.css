@@ -43,6 +43,7 @@
 
   --maxw: 1320px;
   --grow: 1; /* js/grow.js: up to 1.33 on big screens */
+  --grow-bar: 1; /* js/grow.js: the bar and footer, up to 1.15 */
 }
 
 /* ---------- Base ---------- */
@@ -125,10 +126,17 @@ a:hover {
   background: var(--maroon);
   color: #fff;
 }
+/* Big screens: the bar and the footer grow with the window, less than the
+   content (js/grow.js --grow-bar); their inner width divides it back out, so
+   their edges stay level with the content's. */
+.topnav,
+.site-footer {
+  zoom: var(--grow-bar);
+}
 .topnav__in {
-  max-width: calc(var(--maxw) * var(--grow));
+  max-width: calc(var(--maxw) * var(--grow) / var(--grow-bar));
   margin: 0 auto;
-  padding: 0 calc(24px * var(--grow));
+  padding: 0 calc(24px * var(--grow) / var(--grow-bar));
   display: flex;
   align-items: center;
   gap: 24px;
@@ -1373,7 +1381,8 @@ main {
   max-width: var(--maxw);
   margin: 0 auto;
   padding: 0 24px;
-  /* Big screens: the content grows (js/grow.js); the bar and footer don't. */
+  /* Big screens: the content grows (js/grow.js); the bar and footer grow
+     less (their own zoom, --grow-bar). */
   zoom: var(--grow);
 }
 
@@ -2235,9 +2244,9 @@ main {
   box-shadow: inset 0 2px 0 var(--cream2);
 }
 .site-footer__inner {
-  max-width: calc(var(--maxw) * var(--grow));
+  max-width: calc(var(--maxw) * var(--grow) / var(--grow-bar));
   margin: 0 auto;
-  padding: 32px calc(24px * var(--grow));
+  padding: 32px calc(24px * var(--grow) / var(--grow-bar));
   display: flex;
   align-items: center;
   justify-content: space-between;
