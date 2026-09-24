@@ -1320,8 +1320,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 }
 #wn-feat .hc .hc-band .hc__meta {
   font-size: calc(21 * var(--u));
-  font-style: italic;
-  color: var(--g800);
+  color: var(--g800); /* no italics on the authors (Kate, Sep 24) */
 }
 #wn-feat .hc .hc-band .hc__img {
   flex: 1 1 auto;
