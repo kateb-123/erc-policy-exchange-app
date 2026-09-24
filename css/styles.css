@@ -1010,9 +1010,24 @@ a:hover {
   font-family: var(--head);
   text-wrap: pretty;
 }
+/* The band across the top says what the card is (Kate, Sep 24: "a maroon
+   header that shows what an event or whatever is"); the card sits under it. */
+#wn-feat .hc .hc__band {
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 2;
+  height: calc(48 * var(--u));
+  margin: 0;
+  padding: 0 calc(64 * var(--u));
+  background: var(--maroon-dark);
+  font: 600 calc(16 * var(--u)) / calc(48 * var(--u)) var(--head);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
 #wn-feat .hc .hc__v {
   position: absolute;
-  inset: 0;
+  inset: calc(48 * var(--u)) 0 0;
 }
 #wn-feat .hc .hc__v--slot {
   display: none !important;
@@ -1031,6 +1046,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   display: block !important;
 }
 #wn-feat .hc .hc__sup {
+  display: none; /* the band carries it now */
   margin: 0;
   font: 400 calc(18 * var(--u)) / 1.3 var(--head);
   letter-spacing: 0.08em;
@@ -1109,6 +1125,33 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   min-width: 0;
   padding: calc(56 * var(--u)) calc(64 * var(--u)) calc(48 * var(--u));
 }
+#wn-feat .hc .hc-erc .hc__col {
+  gap: calc(14 * var(--u));
+  padding: calc(36 * var(--u)) calc(56 * var(--u)) calc(32 * var(--u)) calc(64 * var(--u));
+}
+#wn-feat .hc .hc__fact {
+  display: flex;
+  align-items: center;
+  gap: calc(14 * var(--u));
+}
+#wn-feat .hc .hc__fact b {
+  font: 600 calc(80 * var(--u)) / 1 var(--head);
+  letter-spacing: -0.02em;
+}
+#wn-feat .hc .hc__fact span {
+  font: 400 calc(17 * var(--u)) / 1.3 var(--head);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cream);
+}
+#wn-feat .hc .hc-erc .hc__ttl {
+  font-size: calc(44 * var(--u));
+  -webkit-line-clamp: 2;
+}
+#wn-feat .hc .hc-erc .hc__blurb {
+  color: var(--cream);
+  -webkit-line-clamp: 3;
+}
 /* 4a Upcoming event: the date carries the card. */
 #wn-feat .hc .hc-date {
   display: grid;
@@ -1151,12 +1194,55 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 #wn-feat .hc .hc__d {
   font: 600 calc(150 * var(--u)) / 1 var(--head);
 }
+/* The date panel with a headshot: the date on top, the picture under it,
+   the text starting further left, the event's words under the date line. */
+#wn-feat .hc .hc__when {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+#wn-feat .hc .hc-date--pic .hc__panel {
+  justify-content: flex-start;
+  align-items: stretch;
+}
+#wn-feat .hc .hc-date--pic .hc__when {
+  padding: calc(18 * var(--u)) 0 calc(14 * var(--u));
+}
+#wn-feat .hc .hc-date--pic .hc__k {
+  display: none; /* no "Upcoming" over the date; the headshot needs the room */
+}
+#wn-feat .hc .hc-date--pic .hc__m {
+  font-size: calc(22 * var(--u));
+}
+#wn-feat .hc .hc-date--pic .hc__d {
+  font-size: calc(64 * var(--u));
+}
+#wn-feat .hc .hc-date--pic .hc__img--head {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+#wn-feat .hc .hc-date--pic .hc__img--head img {
+  object-position: 50% 20%;
+}
+#wn-feat .hc .hc-date--pic .hc__col {
+  gap: calc(16 * var(--u));
+  padding: calc(48 * var(--u)) calc(64 * var(--u)) calc(40 * var(--u)) calc(44 * var(--u));
+}
+#wn-feat .hc .hc__blurb {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  margin: 0;
+  font: 400 calc(20 * var(--u)) / 1.45 var(--head);
+  color: var(--g800);
+}
 /* 3a Opportunity, and anything with no photo: type only, the dot grid. */
 #wn-feat .hc .hc-type {
   display: flex;
   flex-direction: column;
   gap: calc(22 * var(--u));
-  padding: calc(64 * var(--u)) calc(72 * var(--u)) calc(52 * var(--u));
+  padding: calc(44 * var(--u)) calc(72 * var(--u)) calc(44 * var(--u));
   background: var(--maroon);
 }
 #wn-feat .hc .hc-type .hc__ttl {
@@ -1240,7 +1326,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   display: flex;
   flex-direction: column;
   gap: calc(22 * var(--u));
-  padding: calc(64 * var(--u)) calc(72 * var(--u)) calc(56 * var(--u));
+  padding: calc(44 * var(--u)) calc(72 * var(--u)) calc(48 * var(--u));
   background: var(--maroon);
   color: #fff;
 }

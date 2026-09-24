@@ -444,7 +444,7 @@ function init(rows, modified, featured) {
   // The admin door: a signed-in admin's browser carries a hint cookie, and
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
-  window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY };
+  window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
   if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=10").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
@@ -721,8 +721,8 @@ function heroCardHTML(entry) {
   const src = (it.source || "").trim();
   const date = hcDate(it.date);
   const erc = kind === "event" && (/^erc\b/i.test(it.subtype || "") || src === "ERC" || /^ERC\b/.test(it.headline || ""));
-  const sup = esc(kind ? (erc ? "ERC event" : HC_SUPER[kind]) : tab.nav || "ERC");
-  const head = `<p class="hc__sup">${sup}</p><h3 class="hc__ttl">${wnTitleLink(entry)}</h3>`;
+  const sup = esc(kind ? (erc ? "Upcoming ERC event" : HC_SUPER[kind]) : tab.nav || "ERC");
+  const head = `<h3 class="hc__ttl">${wnTitleLink(entry)}</h3>`;
   const pic = (url, cls, label) =>
     url
       ? `<figure class="hc__img ${cls}"><img src="${esc(url)}" alt=""></figure>`
@@ -739,18 +739,33 @@ function heroCardHTML(entry) {
   const when = date
     ? hcLine([hcFmt(date, { weekday: "long", month: "long", day: "numeric" }), (it.time || "").trim()])
     : "";
+  const blurb = cleanBlurb(it.blurb);
 
+  // The ERC card: the day large beside the month, weekday and time (the
+  // design system's factoid: a big number with a short label), then the
+  // title, the place, and the event's own words (Kate's pick B, Sep 24).
+  const fact = date
+    ? `<div class="hc__fact" aria-hidden="true"><b>${date.getUTCDate()}</b><span>${esc(hcFmt(date, { month: "short" }))}<br>${hcLine([
+        hcFmt(date, { weekday: "long" }),
+        (it.time || "").trim(),
+      ])}</span></div>`
+    : "";
   const ercV = (url) => `
-    <div class="hc__v hc-erc${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}
-      <p class="hc__meta">${hcLine([src === "ERC" ? "Education Research Center" : src])}<br>${hcLine([
+    <div class="hc__v hc-erc${url ? "" : " hc__v--slot"}"><div class="hc__col">${fact}${head}
+      <p class="hc__meta">${hcLine([src === "ERC" ? "Education Research Center" : src, (it.location || "").trim()])}<span class="sr-only">. ${hcLine([
         date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
         (it.time || "").trim(),
-        (it.location || "").trim(),
-      ])}</p></div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
-  const dateV = () => `
-    <div class="hc__v hc-date"><div class="hc__panel" aria-hidden="true"><span class="hc__k">Upcoming</span>
-      <span class="hc__m">${esc(hcFmt(date, { month: "short" }))}</span><span class="hc__d">${date.getUTCDate()}</span></div>
-      <div class="hc__col">${head}<p class="hc__meta">${hcLine([src, (it.location || "").trim() || "Online"])}<br>${when}</p></div></div>`;
+      ])}</span></p>${blurb ? `<p class="hc__blurb">${esc(blurb)}</p>` : ""}</div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
+  // With a picture the panel splits: the date on top, the headshot under
+  // it, and the event's own words under the date line (Kate, Sep 24).
+  const dateV = (url) => `
+    <div class="hc__v hc-date${url ? " hc-date--pic" : ""}"><div class="hc__panel" aria-hidden="true"><div class="hc__when"><span class="hc__k">Upcoming</span>
+      <span class="hc__m">${esc(hcFmt(date, { month: "short" }))}</span><span class="hc__d">${date.getUTCDate()}</span></div>${
+        url ? `<figure class="hc__img hc__img--head"><img src="${esc(url)}" alt=""></figure>` : ""
+      }</div>
+      <div class="hc__col">${head}<p class="hc__meta">${hcLine([src, (it.location || "").trim() || "Online"])}<br>${when}</p>${
+        url && blurb ? `<p class="hc__blurb">${esc(blurb)}</p>` : ""
+      }</div></div>`;
   const typeV = () => `
     <div class="hc__v hc-type"><div class="hc__dots" aria-hidden="true"></div>${head}<p class="hc__meta">${meta}</p></div>`;
   const bandV = (url) => `
@@ -774,13 +789,13 @@ function heroCardHTML(entry) {
   let main;
   let slot = "";
   if (want === "date") {
-    main = date ? dateV() : typeV();
+    main = date ? dateV(img) : typeV();
   } else if (want === "type") {
     main = typeV();
   } else if (img) {
     main = draw[want](img);
   } else {
-    main = kind === "event" && date ? dateV() : typeV();
+    main = kind === "event" && date ? dateV("") : typeV();
     slot = draw[want]("");
   }
   // On Auto an editor still sees where this item's picture would go.
@@ -788,14 +803,13 @@ function heroCardHTML(entry) {
     const room = kind === "event" ? "erc" : kind === "research" ? "band" : kind === "headline" || !kind ? "photo" : "";
     if (room) slot = draw[room]("");
   }
-  return `<div class="hc" data-len="${wnLen(it)}"><div class="hc__in">${main}${slot}</div></div>`;
+  return `<div class="hc" data-len="${wnLen(it)}"><div class="hc__in"><p class="hc__band">${sup}</p>${main}${slot}</div></div>`;
 }
 
 // Her Share card (6b): the invitation, with the button drawn in; the whole
 // card is the one link, to the share form.
 function shareCardHTML() {
-  return `<div class="hc" data-len="short"><div class="hc__in"><div class="hc__v hc-share">
-      <p class="hc__sup">Contribute</p>
+  return `<div class="hc" data-len="short"><div class="hc__in"><p class="hc__band">Contribute</p><div class="hc__v hc-share">
       <h3 class="hc__ttl"><span class="feat__plain">${esc(SHARE_CARD.it.headline)}</span></h3>
       <p class="hc__meta">Send it to the ERC and we'll add it to the exchange.</p>
       <a class="hc__btn" href="share/">Share an item <span aria-hidden="true">&raquo;</span></a>
@@ -820,7 +834,7 @@ function quoteCardHTML(entry) {
       <span class="hc__mark" aria-hidden="true">\u201C</span>
       <p class="hc__q">${wnTitleLink(entry)}</p>
       ${who ? `<p class="hc__meta">${who}</p>` : ""}</div>${img || slot ? pic : ""}</div>`;
-  return `<div class="hc" data-q="${len}"><div class="hc__in">${body(false)}${img ? "" : body(true)}</div></div>`;
+  return `<div class="hc" data-q="${len}"><div class="hc__in"><p class="hc__band">${esc(entry.tab.nav || "Quote")}</p>${body(false)}${img ? "" : body(true)}</div></div>`;
 }
 
 function wnRowHTML(entry, i) {
