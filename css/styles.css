@@ -387,14 +387,15 @@ a:hover {
   align-items: flex-start;
   gap: 2px;
 }
-/* A rule under the welcome and one over the credit lines close the home
-   section in; the credit lines sit outside it (Kate, Sep 24). */
+/* A thin rule under the welcome and one over the credit lines close the
+   home section in; the credit lines sit outside it (Kate, Sep 24, picked A
+   of five: thin rules). */
 #landing .home-head {
-  border-bottom: 2px solid var(--g400);
+  border-bottom: 1px solid var(--g400);
 }
 #landing .home-meta {
   padding-top: 16px;
-  border-top: 2px solid var(--g400);
+  border-top: 1px solid var(--g400);
 }
 .slab-meta {
   font-size: 14px;
