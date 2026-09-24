@@ -1272,6 +1272,83 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 #wn-feat .hc .hc-share:hover .hc__btn {
   background: var(--cream);
 }
+/* The Quote card (7a): the words in italic under the opening mark, who said
+   them at the foot, a 4:5 portrait at the right; without one the words take
+   the width. Longer quotes step down (data-q, at 120 and 180 characters). */
+#wn-feat .hc .hc-quote {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(400 * var(--u));
+  background: var(--g100);
+}
+#wn-feat .hc .hc-quote--wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+#wn-feat .hc .hc-quote .hc__col {
+  display: flex;
+  flex-direction: column;
+  gap: calc(22 * var(--u));
+  min-width: 0;
+  padding: calc(52 * var(--u)) calc(64 * var(--u)) calc(48 * var(--u)) calc(72 * var(--u));
+}
+#wn-feat .hc .hc-quote--wide .hc__col {
+  max-width: calc(1000 * var(--u));
+  padding-right: calc(72 * var(--u));
+}
+#wn-feat .hc .hc__mark {
+  display: block;
+  margin: calc(16 * var(--u)) 0 calc(-18 * var(--u));
+  font: 600 calc(96 * var(--u)) / 0.6 Georgia, serif;
+  color: var(--maroon-muted);
+}
+#wn-feat .hc .hc__q {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  margin: 0;
+  font: italic 400 calc(38 * var(--u)) / 1.3 var(--head);
+  color: var(--maroon);
+}
+#wn-feat .hc .hc__q a,
+#wn-feat .hc .hc__q .feat__plain {
+  display: inline;
+  color: inherit;
+  text-decoration: none;
+}
+#wn-feat .hc .hc__q a::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+#wn-feat .hc:hover .hc__q a {
+  text-decoration: underline;
+  text-decoration-thickness: calc(2 * var(--u));
+  text-underline-offset: calc(5 * var(--u));
+}
+#wn-feat .hc[data-q="mid"] .hc__q {
+  -webkit-line-clamp: 5;
+  font-size: calc(32 * var(--u));
+}
+#wn-feat .hc[data-q="long"] .hc__q {
+  -webkit-line-clamp: 6;
+  font-size: calc(28 * var(--u));
+}
+#wn-feat .hc .hc-quote .hc__meta {
+  margin-top: auto;
+  font-size: calc(21 * var(--u));
+  color: var(--g800);
+}
+#wn-feat .hc .hc-quote .hc__meta b {
+  display: block;
+  font-weight: 600;
+  color: var(--maroon);
+}
+#wn-feat .hc .hc-quote .hc__slot {
+  outline-color: var(--g400);
+  color: var(--g600);
+  background: var(--g200);
+}
 /* Longer titles step down so they show whole (the title rules, Sep 24). */
 #wn-feat .hc[data-len="mid"] .hc__ttl {
   font-size: calc(42 * var(--u));
@@ -2763,6 +2840,66 @@ main {
 .admin-hint {
   margin: 0;
   font-size: 13px;
+  color: var(--g600);
+}
+/* The hero card choice: each template drawn small (Kate, Sep 24). */
+.admin-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.admin-tiles legend {
+  margin-bottom: 6px;
+  font-family: var(--head);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--g900);
+}
+.admin-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  box-shadow: inset 0 0 0 1px var(--g600);
+  background: #fff;
+  cursor: pointer;
+}
+/* The tile itself shows the choice; the radio stays for the keyboard. */
+.admin-tiles .admin-tile input {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 1px;
+  min-height: 0;
+  height: 1px;
+  padding: 0;
+  opacity: 0;
+}
+.admin-tile:has(input:checked) {
+  box-shadow: inset 0 0 0 3px #0091ff;
+}
+.admin-tile:has(input:focus-visible) {
+  outline: 2px solid var(--g900);
+  outline-offset: 2px;
+}
+.admin-tile__art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.admin-tile__name {
+  font-family: var(--head);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--g900);
+}
+.admin-tile small {
+  font-size: 12px;
+  line-height: 1.3;
   color: var(--g600);
 }
 .admin-pin {

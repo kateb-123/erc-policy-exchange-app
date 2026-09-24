@@ -93,6 +93,14 @@ ok('featured changes', () => {
   assert.throws(() => A.applyFeatured(f, 'card', { card: { headline: 'x', until: '2026-10-01', image: 'data:x' } }), A.BadRequest);
   assert.throws(() => A.applyFeatured(f, 'drop-table', {}), A.BadRequest);
   A.applyFeatured(f, 'uncard', { id: f.cards[0].id }); assert.strictEqual(f.cards.length, 0);
+  // Her hero card templates: the choice and its own fields ride along, checked.
+  A.applyFeatured(f, 'card', { card: { headline: 'A quote', until: '2026-10-01', hero: 'quote', who: 'Speaker name', role: 'Title, Organization' } });
+  assert.deepStrictEqual([f.cards[0].hero, f.cards[0].who, f.cards[0].role], ['quote', 'Speaker name', 'Title, Organization']);
+  A.applyFeatured(f, 'card', { card: { headline: 'Plain', until: '2026-10-01' } });
+  assert.deepStrictEqual([f.cards[0].hero, f.cards[0].who, f.cards[0].role, f.cards[0].figure], ['', '', '', '']);
+  assert.throws(() => A.applyFeatured(f, 'card', { card: { headline: 'x', until: '2026-10-01', hero: 'banner' } }), A.BadRequest);
+  assert.throws(() => A.applyFeatured(f, 'card', { card: { headline: 'x', until: '2026-10-01', hero: 'quote', who: 'w'.repeat(121) } }), A.BadRequest);
+  f.cards = [];
   assert.ok(A.rekeyFeatured(f, 'https://a', 'https://a2')); assert.strictEqual(f.pins[0].key, 'https://a2');
 });
 

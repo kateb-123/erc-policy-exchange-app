@@ -252,6 +252,8 @@ function deleteRow(text, original) {
 /* ---------- featured.json: pins, one-off cards, hidden items ---------- */
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
+// The one-off card's hero card: automatic, or one of her templates.
+const HERO_CARDS = ['', 'about', 'quote', 'announce', 'number', 'tool'];
 
 function readFeatured(text) {
   let j = {};
@@ -306,8 +308,14 @@ function applyFeatured(f, op, body) {
       image: short(c.image, 2000, 'picture link'),
       label: short(c.label, 40, 'label'),
       until: String(c.until || ''),
+      // Her hero card templates (Sep 24): which one, and its own fields.
+      hero: short(c.hero, 20, 'hero card'),
+      who: short(c.who, 120, 'name'),
+      role: short(c.role, 200, 'title and organization'),
+      figure: short(c.figure, 12, 'figure'),
     };
     if (!card.headline) throw new BadRequest('A card needs a title.');
+    if (!HERO_CARDS.includes(card.hero)) throw new BadRequest('Pick a hero card from the list.');
     for (const k of ['link', 'image']) {
       if (card[k] && !/^https?:\/\/\S+$/i.test(card[k])) {
         throw new BadRequest(`The ${k === 'link' ? 'link' : 'picture link'} needs to start with http:// or https://.`);

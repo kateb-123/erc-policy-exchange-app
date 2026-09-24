@@ -207,11 +207,13 @@ function note(form, msg, kind) {
 }
 // A running count under a title: past 100 characters the New & Upcoming card
 // sets the title smaller and leaves out the summary (Kate, Sep 24).
-function titleCount(input) {
+function titleCount(input, text) {
   const hint = el('p', { class: 'admin-hint', id: `${input.id}-count` });
   const say = () => {
     const n = input.value.trim().length;
-    hint.textContent = `${n} characters. Aim for 100 or fewer: longer titles show smaller in New & Upcoming, with no summary.`;
+    hint.textContent = text
+      ? text(n)
+      : `${n} characters. Aim for 100 or fewer: longer titles show smaller in New & Upcoming, with no summary.`;
   };
   input.addEventListener('input', say);
   say();
@@ -374,6 +376,49 @@ function openItem(key) {
 
 /* ---------- One-off cards for New & upcoming ---------- */
 
+// The hero card choice: automatic, or one of her templates (built so far),
+// each drawn small so she can tell them apart (Kate, Sep 24).
+const HERO_CARDS = [
+  [
+    '',
+    'Auto',
+    'your picture with the title, or the plain card',
+    '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#D1D1D1"/><rect y="22" width="78" height="28" fill="#500000"/><rect x="6" y="28" width="24" height="3" fill="#D6D3C4"/><rect x="6" y="34" width="60" height="4" fill="#fff"/><rect x="6" y="41" width="44" height="4" fill="#fff"/></svg>',
+  ],
+  [
+    'quote',
+    'Quote',
+    'the words, who said them, a portrait',
+    '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#F6F6F6"/><rect x="0.5" y="0.5" width="119" height="49" fill="none" stroke="#D1D1D1"/><text x="6" y="20" font-family="Georgia,serif" font-size="22" font-weight="700" fill="#732F2F">\u201C</text><rect x="7" y="22" width="62" height="3.5" fill="#500000"/><rect x="7" y="28" width="66" height="3.5" fill="#500000"/><rect x="7" y="34" width="40" height="3.5" fill="#500000"/><rect x="7" y="42" width="22" height="3" fill="#500000"/><rect x="80" width="40" height="50" fill="#A7A7A7"/><circle cx="100" cy="19" r="7" fill="#F6F6F6"/><path d="M85 50 Q100 30 115 50Z" fill="#F6F6F6"/></svg>',
+  ],
+];
+function heroTiles(current) {
+  const box = el('fieldset', { class: 'admin-tiles', id: 'c-hero' });
+  box.append(el('legend', {}, 'Hero card'));
+  HERO_CARDS.forEach(([v, name, desc, art]) => {
+    const tile = el('label', { class: 'admin-tile' });
+    const r = el('input', { type: 'radio', name: 'c-hero', value: v });
+    r.checked = v === current;
+    const pic = el('span', { class: 'admin-tile__art' });
+    pic.innerHTML = art;
+    tile.append(r, pic, el('span', { class: 'admin-tile__name' }, name), el('small', {}, desc));
+    box.append(tile);
+  });
+  // Reads and sets like a select, so the form treats it as one.
+  Object.defineProperty(box, 'value', {
+    get: () => ($('input:checked', box) || {}).value || '',
+    set: (v) => {
+      const r = $(`input[value="${v}"]`, box);
+      if (r) r.checked = true;
+    },
+  });
+  return box;
+}
+const PICTURE_HINTS = {
+  auto: 'Optional. A direct link to a picture ending .jpg or .png, 1200 x 500 pixels.',
+  quote: 'Optional. A direct link to a portrait ending .jpg or .png, 4 wide by 5 tall (for example 400 x 500 pixels).',
+};
+
 function openCard(id) {
   const existing = id ? X.state.featured.cards.find((c) => c.id === id) : null;
   const d = makeDialog();
@@ -384,12 +429,15 @@ function openCard(id) {
   );
   const grid = el('div', { class: 'admin-grid' });
   const inputs = {
+    hero: heroTiles(existing ? existing.hero || '' : ''),
     headline: el('input', { id: 'c-headline', type: 'text', autocomplete: 'off' }),
     link: el('input', { id: 'c-link', type: 'url', autocomplete: 'off' }),
     label: el('input', { id: 'c-label', type: 'text', autocomplete: 'off', maxlength: '40' }),
     until: el('input', { id: 'c-until', type: 'date', min: X.TODAY }),
     blurb: el('textarea', { id: 'c-blurb', rows: '4' }),
     image: el('input', { id: 'c-image', type: 'url', autocomplete: 'off' }),
+    who: el('input', { id: 'c-who', type: 'text', autocomplete: 'off', maxlength: '120' }),
+    role: el('input', { id: 'c-role', type: 'text', autocomplete: 'off', maxlength: '200' }),
   };
   inputs.headline.value = existing ? existing.headline : '';
   inputs.link.value = existing ? existing.link : '';
@@ -397,19 +445,47 @@ function openCard(id) {
   inputs.until.value = existing ? existing.until : addDays(14);
   inputs.blurb.value = existing ? existing.blurb : '';
   inputs.image.value = existing ? existing.image : '';
+  inputs.who.value = existing ? existing.who || '' : '';
+  inputs.role.value = existing ? existing.role || '' : '';
+  const isQuote = () => inputs.hero.value === 'quote';
+  const heroRow = el('div', { class: 'admin-field' });
+  heroRow.append(inputs.hero, el('p', { class: 'admin-hint' }, 'How the card is drawn in New & Upcoming on laptops.'));
   const rows = [
+    heroRow,
     fieldRow('c-headline', 'Title', inputs.headline),
     fieldRow('c-link', 'Link', inputs.link, 'Optional. Where the card goes when clicked.'),
     fieldRow('c-label', 'Label', inputs.label, 'The small word over the title, for example ERC or Announcement.'),
     fieldRow('c-until', 'Show until', inputs.until),
     fieldRow('c-blurb', 'Summary', inputs.blurb),
-    fieldRow('c-image', 'Picture link', inputs.image, 'Optional. A direct link to a picture ending .jpg or .png, 1200 x 500 pixels.'),
+    fieldRow('c-image', 'Picture link', inputs.image, PICTURE_HINTS.auto),
+    fieldRow('c-who', 'Who said it', inputs.who),
+    fieldRow('c-role', 'Their title and organization', inputs.role),
   ];
   rows[0].classList.add('admin-field--wide');
-  rows[0].append(titleCount(inputs.headline));
-  rows[4].classList.add('admin-field--wide');
+  rows[1].classList.add('admin-field--wide');
+  rows[1].append(
+    titleCount(inputs.headline, (n) =>
+      isQuote()
+        ? `${n} characters. Aim for 120 or fewer: longer quotes show smaller in New & Upcoming.`
+        : `${n} characters. Aim for 100 or fewer: longer titles show smaller in New & Upcoming, with no summary.`
+    )
+  );
   rows[5].classList.add('admin-field--wide');
+  rows[6].classList.add('admin-field--wide');
   grid.append(...rows);
+  // Each template shows only its own fields.
+  const shape = () => {
+    const q = isQuote();
+    $('label', rows[1]).textContent = q ? 'The quote' : 'Title';
+    rows[3].hidden = q;
+    rows[5].hidden = q;
+    rows[7].hidden = !q;
+    rows[8].hidden = !q;
+    $('#c-image-hint', rows[6]).textContent = q ? PICTURE_HINTS.quote : PICTURE_HINTS.auto;
+    inputs.headline.dispatchEvent(new Event('input'));
+  };
+  inputs.hero.addEventListener('change', shape);
+  shape();
   form.append(grid, el('p', { class: 'admin-note', role: 'status' }));
 
   const actions = el('div', { class: 'admin-actions' });
@@ -469,7 +545,10 @@ function openCard(id) {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const card = Object.fromEntries(Object.entries(inputs).map(([k, v]) => [k, v.value.trim()]));
-    if (!card.headline) return note(form, 'A card needs a title.', 'error');
+    // A hidden field's words don't ride along.
+    if (!isQuote()) card.who = card.role = '';
+    else card.label = card.blurb = '';
+    if (!card.headline) return note(form, isQuote() ? 'A card needs the quote.' : 'A card needs a title.', 'error');
     if (!card.until) return note(form, 'Pick the last day to show the card.', 'error');
     save.disabled = true;
     note(form, 'Saving…', 'busy');

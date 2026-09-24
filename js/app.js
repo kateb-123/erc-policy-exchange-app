@@ -445,7 +445,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=6").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=8").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -576,7 +576,18 @@ function whatsNewFeed(per = WN_PER) {
   const cards = state.featured.cards
     .filter((c) => (c.until || "") >= TODAY)
     .map((c) => ({
-      it: { headline: c.headline, link: c.link || "", blurb: c.blurb || "", infographic: c.image || "", card: c.id },
+      it: {
+        headline: c.headline,
+        link: c.link || "",
+        // A quote card's summary, for the plain card on phones, is who said it.
+        blurb: c.blurb || (c.hero === "quote" ? [c.who, c.role].filter(Boolean).join(", ") : ""),
+        infographic: c.image || "",
+        card: c.id,
+        hero: c.hero || "",
+        who: c.who || "",
+        role: c.role || "",
+        figure: c.figure || "",
+      },
       tab: { value: "", nav: c.label || "ERC" },
     }));
   const front = [...pinned, ...cards];
@@ -701,6 +712,7 @@ const hcLine = (parts) => parts.filter(Boolean).map(esc).join(" · ");
 function heroCardHTML(entry) {
   const { it, tab } = entry;
   if (it.fixed === "share") return shareCardHTML();
+  if (it.hero === "quote") return quoteCardHTML(entry);
   const kind = tab.value;
   const img = wnImage(it);
   const src = (it.source || "").trim();
@@ -770,6 +782,27 @@ function shareCardHTML() {
       <p class="hc__meta">Send it to the ERC and we'll add it to the exchange.</p>
       <a class="hc__btn" href="share/">Share an item <span aria-hidden="true">&raquo;</span></a>
     </div></div></div>`;
+}
+
+// Her Quote card (7a): the words in italic under the opening mark, who said
+// them at the foot, a 4:5 portrait at the right. Without a portrait the words
+// take the width; an editor sees the empty slot instead. Longer quotes step
+// down at 120 and 180 characters (styles.css data-q).
+function quoteCardHTML(entry) {
+  const { it } = entry;
+  const img = wnImage(it);
+  const n = (it.headline || "").trim().length;
+  const len = n <= 120 ? "short" : n <= 180 ? "mid" : "long";
+  const pic = img
+    ? `<figure class="hc__img hc__img--pt"><img src="${esc(img)}" alt=""></figure>`
+    : `<div class="hc__img hc__img--pt hc__slot"><span>Portrait 4:5</span></div>`;
+  const who = [it.who && `<b>${esc(it.who)}</b>`, it.role && esc(it.role)].filter(Boolean).join("");
+  const body = (slot) => `
+    <div class="hc__v hc-quote${img || slot ? "" : " hc-quote--wide"}${slot ? " hc__v--slot" : ""}"><div class="hc__col">
+      <span class="hc__mark" aria-hidden="true">\u201C</span>
+      <p class="hc__q">${wnTitleLink(entry)}</p>
+      ${who ? `<p class="hc__meta">${who}</p>` : ""}</div>${img || slot ? pic : ""}</div>`;
+  return `<div class="hc" data-q="${len}"><div class="hc__in">${body(false)}${img ? "" : body(true)}</div></div>`;
 }
 
 function wnRowHTML(entry, i) {
