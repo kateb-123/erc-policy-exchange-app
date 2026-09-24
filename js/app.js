@@ -384,15 +384,11 @@ function buildNav() {
   const el = $("#topnav");
   // Real links: every view has a URL, so middle-click, "open in new tab" and
   // copy-link all work, and screen readers hear "link". A plain click is
-  // intercepted for the in-page route. They go in ahead of About the ERC,
-  // which the page itself carries at the end of the row.
-  el.insertAdjacentHTML(
-    "afterbegin",
-    NEWS_TABS.map(
-      (t) => `
+  // intercepted for the in-page route.
+  el.innerHTML = NEWS_TABS.map(
+    (t) => `
     <a class="topnav__link" href="?type=${t.value}" data-type="${t.value}">${esc(t.nav)}</a>`
-    ).join("")
-  );
+  ).join("");
 
   el.addEventListener("click", (e) => {
     const link = e.target.closest(".topnav__link[data-type]");
