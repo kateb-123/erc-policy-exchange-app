@@ -2102,25 +2102,41 @@ main {
   text-underline-offset: 4px;
   cursor: pointer;
 }
+/* The Edit button, Kate's own (Sep 24: "match the blue and do something
+   funky"): a tilted blue sticker with a hard shadow and a pen, which tips the
+   other way when pointed at and presses in when clicked. */
 .admin-edit {
   appearance: none;
   display: inline-block;
   margin: 0 0 12px;
-  padding: 6px 12px;
+  padding: 7px 15px;
   border: 0;
-  background: #fff;
-  box-shadow: inset 0 0 0 2px var(--g900);
-  color: var(--g900);
+  border-radius: 999px;
+  background: #0091ff;
+  box-shadow: 3px 3px 0 #00386b;
+  color: #fff;
   font-family: var(--head);
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 900;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
+  transform: rotate(-3deg);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   cursor: pointer;
 }
+.admin-edit::before {
+  content: "\f303"; /* Font Awesome's pen */
+  margin-right: 7px;
+  font-family: "Font Awesome 7 Free";
+  font-weight: 900;
+}
 .admin-edit:hover {
-  background: var(--g900);
-  color: #fff;
+  transform: rotate(2deg) scale(1.08);
+  box-shadow: 5px 5px 0 #00386b;
+}
+.admin-edit:active {
+  transform: rotate(0deg) translate(2px, 2px);
+  box-shadow: 1px 1px 0 #00386b;
 }
 .feed-item > .admin-edit {
   margin-left: 24px;
