@@ -179,15 +179,9 @@ let uploadGen = 0;       // moves on when the form starts over, so a late upload
 let uploadFailed = false;
 let sendWithout = false; // a second Submit after a failed upload sends without the media
 
-// Link first: it is the one thing a busy submitter always has. Only Media is
-// optional (Kate, Sep 23).
+// Type and Title first, then the Link (Kate, Sep 23). Only Media is optional.
 root.innerHTML = `
   <form id="f" class="form" novalidate>
-    <div class="field field--full">
-      <label for="l">Link</label>
-      <input id="l" type="url" placeholder="https://" autocomplete="off" required>
-      <p class="field__error" id="l-err" hidden></p>
-    </div>
     <fieldset class="field field--full radios">
       <legend>Type</legend>
       <div id="types" class="radios__list"></div>
@@ -197,6 +191,11 @@ root.innerHTML = `
       <label for="t">Title</label>
       <input id="t" type="text" autocomplete="off" required>
       <p class="field__error" id="t-err" hidden></p>
+    </div>
+    <div class="field field--full">
+      <label for="l">Link</label>
+      <input id="l" type="url" placeholder="https://" autocomplete="off" required>
+      <p class="field__error" id="l-err" hidden></p>
     </div>
     <div class="field field--full">
       <label for="d">Description <small>(dates, an abstract, or the whole announcement)</small></label>
@@ -322,7 +321,7 @@ const clearMedia = () => {
 
 // Each problem shows under its own field, and the field is marked for screen
 // readers (Sep 23 audit: they were one line under the buttons).
-const ERR_IDS = ['l', 'type', 't', 'd', 'n', 'e'];
+const ERR_IDS = ['type', 't', 'l', 'd', 'n', 'e'];
 function setFieldError(id, msg) {
   const box = document.getElementById(`${id}-err`);
   box.textContent = msg || '';
@@ -493,10 +492,10 @@ form.addEventListener('submit', async event => {
   const name = document.getElementById('n').value.trim();
   const email = document.getElementById('e').value.trim();
   const bad = [];
-  if (!link) bad.push(['l', 'Add a link.']);
-  else if (!/^https?:\/\//i.test(link)) bad.push(['l', 'The link needs to start with http:// or https://.']);
   if (!picked) bad.push(['type', 'Pick a type.']);
   if (!title) bad.push(['t', 'Add a title.']);
+  if (!link) bad.push(['l', 'Add a link.']);
+  else if (!/^https?:\/\//i.test(link)) bad.push(['l', 'The link needs to start with http:// or https://.']);
   if (!desc) bad.push(['d', 'Add a description.']);
   if (!name) bad.push(['n', 'Add your name.']);
   if (!email) bad.push(['e', 'Add your email address.']);
@@ -575,7 +574,7 @@ form.addEventListener('submit', async event => {
       doneBox.hidden = true; form.hidden = false;
       document.getElementById('n').value = name;
       document.getElementById('e').value = email;
-      document.getElementById('l').focus();
+      typesBox.querySelector('input').focus();
     });
     doneBox.append(again);
     form.hidden = true; doneBox.hidden = false;
