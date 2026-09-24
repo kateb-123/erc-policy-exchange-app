@@ -27,5 +27,10 @@
   ],
   "cards": [],
   "hidden": [],
-  "heroes": []
+  "heroes": [
+    {
+      "key": "https://aefpweb.org/callforproposals",
+      "hero": "band"
+    }
+  ]
 }
