@@ -1339,6 +1339,42 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   outline-color: var(--g500);
   background: var(--g200);
 }
+/* 2a Research with the picture beside: the text at the left, a 440 x 300
+   picture at the right with a thin outline. */
+#wn-feat .hc .hc-beside {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(440 * var(--u));
+  gap: calc(56 * var(--u));
+  align-items: center;
+  padding: 0 calc(72 * var(--u)) 0 calc(72 * var(--u));
+  background: var(--g100);
+}
+#wn-feat .hc .hc-beside .hc__col {
+  display: flex;
+  flex-direction: column;
+  gap: calc(16 * var(--u));
+  min-width: 0;
+  padding: calc(28 * var(--u)) 0;
+}
+#wn-feat .hc .hc-beside .hc__ttl {
+  font-size: calc(40 * var(--u));
+}
+#wn-feat .hc .hc-beside .hc__meta {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-size: calc(21 * var(--u));
+}
+#wn-feat .hc .hc-beside .hc__img--shot {
+  width: calc(440 * var(--u));
+  height: calc(300 * var(--u));
+  background: #fff;
+  box-shadow: 0 0 0 calc(2 * var(--u)) var(--g400);
+}
+html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
+  display: grid !important;
+}
 /* 5a Headline or one-off card with a photo: the photo full bleed, the
    maroon block bottom left, growing upward with the headline. */
 #wn-feat .hc .hc-photo .hc__img--full {

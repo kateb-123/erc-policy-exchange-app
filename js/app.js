@@ -445,7 +445,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=10").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=11").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -776,6 +776,9 @@ function heroCardHTML(entry) {
     kind === "research"
       ? `<div class="hc__v hc-band${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p></div>${pic(url, "hc__img--band", "Landscape photo")}</div>`
       : `<div class="hc__v hc-band hc-band--top${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--band", "Landscape photo")}<div class="hc__col">${head}<p class="hc__meta">${meta}</p></div></div>`;
+  // 2a: the picture beside the text, 440 x 300 with a thin outline.
+  const besideV = (url) => `
+    <div class="hc__v hc-beside${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p></div>${pic(url, "hc__img--shot", "Picture 440 x 300")}</div>`;
   const photoV = (url) => `
     <div class="hc__v hc-photo${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--full", "Photo 1200 x 500")}
       <div class="hc__blk">${head}<p class="hc__meta">${meta}</p></div></div>`;
@@ -790,7 +793,7 @@ function heroCardHTML(entry) {
         : kind === "opportunity"
           ? "type"
           : img ? "photo" : "type";
-  const draw = { erc: ercV, date: dateV, type: typeV, band: bandV, photo: photoV };
+  const draw = { erc: ercV, date: dateV, type: typeV, band: bandV, beside: besideV, photo: photoV };
   const want = draw[entry.hero] ? entry.hero : auto;
   let main;
   let slot = "";

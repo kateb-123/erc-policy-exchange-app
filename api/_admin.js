@@ -255,7 +255,7 @@ const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 // The one-off card's hero card: automatic, or one of her templates.
 const HERO_CARDS = ['', 'about', 'quote', 'announce', 'number', 'tool'];
 // An item's: automatic, or one of her section cards.
-const HERO_ITEMS = ['', 'erc', 'date', 'type', 'band', 'photo'];
+const HERO_ITEMS = ['', 'erc', 'date', 'type', 'band', 'beside', 'photo'];
 
 function readFeatured(text) {
   let j = {};
