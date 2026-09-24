@@ -827,25 +827,26 @@ a:hover {
 @media (min-width: 1201px) {
   #landing:not([hidden]) {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(320px, 28vw, 400px);
+    grid-template-columns: minmax(0, 1fr) clamp(360px, 31vw, 460px);
     gap: 0 48px;
     align-items: stretch;
     margin: 0 0 clamp(48px, 9vh, 104px);
   }
   /* The welcome heads the whole page, over both columns (Kate, Sep 24). */
-  .home-head {
+  #landing .home-head {
     grid-column: 1 / -1;
-    padding: clamp(32px, 6vh, 72px) 0 clamp(24px, 4vh, 48px);
+    padding: clamp(32px, 6vh, 72px) 0 clamp(20px, 3vh, 48px);
   }
-  /* The hero: the heading with the arrows, count and pause on one line, her
-     card under it. The list beside the card is not shown here. */
+  /* The hero: the heading, her card, then the arrows, count and pause
+     centered under it (Kate, Sep 24: next to the heading "looks weird"). The
+     list beside the card is not shown here. */
   .home2-band {
     grid-column: 1;
     grid-row: 2;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     align-items: center;
-    row-gap: 12px;
+    row-gap: 10px;
     margin: 0;
     padding: 0;
     background: none;
@@ -857,19 +858,19 @@ a:hover {
     display: contents;
   }
   #wn-split > .caro {
-    grid-column: 2;
-    grid-row: 1;
-    justify-self: end;
+    grid-column: 1;
+    grid-row: 3;
+    justify-self: center;
     position: static;
     z-index: auto;
-    margin: 0 -10px 0 0;
+    margin: -4px 0 0;
     background: none;
   }
   #wn-split > .rail {
     display: none;
   }
   #wn-feat {
-    grid-column: 1 / -1;
+    grid-column: 1;
     grid-row: 2;
     display: block;
     min-height: 0;
