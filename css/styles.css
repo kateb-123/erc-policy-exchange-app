@@ -713,8 +713,10 @@ a:hover {
   color: var(--g600);
 }
 
-/* Previous, "n / 12", next under the card at every width (Kate, Sep 23);
-   on phones they are the only way through, since the list is hidden. */
+/* Previous, "n / 12", next: inside the card's bottom right corner beside
+   the list, under the card on phones (Kate, Sep 24: under the card was
+   "throwing off the layout"). On phones they are the only way through,
+   since the list is hidden. */
 .caro {
   display: flex;
   align-items: center;
@@ -747,6 +749,25 @@ a:hover {
 .caro__count b {
   font-weight: 600;
   color: var(--maroon);
+}
+/* Beside the list, the arrows sit in the card's own cell, over its bottom
+   right corner and above the card's stretched link, so the row under the
+   card goes. Every card leaves room there except one with a wide picture,
+   whose corner they cover. */
+@media (min-width: 821px) {
+  .home2-split > .caro {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: end;
+    justify-self: end;
+    position: relative;
+    z-index: 2;
+    margin: 0 6px 6px 0;
+    background: #fff;
+  }
+  .home2-split > .rail {
+    grid-row: 1;
+  }
 }
 
 @media (max-width: 1000px) {
