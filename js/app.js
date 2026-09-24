@@ -113,7 +113,7 @@ const state = {
   sort: null, // {key,dir} once a sort action is chosen; null = per-tab default
   searchFrom: null, // where to return when the global search box is cleared
   allItems: [], // every row of the sheet, hidden ones included
-  featured: { pins: [], cards: [], hidden: [] }, // the admin door's file
+  featured: { pins: [], cards: [], hidden: [], heroes: [] }, // the admin door's file
   briefFrom: null, // the view a brief was opened from, for its way back
   ready: false, // true once the data is in and the page's handlers are live
 };
@@ -445,7 +445,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=8").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=10").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -594,11 +594,16 @@ function whatsNewFeed(per = WN_PER) {
   const taken = new Set(pinned.map((x) => itemKey(x.it)));
   const rest = out.filter((x) => !taken.has(itemKey(x.it)));
   const list = [...front, ...rest].slice(0, Math.max(per * NEWS_TABS.length, front.length));
+  // An item carries the hero card the editor chose for it, if any.
+  list.forEach((e) => {
+    if (!e.it.card) e.hero = heroOf(itemKey(e.it));
+  });
   // The Share card closes the rotation where the hero cards show (Kate,
   // Sep 24: "Share only", wide screens only); phones have the Share button.
   if (matchMedia(WIDE).matches) list.push(SHARE_CARD);
   return list;
 }
+const heroOf = (key) => ((state.featured.heroes || []).find((h) => h.key === key) || {}).hero || "";
 // Wide screens show the hero cards (styles.css .hc) and the Share card.
 const WIDE = "(min-width: 1201px)";
 const SHARE_CARD = {
@@ -756,19 +761,34 @@ function heroCardHTML(entry) {
     <div class="hc__v hc-photo${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--full", "Photo 1200 x 500")}
       <div class="hc__blk">${head}<p class="hc__meta">${meta}</p></div></div>`;
 
+  // Auto picks by what the item has; the editor's choice (entry.hero) wins,
+  // falling back when the item lacks the picture or date the card needs.
+  const auto =
+    kind === "event"
+      ? img ? "erc" : date ? "date" : "type"
+      : kind === "research"
+        ? img ? "band" : "type"
+        : kind === "opportunity"
+          ? "type"
+          : img ? "photo" : "type";
+  const draw = { erc: ercV, date: dateV, type: typeV, band: bandV, photo: photoV };
+  const want = draw[entry.hero] ? entry.hero : auto;
   let main;
   let slot = "";
-  if (kind === "event") {
-    main = img ? ercV(img) : date ? dateV() : typeV();
-    if (!img) slot = ercV("");
-  } else if (kind === "research") {
-    main = img ? bandV(img) : typeV();
-    if (!img) slot = bandV("");
-  } else if (kind === "headline" || !kind) {
-    main = img ? photoV(img) : typeV();
-    if (!img) slot = photoV("");
-  } else {
+  if (want === "date") {
+    main = date ? dateV() : typeV();
+  } else if (want === "type") {
     main = typeV();
+  } else if (img) {
+    main = draw[want](img);
+  } else {
+    main = kind === "event" && date ? dateV() : typeV();
+    slot = draw[want]("");
+  }
+  // On Auto an editor still sees where this item's picture would go.
+  if (!entry.hero && !img && !slot) {
+    const room = kind === "event" ? "erc" : kind === "research" ? "band" : kind === "headline" || !kind ? "photo" : "";
+    if (room) slot = draw[room]("");
   }
   return `<div class="hc" data-len="${wnLen(it)}"><div class="hc__in">${main}${slot}</div></div>`;
 }
@@ -1856,9 +1876,9 @@ async function loadFeatured() {
   try {
     const res = await fetch(FEATURED_JSON, { cache: "no-store" });
     const j = res.ok ? await res.json() : {};
-    return { pins: list(j.pins), cards: list(j.cards), hidden: list(j.hidden) };
+    return { pins: list(j.pins), cards: list(j.cards), hidden: list(j.hidden), heroes: list(j.heroes) };
   } catch {
-    return { pins: [], cards: [], hidden: [] };
+    return { pins: [], cards: [], hidden: [], heroes: [] };
   }
 }
 

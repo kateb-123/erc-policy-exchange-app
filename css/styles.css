@@ -2844,9 +2844,9 @@ main {
 }
 /* The hero card choice: each template drawn small (Kate, Sep 24). */
 .admin-tiles {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   margin: 0;
   padding: 0;
   border: 0;
@@ -2857,6 +2857,28 @@ main {
   font-size: 14px;
   font-weight: 700;
   color: var(--g900);
+}
+.admin-tiles__h {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  color: var(--g600);
+}
+.admin-tiles__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+/* Inside the New & Upcoming box the tiles take the full row. */
+.admin-pin .admin-tiles {
+  width: 100%;
+  margin-top: 4px;
+}
+.admin-pin .admin-tiles legend {
+  float: none;
+  width: auto;
+  padding: 0;
+  font-size: 14px;
 }
 .admin-tile {
   position: relative;

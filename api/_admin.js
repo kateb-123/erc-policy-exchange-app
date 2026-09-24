@@ -254,6 +254,8 @@ function deleteRow(text, original) {
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 // The one-off card's hero card: automatic, or one of her templates.
 const HERO_CARDS = ['', 'about', 'quote', 'announce', 'number', 'tool'];
+// An item's: automatic, or one of her section cards.
+const HERO_ITEMS = ['', 'erc', 'date', 'type', 'band', 'photo'];
 
 function readFeatured(text) {
   let j = {};
@@ -268,6 +270,7 @@ function readFeatured(text) {
     pins: Array.isArray(j.pins) ? j.pins : [],
     cards: Array.isArray(j.cards) ? j.cards : [],
     hidden: Array.isArray(j.hidden) ? j.hidden : [],
+    heroes: Array.isArray(j.heroes) ? j.heroes : [],
   };
 }
 
@@ -279,7 +282,14 @@ const short = (v, max, what) => {
 
 function applyFeatured(f, op, body) {
   const key = short(body.key, 2000, 'item key');
-  if (['pin', 'unpin', 'hide', 'unhide'].includes(op) && !key) throw new BadRequest('Which item?');
+  if (['pin', 'unpin', 'hide', 'unhide', 'hero'].includes(op) && !key) throw new BadRequest('Which item?');
+  if (op === 'hero') {
+    const hero = short(body.hero, 20, 'hero card');
+    if (!HERO_ITEMS.includes(hero)) throw new BadRequest('Pick a hero card from the list.');
+    f.heroes = f.heroes.filter((h) => h.key !== key);
+    if (hero) f.heroes.push({ key, hero });
+    return hero ? `Admin: choose the ${hero} card for an item` : 'Admin: let an item pick its card again';
+  }
   if (op === 'pin') {
     if (!ISO_DAY.test(String(body.until || ''))) throw new BadRequest('Pick the last day to keep it pinned.');
     f.pins = f.pins.filter((p) => p.key !== key);
@@ -354,6 +364,12 @@ function rekeyFeatured(f, from, to) {
     if (k !== from) return k;
     changed = true;
     return to;
+  });
+  f.heroes.forEach((h) => {
+    if (h.key === from) {
+      h.key = to;
+      changed = true;
+    }
   });
   return changed;
 }

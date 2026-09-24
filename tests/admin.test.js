@@ -101,7 +101,17 @@ ok('featured changes', () => {
   assert.throws(() => A.applyFeatured(f, 'card', { card: { headline: 'x', until: '2026-10-01', hero: 'banner' } }), A.BadRequest);
   assert.throws(() => A.applyFeatured(f, 'card', { card: { headline: 'x', until: '2026-10-01', hero: 'quote', who: 'w'.repeat(121) } }), A.BadRequest);
   f.cards = [];
+  // An item's hero card choice: set, change, take off; only her templates.
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'type' });
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo' });
+  assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: 'photo' }]);
+  assert.throws(() => A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'banner' }), A.BadRequest);
+  assert.throws(() => A.applyFeatured(f, 'hero', { key: '', hero: 'type' }), A.BadRequest);
   assert.ok(A.rekeyFeatured(f, 'https://a', 'https://a2')); assert.strictEqual(f.pins[0].key, 'https://a2');
+  assert.strictEqual(f.heroes[0].key, 'https://a2');
+  A.applyFeatured(f, 'hero', { key: 'https://a2', hero: '' });
+  assert.deepStrictEqual(f.heroes, []);
+  assert.deepStrictEqual(A.readFeatured('{}').heroes, []);
 });
 
 // Handlers, with a fake GitHub holding copies of the files.
