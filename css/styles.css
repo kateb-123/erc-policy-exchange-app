@@ -42,8 +42,8 @@
     Helvetica, Arial, sans-serif;
 
   --maxw: 1320px;
-  --grow: 1; /* js/grow.js: up to 1.33 on big screens */
-  --grow-bar: 1; /* js/grow.js: the bar and footer, up to 1.15 */
+  --grow: 1; /* js/grow.js: up to 1.15 on big screens */
+  --grow-bar: 1; /* js/grow.js: the bar and footer, the same */
 }
 
 /* ---------- Base ---------- */
@@ -845,7 +845,9 @@ a:hover {
 @media (min-width: 1201px) {
   #landing:not([hidden]) {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) clamp(360px, 31vw, 460px);
+    /* The list is 324px, so her card is 900 x 375 in a 1426px window
+       (Kate, Sep 24: "bigger card ... card 900x375"). */
+    grid-template-columns: minmax(0, 1fr) 324px;
     gap: 0 48px;
     align-items: stretch;
     margin: 0 0 clamp(48px, 9vh, 104px);
