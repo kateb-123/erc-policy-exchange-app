@@ -380,6 +380,10 @@ a:hover {
   background: #fff;
   color: var(--maroon);
 }
+/* The arrow is a wide-screen thing; phones keep the plain button. */
+.slab-cta .fa-arrow-right {
+  display: none;
+}
 /* The update and credit lines, under everything on the home page. */
 .home-meta {
   display: flex;
@@ -931,13 +935,23 @@ a:hover {
     min-height: 44px;
     padding: 12px 20px;
   }
+  /* Share: as wide as its words, at the right edge, small round corners
+     and an arrow after (Kate's pick, Sep 24: the full-width slab under the
+     maroon card "blended in"). */
   .slab-intro {
-    align-items: stretch;
+    align-items: flex-end;
   }
   .slab-cta {
     justify-content: center;
-    min-height: 52px;
-    padding: 14px 20px;
+    gap: 10px;
+    min-height: 0;
+    padding: 13px 22px;
+    border-radius: 4px;
+  }
+  .slab-cta .fa-arrow-right {
+    display: inline-block;
+    font-size: 13px;
+    line-height: 1;
   }
   /* The update and credit lines under both columns, "Curated by" on its
      own line (Kate, Sep 24). */
