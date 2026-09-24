@@ -857,17 +857,11 @@ a:hover {
     gap: 12px;
     text-align: left;
   }
-  /* The update and credit lines: one row under both columns (Kate, Sep 24). */
+  /* The update and credit lines under both columns, "Curated by" on its
+     own line (Kate, Sep 24). */
   .home-meta {
     grid-column: 1 / -1;
-    flex-direction: row;
-    flex-wrap: wrap;
     margin-top: 20px;
-  }
-  .home-meta .slab-meta:not(:empty) + .slab-meta::before {
-    content: "•";
-    margin: 0 10px;
-    color: var(--g400);
   }
   .slab-meta {
     font-size: 14px;
