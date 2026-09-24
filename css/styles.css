@@ -1193,45 +1193,23 @@ main {
 }
 
 /* ---------- Tags ---------- */
-/* Tinted pills, kept from the handoff by choice: the subtype's accent as a
-   10% fill, its name written across it. Maroon is ERC's own and Texas; teal,
-   navy and gold are assigned per subtype in app.js.
-   Two accents are too light to be read at 13px — gold #AF8846 is 2.9:1 and
-   teal #1B9D92 is 2.4:1, both under the 4.5:1 floor — so --t paints the fill
-   and --ink writes the text. They are the same colour wherever it is dark
-   enough to serve as both. */
+/* Plain text, no pill (Kate, Sep 23: the tinted pills made every page busy).
+   The lighter maroon, #95463B at 6.5:1; the ERC's own items in the darker
+   maroon so they still stand out. */
 .tag {
   display: inline-flex;
   align-items: center;
-  --t: var(--teal);
-  --ink: var(--teal-ink);
   font-family: var(--head);
   font-size: 13px;
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 7px 14px;
-  border-radius: 999px;
   white-space: nowrap;
-  color: var(--ink);
-  background: color-mix(in srgb, var(--t) 10%, #fff);
+  color: var(--brick);
 }
-.tag--maroon {
-  --t: var(--maroon);
-  --ink: var(--maroon);
-}
-.tag--teal {
-  --t: var(--teal);
-  --ink: var(--teal-ink);
-}
-.tag--navy {
-  --t: var(--navy);
-  --ink: var(--navy);
-}
-.tag--gold {
-  --t: var(--gold);
-  --ink: var(--gold-ink);
+.tag--own {
+  color: var(--maroon);
 }
 
 /* ---------- Headline cards ----------

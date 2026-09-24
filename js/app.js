@@ -1001,30 +1001,9 @@ const SUBTYPE_ORDER = {
   opportunity: ["call for proposals", "fellowships & programs", "funding & grants"],
 };
 
-// Tag colours (Claude Design handoff, Sep 2026): maroon for ERC's own and
-// Texas, then teal / navy / gold per subtype, so a subtype keeps its colour
-// wherever it appears. A subtype missing here wears teal.
-const SUBTYPE_COLOR = {
-  // Research
-  "erc research": "tag--maroon",
-  "peer-reviewed": "tag--teal",
-  "working paper": "tag--navy",
-  report: "tag--gold",
-  // Events
-  "erc events": "tag--maroon",
-  "texas a&m": "tag--maroon",
-  "webinar-online": "tag--teal",
-  webinar: "tag--teal",
-  online: "tag--teal",
-  "off-campus": "tag--navy",
-  // Opportunities
-  "funding & grants": "tag--teal",
-  "fellowships & programs": "tag--gold",
-  "call for proposals": "tag--navy",
-  // Headlines
-  texas: "tag--maroon",
-  national: "tag--teal",
-};
+// The ERC's own subtypes: their label is the darker maroon, every other one
+// the lighter (Kate, Sep 23).
+const OWN_SUBTYPES = new Set(["erc research", "erc events", "texas a&m", "a&m"]);
 function sortSubtypes(subs, type) {
   const order = SUBTYPE_ORDER[(type || "").toLowerCase()] || [];
   const rank = (s) => {
@@ -1321,7 +1300,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
       const source = (it.source || "").trim();
       const subtype = (it.subtype || "").trim();
       const catText = subtype || (it.type || "");
-      const catHTML = `<div class="feed-item__cat"><span class="tag ${colorFor[subtype] || "tag--teal"}">${esc(catText)}</span></div>`;
+      const catHTML = `<div class="feed-item__cat"><span class="tag ${colorFor[subtype] || ""}">${esc(catText)}</span></div>`;
       const detailId = `feed-detail-${i}`;
       // The right side: Opportunities show the deadline, everything else its date.
       const rv = isOpp
@@ -1421,7 +1400,7 @@ function renderHeadlineCards(results, colorFor, total = results.length) {
         .join(" • ");
       return `
         <article class="ncard" data-key="${esc(itemKey(it))}">
-          <span class="tag ${colorFor[subtype] || "tag--teal"}">${esc(subtype || it.type || "")}</span>
+          <span class="tag ${colorFor[subtype] || ""}">${esc(subtype || it.type || "")}</span>
           <h3 class="ncard__title">${itemTitleLink(it, true)}</h3>
           ${subhead ? `<span class="ncard__subhead">${subhead}</span>` : ""}
         </article>`;
@@ -1658,13 +1637,13 @@ function render() {
 
   renderToolbar();
 
-  // Each sub-category's tag colour (SUBTYPE_COLOR; unknown ones wear teal).
+  // Each sub-category's label class: the ERC's own wear the darker maroon.
   const colorFor = {};
   distinct(
     "subtype",
     state.items.filter((it) => (it.type || "").toLowerCase() === state.type)
   ).forEach((s) => {
-    colorFor[s] = SUBTYPE_COLOR[s.trim().toLowerCase()] || "tag--teal";
+    colorFor[s] = OWN_SUBTYPES.has(s.trim().toLowerCase()) ? "tag--own" : "";
   });
 
   if (results.length === 0) {
