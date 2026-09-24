@@ -830,6 +830,99 @@ a:hover {
   }
 }
 
+/* The highlight first (Kate, Sep 24: "i wish the highlight ... was the first
+   thing you saw"). Laptops: the welcome is a 320px column beside the band,
+   as tall as it, the four buttons stretched to fill it; the whole top fits
+   a 1426x703 laptop window. Narrower: the band first, the welcome under it.
+   The page keeps the welcome first in its code, the laptop reading order. */
+@media (min-width: 1201px) {
+  #landing:not([hidden]) {
+    display: grid;
+    grid-template-columns: 320px minmax(0, 1fr);
+    gap: 32px;
+    align-items: stretch;
+    margin: 24px 0 48px;
+  }
+  .button-slab {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+  }
+  .slab-title {
+    font-size: 24px;
+  }
+  .slab-lede {
+    font-size: 15px;
+    line-height: 1.5;
+    margin: -4px 0 0;
+  }
+  .button-group {
+    flex: 1 1 auto;
+    grid-template-columns: 1fr;
+    grid-auto-rows: 1fr;
+    gap: 12px;
+  }
+  .slab-btn,
+  .slab-cta {
+    min-height: 44px;
+    padding: 12px 16px;
+  }
+  .slab-cta {
+    justify-content: center;
+  }
+  /* Share full width; the two small lines sit left, like the text above
+     (Kate, Sep 24). */
+  .slab-intro {
+    align-items: stretch;
+    gap: 12px;
+    text-align: left;
+  }
+  .slab-intro__meta {
+    align-items: flex-start;
+  }
+  .slab-meta {
+    font-size: 13px;
+  }
+  .home2-band {
+    margin: 0;
+  }
+  /* A shorter card and list so the band fits the window. 360px holds the
+     tallest card: clamped text under a wide picture cut to 130px (386px
+     uncut, measured at the widest page). */
+  .feat,
+  .rail__vp {
+    min-height: 360px;
+  }
+  .feat.has-wide .feat__media {
+    aspect-ratio: auto;
+    height: 130px;
+    flex: none;
+  }
+}
+@media (max-width: 1200px) {
+  #landing:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+  }
+  .home2-band {
+    order: -1;
+    margin: 32px 0 24px;
+  }
+  .button-slab {
+    margin: 16px 0 48px;
+  }
+}
+@media (max-width: 640px) {
+  .home2-band {
+    margin-top: 16px;
+  }
+  .button-slab {
+    margin-top: 8px;
+  }
+}
+
 /* ---------- Layout ---------- */
 main {
   flex: 1 0 auto; /* short pages still push the footer to the viewport bottom */
