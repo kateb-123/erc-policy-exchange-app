@@ -445,7 +445,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=5").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=6").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -582,10 +582,21 @@ function whatsNewFeed(per = WN_PER) {
   const front = [...pinned, ...cards];
   const taken = new Set(pinned.map((x) => itemKey(x.it)));
   const rest = out.filter((x) => !taken.has(itemKey(x.it)));
-  return [...front, ...rest].slice(0, Math.max(per * NEWS_TABS.length, front.length));
+  const list = [...front, ...rest].slice(0, Math.max(per * NEWS_TABS.length, front.length));
+  // The Share card closes the rotation where the hero cards show (Kate,
+  // Sep 24: "Share only", wide screens only); phones have the Share button.
+  if (matchMedia(WIDE).matches) list.push(SHARE_CARD);
+  return list;
 }
-// A New & upcoming entry's key: a one-off card's own id, else the item's.
-const wnKey = ({ it }) => (it.card ? `card:${it.card}` : itemKey(it));
+// Wide screens show the hero cards (styles.css .hc) and the Share card.
+const WIDE = "(min-width: 1201px)";
+const SHARE_CARD = {
+  it: { headline: "Know of a study, event or opportunity we missed?", blurb: "", fixed: "share" },
+  tab: { value: "", nav: "Contribute" },
+};
+// A New & upcoming entry's key: a fixed card's name, a one-off card's own
+// id, else the item's.
+const wnKey = ({ it }) => (it.fixed ? `fixed:${it.fixed}` : it.card ? `card:${it.card}` : itemKey(it));
 
 // Opportunities are judged on their deadline, everything else on its date.
 const wnWhen = (it, tab) =>
@@ -689,6 +700,7 @@ const hcLine = (parts) => parts.filter(Boolean).map(esc).join(" · ");
 
 function heroCardHTML(entry) {
   const { it, tab } = entry;
+  if (it.fixed === "share") return shareCardHTML();
   const kind = tab.value;
   const img = wnImage(it);
   const src = (it.source || "").trim();
@@ -747,6 +759,17 @@ function heroCardHTML(entry) {
     main = typeV();
   }
   return `<div class="hc" data-len="${wnLen(it)}"><div class="hc__in">${main}${slot}</div></div>`;
+}
+
+// Her Share card (6b): the invitation, with the button drawn in; the whole
+// card is the one link, to the share form.
+function shareCardHTML() {
+  return `<div class="hc" data-len="short"><div class="hc__in"><div class="hc__v hc-share">
+      <p class="hc__sup">Contribute</p>
+      <h3 class="hc__ttl"><span class="feat__plain">${esc(SHARE_CARD.it.headline)}</span></h3>
+      <p class="hc__meta">Send it to the ERC and we'll add it to the exchange.</p>
+      <a class="hc__btn" href="share/">Share an item <span aria-hidden="true">&raquo;</span></a>
+    </div></div></div>`;
 }
 
 function wnRowHTML(entry, i) {
@@ -965,6 +988,9 @@ function initWhatsNew(list) {
     announce();
     if (!phone.matches) glideTo(rows[at], true);
   }, until);
+  // Crossing into or out of the wide layout adds or drops the Share card,
+  // so the rotation is built again.
+  matchMedia(WIDE).addEventListener("change", buildWhatsNew, until);
 
   sync();
   show(0, { fade: false });

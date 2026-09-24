@@ -141,6 +141,7 @@ function decorate() {
   document.querySelectorAll('#news-list .feed-item[data-key], #news-list .ncard[data-key], #wn-feat[data-key]').forEach((node) => {
     if ($(':scope > .admin-edit', node)) return;
     const key = node.dataset.key;
+    if (key.startsWith('fixed:')) return; // the Share card has nothing to edit
     const title = key.startsWith('card:') ? 'this card' : (findItem(key) || {}).headline || 'this item';
     const b = el('button', { type: 'button', class: 'admin-edit', 'aria-label': `Edit: ${title}` }, 'Edit');
     b.addEventListener('click', (e) => {

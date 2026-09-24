@@ -1234,6 +1234,44 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 #wn-feat .hc .hc__blk .hc__meta {
   font-size: calc(21 * var(--u));
 }
+/* The Share card (6b): the invitation on maroon, the button drawn in at the
+   foot; the button's link covers the card. */
+#wn-feat .hc .hc-share {
+  display: flex;
+  flex-direction: column;
+  gap: calc(22 * var(--u));
+  padding: calc(64 * var(--u)) calc(72 * var(--u)) calc(56 * var(--u));
+  background: var(--maroon);
+  color: #fff;
+}
+#wn-feat .hc .hc-share .hc__ttl {
+  -webkit-line-clamp: 2;
+  max-width: calc(900 * var(--u));
+  font-size: calc(56 * var(--u));
+}
+#wn-feat .hc .hc-share .hc__meta {
+  max-width: calc(780 * var(--u));
+}
+#wn-feat .hc .hc-share .hc__btn {
+  margin-top: auto;
+  align-self: flex-start;
+  padding: calc(22 * var(--u)) calc(36 * var(--u));
+  background: #fff;
+  font: 700 calc(20 * var(--u)) / 1 var(--head);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--maroon);
+  text-decoration: none;
+}
+#wn-feat .hc .hc-share .hc__btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+#wn-feat .hc .hc-share:hover .hc__btn {
+  background: var(--cream);
+}
 /* Longer titles step down so they show whole (the title rules, Sep 24). */
 #wn-feat .hc[data-len="mid"] .hc__ttl {
   font-size: calc(42 * var(--u));
