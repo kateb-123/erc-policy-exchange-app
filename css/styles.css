@@ -841,7 +841,7 @@ a:hover {
   #landing:not([hidden]) {
     display: grid;
     grid-template-columns: clamp(320px, 28vw, 400px) minmax(0, 1fr);
-    gap: 32px;
+    gap: 48px;
     align-items: stretch;
     margin: 24px 0 48px;
   }
