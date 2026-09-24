@@ -630,7 +630,8 @@ const wnLen = (it) => {
 };
 
 // The headline is a card's one way out: a brief opens in the site, an item at
-// its source, a one-off card with no link in its section, if it has one.
+// its source, a one-off card with no link in its section, if it has one. No
+// new-tab icon on the scrolling card (Kate, Sep 24); screen readers still hear it.
 function wnTitleLink({ it, tab }) {
   const title = esc(it.headline);
   const id = briefId(it);
@@ -638,7 +639,7 @@ function wnTitleLink({ it, tab }) {
   return id
     ? `<a href="?brief=${id}" data-brief="${id}" data-brief-title="${title}">${title}</a>`
     : link
-      ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${title} ${faIcon("arrow-up-right-from-square")}${NEW_TAB}</a>`
+      ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${title}${NEW_TAB}</a>`
       : tab.value
         ? `<a href="?type=${tab.value}" data-type="${tab.value}">${title}</a>`
         : `<span class="feat__plain">${title}</span>`;
