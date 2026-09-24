@@ -387,14 +387,14 @@ a:hover {
   align-items: flex-start;
   gap: 2px;
 }
-/* A rule under the welcome and one under the credit lines close the home
-   section in (Kate, Sep 24). */
+/* A rule under the welcome and one over the credit lines close the home
+   section in; the credit lines sit outside it (Kate, Sep 24). */
 #landing .home-head {
   border-bottom: 2px solid var(--g400);
 }
 #landing .home-meta {
-  padding-bottom: 20px;
-  border-bottom: 2px solid var(--g400);
+  padding-top: 16px;
+  border-top: 2px solid var(--g400);
 }
 .slab-meta {
   font-size: 14px;
@@ -903,50 +903,30 @@ a:hover {
   #wn-feat > :not(.hc):not(.admin-edit) {
     display: none;
   }
-  /* The sections: rows split by rules, each its icon, name, count and a
-     chevron, as tall as the hero between them; Share under the list. */
+  /* The sections: the white boxes with the maroon outline, no icons (Kate,
+     Sep 24), then Share, as tall as her card and level with it (below the
+     New & Upcoming heading, above the arrows). */
   .button-slab {
     grid-column: 2;
     grid-row: 2;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
     margin: 0;
     padding: 0;
+  }
+  #landing .button-slab {
+    margin: calc(14px + 26px * 1.2 + 10px) 0 50px;
   }
   .button-group {
     flex: 1 1 auto;
     grid-template-columns: 1fr;
     grid-auto-rows: 1fr;
-    gap: 0;
+    gap: 12px;
   }
   .slab-btn {
-    justify-content: flex-start;
-    gap: 16px;
-    min-height: 0;
-    padding: 8px 4px;
-    box-shadow: none;
-    border-bottom: 1px solid var(--g400);
-    font-size: 18px;
-    letter-spacing: 0;
-    text-transform: none;
-  }
-  .slab-btn:hover {
-    background: var(--g100);
-    color: var(--maroon);
-  }
-  .slab-btn .slab-btn__icon {
-    display: block;
-  }
-  .slab-btn small {
-    margin-left: auto;
-    font-size: 15px;
-    color: var(--g600);
-  }
-  .slab-btn .slab-btn__go {
-    display: inline-block;
-    font-size: 13px;
-    color: var(--maroon);
+    min-height: 44px;
+    padding: 12px 20px;
   }
   .slab-intro {
     align-items: stretch;
