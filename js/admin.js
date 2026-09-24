@@ -419,15 +419,8 @@ function openCard(id) {
     if (!card.until) return note(form, 'Pick the last day to show the card.', 'error');
     save.disabled = true;
     note(form, 'Saving…', 'busy');
-    // Changing a card is taking the old one down and putting the new one up.
-    if (existing) {
-      const r = await api('save', { op: 'uncard', id: existing.id });
-      if (!r.ok) {
-        save.disabled = false;
-        return note(form, r.error, 'error');
-      }
-    }
-    const r = await api('save', { op: 'card', card });
+    // A changed card replaces the old one in one checked save.
+    const r = await api('save', { op: 'card', card, replace: existing ? existing.id : '' });
     save.disabled = false;
     if (!r.ok) return note(form, r.error, 'error');
     X.state.featured = r.featured;
@@ -451,7 +444,7 @@ function openHidden() {
   if (!hidden.length) {
     box.append(el('p', {}, 'Nothing is hidden. "Hide from the site" in an item’s editor puts it here.'));
   } else {
-    box.append(el('p', { class: 'admin-hint' }, 'These stay in the sheet but are off the site.'));
+    box.append(el('p', { class: 'admin-hint' }, 'These are off the site’s pages but still in its data file, which anyone can download. Use Delete for anything that must not be public.'));
     const ul = el('ul', { class: 'admin-list' });
     hidden.forEach((key) => {
       const it = findItem(key);

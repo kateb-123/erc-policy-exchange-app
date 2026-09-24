@@ -153,6 +153,32 @@ function call(handler, { method = 'POST', headers = {}, body, deps }) {
     assert.strictEqual(r.status, 400);
     assert.ok(gh.writes.every((w) => w.message.startsWith('Admin: ')));
   });
+  await okA('login: a short password keeps the door shut', async () => {
+    const shortEnv = { ADMIN_PASSWORD: 'short one', GITHUB_TOKEN: 'x' };
+    let r = await call(A.handleLogin, { body: { password: 'short one' }, deps: { env: shortEnv, pause: async () => {} } });
+    assert.strictEqual(r.status, 503);
+    r = await call(A.handleSession, { method: 'GET', headers: { cookie }, deps: { env: shortEnv } });
+    assert.strictEqual(r.body.ok, false);
+  });
+  await okA('save: a damaged pins file is never saved over', async () => {
+    const gh = fakeGh({ 'data/news.csv': csv, 'data/featured.json': '{"pins": [ <<<<<<< HEAD' });
+    const r = await call(A.handleSave, { headers: { cookie }, body: { op: 'hide', key: 'k' }, deps: { env, gh } });
+    assert.strictEqual(r.status, 409);
+    assert.strictEqual(gh.files['data/featured.json'], '{"pins": [ <<<<<<< HEAD');
+  });
+  await okA('save: changing a card is one checked write', async () => {
+    const gh = fakeGh({ 'data/news.csv': csv });
+    let r = await call(A.handleSave, { headers: { cookie }, body: { op: 'card', card: { headline: 'First', until: '2026-10-20' } }, deps: { env, gh } });
+    const id = r.body.featured.cards[0].id;
+    r = await call(A.handleSave, { headers: { cookie }, body: { op: 'card', replace: id, card: { headline: 'Bad', until: '2026-10-20', image: 'ftp://x' } }, deps: { env, gh } });
+    assert.strictEqual(r.status, 400);
+    assert.strictEqual(JSON.parse(gh.files['data/featured.json']).cards[0].headline, 'First');
+    r = await call(A.handleSave, { headers: { cookie }, body: { op: 'card', replace: id, card: { headline: 'Second', until: '2026-10-21' } }, deps: { env, gh } });
+    const cards = JSON.parse(gh.files['data/featured.json']).cards;
+    assert.strictEqual(r.status, 200); assert.deepStrictEqual(cards.map((c) => [c.id, c.headline]), [[id, 'Second']]);
+    r = await call(A.handleSave, { headers: { cookie }, body: { op: 'card', replace: 'cgone', card: { headline: 'X', until: '2026-10-21' } }, deps: { env, gh } });
+    assert.strictEqual(r.status, 409);
+  });
   await okA('save: no GitHub key yet', async () => {
     const r = await call(A.handleSave, { headers: { cookie }, body: { op: 'hide', key: 'k' }, deps: { env, gh: { ready: false } } });
     assert.strictEqual(r.status, 503);

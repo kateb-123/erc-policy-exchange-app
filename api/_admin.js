@@ -8,8 +8,14 @@
  * (about a minute), and every change sits in the history, where it can be
  * undone.
  *
- * Set in Vercel (Project > Settings > Environment Variables), never here:
- *   ADMIN_PASSWORD   the password Kate chose
+ * Set in Vercel (Project > Settings > Environment Variables), for
+ * Production only (a preview deploy with them would also commit to main),
+ * never here:
+ *   ADMIN_PASSWORD   the password Kate chose: 20 characters or more. Each
+ *                    wrong guess waits 1.5 s, but Vercel runs many copies
+ *                    at once, so length is what stops fast guessing (a
+ *                    Firewall rate limit on /api/admin/login adds a second
+ *                    stop).
  *   GITHUB_TOKEN     a fine-grained token for this repo only, with
  *                    Contents: read and write
  * Optional:
@@ -36,6 +42,7 @@ const COLUMNS = [
 ];
 const TYPES = ['research', 'event', 'opportunity', 'headline'];
 const MAX_FIELD = 6000;
+const MIN_PASSWORD = 20;
 
 class BadRequest extends Error {}
 class Conflict extends Error {}
@@ -94,7 +101,9 @@ function readCookies(req) {
   return out;
 }
 
-const signedIn = (req, env) => !!verify(readCookies(req)[SESSION_COOKIE], sessionSecret(env));
+const signedIn = (req, env) =>
+  String(env.ADMIN_PASSWORD || '').length >= MIN_PASSWORD &&
+  !!verify(readCookies(req)[SESSION_COOKIE], sessionSecret(env));
 
 // Changes come only from pages on this site. The session cookie is
 // SameSite=Strict as well; this is the second lock on the same door.
@@ -247,7 +256,9 @@ function readFeatured(text) {
   try {
     j = text ? JSON.parse(text) : {};
   } catch {
-    j = {};
+    // A hand edit or a merge left it broken: stop rather than save over it,
+    // which would bring every hidden item back and drop every pin.
+    throw new Conflict('The pins file (data/featured.json) is damaged, so nothing was saved over it. Fix it on GitHub first.');
   }
   return {
     pins: Array.isArray(j.pins) ? j.pins : [],
@@ -301,6 +312,13 @@ function applyFeatured(f, op, body) {
       }
     }
     if (!ISO_DAY.test(card.until)) throw new BadRequest('Pick the last day to show the card.');
+    const replace = String(body.replace || '');
+    const at = replace ? f.cards.findIndex((c) => c.id === replace) : -1;
+    if (replace && at < 0) throw new Conflict('That card is gone already. Reload the page.');
+    if (at >= 0) {
+      f.cards[at] = { ...card, id: replace };
+      return `Admin: change the card "${card.headline}"`;
+    }
     f.cards.unshift(card);
     return `Admin: add a card "${card.headline}"`;
   }
@@ -442,6 +460,9 @@ async function handleLogin(req, res, { env = process.env, pause = wait } = {}) {
   if (req.method !== 'POST') return send(res, 405, { ok: false, error: 'Use POST.' });
   if (!env.ADMIN_PASSWORD) {
     return send(res, 503, { ok: false, error: "The admin door isn't set up yet: its password goes in Vercel's settings." });
+  }
+  if (env.ADMIN_PASSWORD.length < MIN_PASSWORD) {
+    return send(res, 503, { ok: false, error: `The admin password in Vercel's settings is too short; use ${MIN_PASSWORD} characters or more.` });
   }
   if (!fromThisSite(req)) return send(res, 403, { ok: false, error: 'Sign in from the site itself.' });
   const body = await readBody(req);
