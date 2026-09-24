@@ -1019,7 +1019,7 @@ a:hover {
   height: calc(48 * var(--u));
   margin: 0;
   padding: 0 calc(64 * var(--u));
-  background: var(--maroon-dark);
+  background: var(--maroon); /* #500000, Kate */
   font: 600 calc(16 * var(--u)) / calc(48 * var(--u)) var(--head);
   letter-spacing: 0.1em;
   text-transform: uppercase;
