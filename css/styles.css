@@ -761,8 +761,17 @@ a:hover {
   .rail {
     display: none;
   }
+  /* A smaller title with five lines: 10 of Sep 23's 12 titles show whole at
+     375px (2 did at two lines). 280px holds the tallest card, so the arrows
+     stay put. */
   .feat {
-    min-height: 250px;
+    min-height: 280px;
+  }
+  .feat h3 {
+    font-size: 20px;
+  }
+  .feat h3 a {
+    -webkit-line-clamp: 5;
   }
   .feat.has-wide .feat__media {
     flex: none;

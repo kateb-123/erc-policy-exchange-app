@@ -464,10 +464,10 @@ function whatsNewFeed(per = WN_PER) {
 
 // Opportunities are judged on their deadline, everything else on its date.
 const wnWhen = (it, tab) =>
-  it.date
-    ? formatDate(it.date)
-    : tab.value === "opportunity"
-      ? parseDeadline(it.deadline).label
+  tab.value === "opportunity"
+    ? parseDeadline(it.deadline).label
+    : it.date
+      ? formatDate(it.date)
       : "";
 
 // A Drive link is a PDF viewer, not an image: only a direct image file can go
@@ -534,7 +534,7 @@ function wnRowHTML({ it, tab }, i) {
   const foot = [(it.source || "").trim(), wnWhen(it, tab)].filter(Boolean).map(esc).join(" • ");
   return `
     <li class="rail__row">
-      <button type="button" class="rail__pick" data-i="${i}" aria-label="Show in the featured card: ${esc(it.headline)}">
+      <button type="button" class="rail__pick" data-i="${i}" aria-describedby="wn-pick-hint">
         <span class="rail__sec">${esc(tab.nav)}</span>
         <span class="rail__hd-line">${esc(it.headline)}</span>
         ${foot ? `<span class="rail__src">${foot}</span>` : ""}
@@ -554,10 +554,11 @@ function buildWhatsNew() {
     <article class="feat no-art" id="wn-feat" aria-live="off">${wnFeatHTML(list[0], "")}</article>
     <div class="caro" role="group" aria-label="Browse new and upcoming items">
       <button type="button" class="caro__btn" data-step="-1" aria-label="Previous item">${faIcon("chevron-left")}</button>
-      <span class="caro__count" aria-live="polite"><b>1</b> / ${list.length}</span>
+      <span class="caro__count" aria-live="off" aria-atomic="true"><b>1</b> / ${list.length}</span>
       <button type="button" class="caro__btn" data-step="1" aria-label="Next item">${faIcon("chevron-right")}</button>
     </div>
     <div class="rail">
+      <span id="wn-pick-hint" hidden>Shows this item in the featured card</span>
       <button type="button" class="rail__pause"></button>
       <div class="rail__vp" role="group" aria-label="New and upcoming items">
         <ul class="rail__list" role="list">${list.map(wnRowHTML).join("")}</ul>
@@ -588,6 +589,7 @@ function initWhatsNew(list) {
   const vp = $(".rail__vp", split);
   const btn = $(".rail__pause", split);
   const count = $(".caro__count b", split);
+  const countBox = $(".caro__count", split);
   const rows = $$(".rail__row", vp);
   const picks = $$(".rail__pick", vp);
   const phone = matchMedia("(max-width: 820px)");
@@ -605,9 +607,10 @@ function initWhatsNew(list) {
   async function show(i, { fade = true } = {}) {
     at = (i + list.length) % list.length;
     rows.forEach((r, n) => r.classList.toggle("is-current", n === at));
-    picks.forEach((b, n) =>
-      n === at ? b.setAttribute("aria-current", "true") : b.removeAttribute("aria-current")
-    );
+    picks.forEach((b, n) => {
+      n === at ? b.setAttribute("aria-current", "true") : b.removeAttribute("aria-current");
+      b.tabIndex = n === at ? 0 : -1;
+    });
     count.textContent = at + 1;
     if (!phone.matches) glideTo(rows[at], !fade);
     const mine = ++turn;
@@ -661,6 +664,14 @@ function initWhatsNew(list) {
     schedule();
   }
 
+  // Nothing that turns over by itself is read aloud: the card and its
+  // counter speak only when a person moves them.
+  function announce() {
+    const live = off || phone.matches ? "polite" : "off";
+    feat.setAttribute("aria-live", live);
+    countBox.setAttribute("aria-live", live);
+  }
+
   // A stop is not optional: WCAG 2.2.2 asks for one on anything that moves by
   // itself for more than five seconds. The label says what a press will do,
   // and a card that turns over by itself is not read aloud.
@@ -668,7 +679,7 @@ function initWhatsNew(list) {
     btn.innerHTML = faIcon(off ? "play" : "pause");
     btn.title = off ? "Resume auto-scrolling" : "Pause auto-scrolling";
     btn.setAttribute("aria-label", `${btn.title} the list`);
-    feat.setAttribute("aria-live", off || phone.matches ? "polite" : "off");
+    announce();
     schedule();
   }
   btn.addEventListener("click", () => {
@@ -684,13 +695,16 @@ function initWhatsNew(list) {
     sync();
     show(Number(b.dataset.i));
   });
-  // Up and down walk the list without leaving the keyboard.
+  // Up and down walk the list without leaving the keyboard; Home and End
+  // jump to its ends.
   vp.addEventListener("keydown", (e) => {
-    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+    const step = { ArrowDown: 1, ArrowUp: -1 }[e.key];
+    const jump = { Home: 0, End: list.length - 1 }[e.key];
+    if (step === undefined && jump === undefined) return;
     e.preventDefault();
     off = true;
     sync();
-    show(at + (e.key === "ArrowDown" ? 1 : -1));
+    show(jump === undefined ? at + step : jump);
     picks[at].focus({ preventScroll: true });
   });
   // The arrows step the card, and stop the walk the way a pick does.
@@ -719,7 +733,7 @@ function initWhatsNew(list) {
     schedule();
   });
   phone.addEventListener("change", () => {
-    feat.setAttribute("aria-live", off || phone.matches ? "polite" : "off");
+    announce();
     if (!phone.matches) glideTo(rows[at], true);
   });
 
