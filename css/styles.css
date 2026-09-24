@@ -365,8 +365,7 @@ a:hover {
   background: var(--maroon);
   color: #fff;
 }
-/* The right column: Share level with the first row of buttons, the two
-   small lines on the floor level with the second. */
+/* Share, beside or under the buttons. */
 .slab-intro {
   display: flex;
   flex-direction: column;
@@ -395,10 +394,11 @@ a:hover {
   background: #fff;
   color: var(--maroon);
 }
-.slab-intro__meta {
+/* The update and credit lines, under everything on the home page. */
+.home-meta {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   gap: 2px;
 }
 .slab-meta {
@@ -850,7 +850,7 @@ a:hover {
   #landing:not([hidden]) {
     display: grid;
     grid-template-columns: clamp(320px, 28vw, 400px) minmax(0, 1fr);
-    gap: 64px;
+    gap: 0 64px;
     align-items: stretch;
     margin: clamp(32px, 6vh, 72px) 0 clamp(48px, 9vh, 104px);
   }
@@ -889,15 +889,23 @@ a:hover {
   .slab-cta {
     justify-content: center;
   }
-  /* Share full width; the two small lines sit left, like the text above
-     (Kate, Sep 24). */
+  /* Share full width at the column's foot. */
   .slab-intro {
     align-items: stretch;
     gap: 12px;
     text-align: left;
   }
-  .slab-intro__meta {
-    align-items: flex-start;
+  /* The update and credit lines: one row under both columns (Kate, Sep 24). */
+  .home-meta {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .home-meta .slab-meta:not(:empty) + .slab-meta::before {
+    content: "•";
+    margin: 0 10px;
+    color: var(--g400);
   }
   .slab-meta {
     font-size: 14px;
@@ -931,7 +939,10 @@ a:hover {
     margin: 32px 0 24px;
   }
   .button-slab {
-    margin: 16px 0 48px;
+    margin: 16px 0 20px;
+  }
+  .home-meta {
+    margin-bottom: 48px;
   }
 }
 @media (max-width: 640px) {

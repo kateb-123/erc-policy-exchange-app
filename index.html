@@ -27,7 +27,7 @@
   <!-- Font Awesome 7 Free: the same tag and hash the Content Desk uses, so both apps share one icon set. -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- ?v= busts stale browser/Pages caches — bump when shipping big changes. -->
-  <link rel="stylesheet" href="css/styles.css?v=102" />
+  <link rel="stylesheet" href="css/styles.css?v=104" />
   <script src="js/grow.js?v=1"></script>
 </head>
 <body>
@@ -78,16 +78,17 @@
         <div class="button-group" id="landing-cards"></div>
         <div class="slab-intro">
           <a class="slab-cta" href="share/">Share an item</a>
-          <div class="slab-intro__meta">
-            <p class="slab-meta" id="landing-updated"></p>
-            <p class="slab-meta">Curated by the <a href="about/">Texas A&amp;M Education Research Center</a>.</p>
-          </div>
         </div>
       </div>
       <section class="home2-band" id="whats-new" aria-labelledby="wn-h">
         <h2 class="split__hd" id="wn-h" tabindex="-1" data-focus-target>New &amp; Upcoming</h2>
         <div class="home2-split" id="wn-split"></div>
       </section>
+      <!-- The update and credit lines run under both columns (Kate, Sep 24). -->
+      <div class="home-meta">
+        <p class="slab-meta" id="landing-updated"></p>
+        <p class="slab-meta">Curated by the <a href="about/">Texas A&amp;M Education Research Center</a>.</p>
+      </div>
     </section>
 
     <!-- Section view: title + one line, Quick Search + sort, the feed. -->
