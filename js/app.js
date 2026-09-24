@@ -729,8 +729,10 @@ function heroCardHTML(entry) {
       : `<div class="hc__img ${cls} hc__slot"><span>${label}</span></div>`;
   const deadline = parseDeadline(it.deadline).label.replace(/^Due /, "");
   const meta =
-    kind === "research"
-      ? hcLine([src, date && hcFmt(date, { month: "long", year: "numeric" })])
+    kind === "research" // the authors on their own line, then the source and month (Kate, Sep 24)
+      ? [(it.authors || "").trim() && esc(it.authors.trim()), hcLine([src, date && hcFmt(date, { month: "long", year: "numeric" })])]
+          .filter(Boolean)
+          .join("<br>")
       : kind === "opportunity"
         ? hcLine([src, deadline && (deadline === "Rolling" ? "Rolling deadline" : `Apply by ${deadline}`)])
         : kind === "headline" || kind === "event"

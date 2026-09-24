@@ -1125,8 +1125,12 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 /* 1a ERC event: text on maroon, the 4:5 portrait at full height on the right. */
 #wn-feat .hc .hc-erc {
   display: grid;
-  grid-template-columns: calc(800 * var(--u)) calc(400 * var(--u));
+  grid-template-columns: minmax(0, 1fr) calc(360 * var(--u));
   background: var(--g100);
+}
+/* A 4:5 headshot fits the 360 x 452 under the band whole, so no head is cut. */
+#wn-feat .hc .hc-erc .hc__img--pt img {
+  object-position: 50% 0;
 }
 #wn-feat .hc .hc-erc .hc__col,
 #wn-feat .hc .hc-date .hc__col {
@@ -1306,6 +1310,13 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   font-size: calc(40 * var(--u));
   -webkit-line-clamp: 2;
   color: var(--maroon);
+}
+#wn-feat .hc .hc-type .hc__meta,
+#wn-feat .hc .hc-band .hc__meta {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 #wn-feat .hc .hc-band .hc__meta {
   font-size: calc(21 * var(--u));
