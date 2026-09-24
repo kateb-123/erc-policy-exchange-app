@@ -1325,6 +1325,15 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 #wn-feat .hc .hc-band .hc__img {
   flex: 1 1 auto;
 }
+/* The strip first: a fixed 220 under the band, the text under it. */
+#wn-feat .hc .hc-band--top .hc__img {
+  flex: 0 0 calc(220 * var(--u));
+}
+#wn-feat .hc .hc-band--top .hc__col {
+  flex: 1 1 auto;
+  justify-content: center;
+  padding: calc(22 * var(--u)) calc(72 * var(--u)) calc(20 * var(--u));
+}
 #wn-feat .hc .hc-band .hc__slot {
   color: var(--maroon-muted);
   outline-color: var(--g500);

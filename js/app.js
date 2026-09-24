@@ -769,8 +769,13 @@ function heroCardHTML(entry) {
       }</div></div>`;
   const typeV = () => `
     <div class="hc__v hc-type"><div class="hc__dots" aria-hidden="true"></div>${head}<p class="hc__meta">${meta}</p></div>`;
-  const bandV = (url) => `
-    <div class="hc__v hc-band${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p></div>${pic(url, "hc__img--band", "Landscape photo")}</div>`;
+  // Research keeps the strip under the text; anything else that takes this
+  // card gets the strip first, under the band (Kate, Sep 24, for the AEFP
+  // call: "above the title and text").
+  const bandV = (url) =>
+    kind === "research"
+      ? `<div class="hc__v hc-band${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p></div>${pic(url, "hc__img--band", "Landscape photo")}</div>`
+      : `<div class="hc__v hc-band hc-band--top${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--band", "Landscape photo")}<div class="hc__col">${head}<p class="hc__meta">${meta}</p></div></div>`;
   const photoV = (url) => `
     <div class="hc__v hc-photo${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--full", "Photo 1200 x 500")}
       <div class="hc__blk">${head}<p class="hc__meta">${meta}</p></div></div>`;
