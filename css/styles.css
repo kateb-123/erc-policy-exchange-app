@@ -136,6 +136,7 @@ a:hover {
 .topnav__title {
   flex-shrink: 0;
   margin: 0;
+  font-family: var(--head);
   font-size: 22px;
   font-weight: 700;
   line-height: 1.2;
@@ -1542,6 +1543,17 @@ main {
   outline: 0;
   box-shadow: inset 0 0 0 2px var(--maroon);
 }
+/* A field's own message sits under it, and the field wears the error colour
+   (Sep 23 audit: every message was one line under the buttons). */
+.field :is(input:not([type="radio"], [type="checkbox"], [type="file"]), textarea)[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 2px var(--error);
+}
+.field__error {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--error);
+}
 .radios > legend {
   margin-bottom: 12px;
 }
@@ -1580,6 +1592,14 @@ main {
   gap: 8px;
   font-size: 14px;
   color: var(--g600);
+}
+.upload__status--error {
+  color: var(--error);
+}
+/* Busy with a file: the button stays in place (and keeps focus) but rests. */
+.btn-outline[aria-disabled="true"] {
+  opacity: 0.6;
+  cursor: default;
 }
 /* Primary: maroon fill. */
 .btn {
@@ -1631,8 +1651,9 @@ main {
   gap: 24px;
   flex-wrap: wrap;
 }
-/* The Turnstile slot, last in the form: nothing shows unless the check needs
-   a click, and its grid row costs nothing at the bottom. */
+/* The Turnstile slot, last in the form under the status line: nothing shows
+   unless the check needs a click, and even once the widget fills it the
+   empty-looking row sits at the bottom, not between the fields and Submit. */
 .cf:empty {
   display: none;
 }
@@ -1673,7 +1694,7 @@ main {
   max-width: 820px;
   padding-bottom: 64px;
 }
-.done h3 {
+.done h2 {
   font-family: var(--head);
   font-size: 24px;
   font-weight: 600;
@@ -1754,6 +1775,15 @@ main {
 .site-footer__icon--about {
   -webkit-mask-image: url("../assets/aggie/building-columns.svg");
   mask-image: url("../assets/aggie/building-columns.svg");
+}
+.site-footer__icon--news {
+  -webkit-mask-image: url("../assets/aggie/newspaper.svg");
+  mask-image: url("../assets/aggie/newspaper.svg");
+}
+/* The outbound mark on a link that opens a new tab, as the feed has. */
+.ext-mark {
+  font-size: 12px;
+  color: var(--g600);
 }
 
 /* ---------- Phones ---------- */

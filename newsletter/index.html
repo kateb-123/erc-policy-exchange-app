@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Join the newsletter · ERC Policy Exchange</title>
   <meta name="description" content="Join the ERC newsletter: new research, events, opportunities, and education news from the Texas A&amp;M Education Research Center." />
+  <!-- Link previews (email, Teams, Slack). -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ERC Policy Exchange" />
+  <meta property="og:title" content="Join the ERC newsletter" />
+  <meta property="og:description" content="Join the ERC newsletter: new research, events, opportunities, and education news from the Texas A&amp;M Education Research Center." />
+  <meta property="og:url" content="https://erc-policy-exchange.vercel.app/newsletter/" />
+  <meta name="twitter:card" content="summary" />
   <link rel="icon" href="../assets/logo/favicon.svg?v=2" type="image/svg+xml" />
   <link rel="icon" href="../assets/logo/favicon-32.png?v=2" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="../assets/logo/apple-touch-icon.png?v=2" />
@@ -23,9 +30,9 @@
 
   <header class="topnav">
     <div class="topnav__in">
-      <h1 class="topnav__title">
+      <p class="topnav__title">
         <a class="topnav__brand" href="../"><span class="topnav__mark" aria-hidden="true"></span>ERC Policy Exchange</a>
-      </h1>
+      </p>
       <button type="button" class="topnav__menu-btn" id="menu-btn" aria-expanded="false" aria-controls="topnav">
         <i class="fa-solid fa-bars" aria-hidden="true"></i>
         Menu
@@ -52,7 +59,7 @@
   </header>
   <main id="main">
     <div class="section-head">
-      <h2 class="section-head__title" tabindex="-1">Join the ERC newsletter</h2>
+      <h1 class="section-head__title" tabindex="-1">Join the ERC newsletter</h1>
       <p class="section-head__desc">Stay connected with what’s happening at the Texas A&amp;M Education Research Center. Every two weeks, we send a newsletter of newest research, upcoming events, and key updates in education policy.</p>
     </div>
     <div id="root"></div>
@@ -70,9 +77,14 @@
           <span class="site-footer__icon site-footer__icon--about" aria-hidden="true"></span>
           <span>About the ERC</span>
         </a>
+        <a class="site-footer__link" href="./" aria-current="page">
+          <span class="site-footer__icon site-footer__icon--news" aria-hidden="true"></span>
+          <span>Join the newsletter</span>
+        </a>
         <a class="site-footer__link" href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">
           <span class="site-footer__icon site-footer__icon--web" aria-hidden="true"></span>
           <span>erc.cehd.tamu.edu</span>
+          <i class="fa-solid fa-arrow-up-right-from-square ext-mark" aria-hidden="true"></i><span class="sr-only"> (opens in new tab)</span>
         </a>
         <a class="site-footer__link" href="mailto:erc@tamu.edu">
           <span class="site-footer__icon site-footer__icon--mail" aria-hidden="true"></span>
@@ -87,13 +99,27 @@
   </footer>
 
 <script>
-// The phone Menu button: same panel as the Exchange's bar.
+// The phone Menu button: the same panel as the Exchange's bar, and it closes
+// the same way, on Escape and on a tap outside the bar.
 (() => {
   const nav = document.querySelector('.topnav');
   const btn = document.getElementById('menu-btn');
+  const close = () => {
+    nav.classList.remove('is-open');
+    btn.setAttribute('aria-expanded', 'false');
+  };
   btn.addEventListener('click', () => {
     const open = nav.classList.toggle('is-open');
     btn.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && nav.classList.contains('is-open')) {
+      close();
+      btn.focus();
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (nav.classList.contains('is-open') && !e.target.closest('.topnav')) close();
   });
 })();
 </script>
@@ -102,6 +128,22 @@
 // Turnstile token before it writes. The address is deliberately not in this
 // page: it used to be, and anyone could append rows to the list by hand.
 const DESK = 'https://erc-content-desk.vercel.app';
+
+// A message written for the reader. Anything else that goes wrong is put into
+// plain words before it shows (Sep 23 audit: raw browser text reached people).
+class UserError extends Error {}
+const plain = err =>
+  err instanceof UserError
+    ? err.message
+    : err instanceof TypeError
+      ? "Couldn't reach the server. Check your connection and try again."
+      : 'Something went wrong on our side. Try again in a moment, or email erc@tamu.edu to join.';
+// The desk answers in JSON; a crash or timeout page doesn't.
+const readReply = async resp => {
+  const data = await resp.json().catch(() => null);
+  if (!data) throw new Error('The reply was not JSON.');
+  return data;
+};
 
 const el = (tag, cls, text) => {
   const n = document.createElement(tag);
@@ -120,17 +162,19 @@ root.innerHTML = `
   <form id="f" class="form form--narrow" novalidate>
     <div class="field">
       <label for="n">Your name</label>
-      <input id="n" type="text" autocomplete="name">
+      <input id="n" type="text" autocomplete="name" required>
+      <p class="field__error" id="n-err" hidden></p>
     </div>
     <div class="field">
       <label for="e">Your email address</label>
-      <input id="e" type="email" autocomplete="email">
+      <input id="e" type="email" autocomplete="email" required>
+      <p class="field__error" id="e-err" hidden></p>
     </div>
-    <div class="cf field--full" id="cf"></div>
     <div class="btns field--full">
       <button type="submit" class="btn" id="go">Subscribe »</button>
     </div>
     <p class="status field--full" id="stat" aria-live="polite"></p>
+    <div class="cf field--full" id="cf"></div>
   </form>
 `;
 
@@ -155,6 +199,18 @@ function renderTurnstile() {
 }
 window.onTurnstileLoad = renderTurnstile;
 renderTurnstile();
+// The check has to be on the page before anything can go. It normally is
+// within a second; on a network that blocks it, say so now (Sep 23 audit: the
+// page showed "Sending" for a minute, then said to reload).
+async function ensureCheck() {
+  for (let i = 0; i < 16 && widgetId === null; i++) {
+    renderTurnstile();
+    if (widgetId === null) await new Promise(r => setTimeout(r, 500));
+  }
+  if (widgetId === null) {
+    throw new UserError("The spam check didn't load on this network, so the form can't send. Email erc@tamu.edu to join instead.");
+  }
+}
 function takeToken() {
   return new Promise((resolve, reject) => {
     const take = () => {
@@ -166,7 +222,8 @@ function takeToken() {
     const onToken = () => { clearTimeout(timer); take(); };
     const timer = setTimeout(() => {
       waiting = waiting.filter(fn => fn !== onToken);
-      reject(new Error("Couldn't confirm you're a person. Reload the page and try again."));
+      turnstile.reset(widgetId);
+      reject(new UserError("The spam check didn't finish. Nothing you typed is lost; press Subscribe to try again."));
     }, 60000);
     waiting.push(onToken);
   });
@@ -181,6 +238,27 @@ const setStat = (msg, kind) => {
   else stat.textContent = msg;
 };
 
+// Each problem shows under its own field, and the field is marked for screen
+// readers (Sep 23 audit: they were one line under the button).
+const ERR_IDS = ['n', 'e'];
+function setFieldError(id, msg) {
+  const box = document.getElementById(`${id}-err`);
+  const input = document.getElementById(id);
+  box.textContent = msg || '';
+  box.hidden = !msg;
+  if (msg) {
+    input.setAttribute('aria-invalid', 'true');
+    input.setAttribute('aria-describedby', `${id}-err`);
+  } else {
+    input.removeAttribute('aria-invalid');
+    input.removeAttribute('aria-describedby');
+  }
+}
+const clearErrors = () => ERR_IDS.forEach(id => setFieldError(id, ''));
+form.addEventListener('input', e => {
+  if (ERR_IDS.includes(e.target.id)) setFieldError(e.target.id, '');
+});
+
 const doneBox = el('div', 'done');
 doneBox.hidden = true;
 root.append(doneBox);
@@ -189,37 +267,49 @@ form.addEventListener('submit', async event => {
   event.preventDefault();
   const name = document.getElementById('n').value.trim();
   const email = document.getElementById('e').value.trim();
-  const errors = [];
-  if (!name) errors.push('Add your name.');
-  if (!email) errors.push('Add your email address.');
-  else if (!/^\S+@\S+\.\S+$/.test(email)) errors.push("That email address doesn't look right.");
-  if (errors.length) return setStat(errors.join(' '), 'error');
+  const bad = [];
+  if (!name) bad.push(['n', 'Add your name.']);
+  if (!email) bad.push(['e', 'Add your email address.']);
+  else if (!/^\S+@\S+\.\S+$/.test(email)) bad.push(['e', "That email address doesn't look right."]);
+  clearErrors();
+  if (bad.length) {
+    bad.forEach(([id, msg]) => setFieldError(id, msg));
+    setStat(bad.length === 1 ? 'One field needs a fix.' : `${bad.length} fields need a fix.`, 'error');
+    document.getElementById(bad[0][0]).focus();
+    return;
+  }
 
   const go = document.getElementById('go');
   go.disabled = true;
-  setStat('Sending', 'busy');
   try {
+    await ensureCheck();
+    setStat('Checking', 'busy');
+    const tok = await takeToken();
+    setStat('Sending', 'busy');
     const resp = await fetch(`${DESK}/api/listserv`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, turnstile_token: await takeToken() }),
+      body: JSON.stringify({ name, email, turnstile_token: tok }),
     });
-    const data = await resp.json();
-    if (!data.ok) throw new Error((data.errors ?? ['Something went wrong. Try again.']).join(' '));
+    if (resp.status === 403) throw new UserError("The spam check didn't pass. Nothing you typed is lost; press Subscribe to try again.");
+    const data = await readReply(resp);
+    if (!data.ok) throw new UserError((data.errors ?? ['Something went wrong. Try again.']).join(' '));
     form.reset();
     setStat('');
-    const title = el('h3', '', 'Thank you. You are on the list.');
-    title.tabIndex = -1;
-    doneBox.replaceChildren(title);
+    const heading = el('h2', '', 'Thank you. You are on the list.');
+    heading.tabIndex = -1;
+    doneBox.replaceChildren(heading);
     doneBox.append(el('p', '', 'The next ERC newsletter will come to ' + email + '.'));
     const back = el('a', 'btn-outline', 'Back to the Exchange');
     back.href = '../';
     doneBox.append(back);
     form.hidden = true; doneBox.hidden = false;
-    title.focus();
+    heading.focus();
   } catch (err) {
-    setStat(err instanceof TypeError ? "Couldn't reach the server. Check your connection." : err.message, 'error');
+    setStat(plain(err), 'error');
   } finally {
     go.disabled = false;
+    // A disabled button drops focus; give it back so the next try is one key away.
+    if (!form.hidden && document.activeElement === document.body) go.focus();
   }
 });
 </script>

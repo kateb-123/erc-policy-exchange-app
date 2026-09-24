@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About the ERC · ERC Policy Exchange</title>
   <meta name="description" content="The Texas A&amp;M Education Research Center curates the ERC Policy Exchange: how to reach us, join the newsletter, or share an item." />
+  <!-- Link previews (email, Teams, Slack). -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ERC Policy Exchange" />
+  <meta property="og:title" content="About the ERC" />
+  <meta property="og:description" content="The Texas A&amp;M Education Research Center curates the ERC Policy Exchange: how to reach us, join the newsletter, or share an item." />
+  <meta property="og:url" content="https://erc-policy-exchange.vercel.app/about/" />
+  <meta name="twitter:card" content="summary" />
   <link rel="icon" href="../assets/logo/favicon.svg?v=2" type="image/svg+xml" />
   <link rel="icon" href="../assets/logo/favicon-32.png?v=2" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="../assets/logo/apple-touch-icon.png?v=2" />
@@ -22,9 +29,9 @@
 
   <header class="topnav">
     <div class="topnav__in">
-      <h1 class="topnav__title">
+      <p class="topnav__title">
         <a class="topnav__brand" href="../"><span class="topnav__mark" aria-hidden="true"></span>ERC Policy Exchange</a>
-      </h1>
+      </p>
       <button type="button" class="topnav__menu-btn" id="menu-btn" aria-expanded="false" aria-controls="topnav">
         <i class="fa-solid fa-bars" aria-hidden="true"></i>
         Menu
@@ -53,7 +60,7 @@
     <div class="about-grid">
       <div>
         <div class="section-head">
-          <h2 class="section-head__title" tabindex="-1">About the ERC</h2>
+          <h1 class="section-head__title" tabindex="-1">About the ERC</h1>
           <p class="section-head__desc">The Education Research Center connects expertise across Texas A&amp;M and beyond with educators, agencies, and organizations working to improve education. Together, we build partnerships that turn evidence and insight into meaningful action.</p>
         </div>
         <div class="about">
@@ -63,6 +70,7 @@
             <a class="tile" href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">
               <span class="tile__glyph tile__glyph--web" aria-hidden="true"></span>
               <span>erc.cehd.tamu.edu</span>
+              <i class="fa-solid fa-arrow-up-right-from-square ext-mark" aria-hidden="true"></i><span class="sr-only"> (opens in new tab)</span>
             </a>
             <a class="tile" href="mailto:erc@tamu.edu">
               <span class="tile__glyph tile__glyph--mail" aria-hidden="true"></span>
@@ -97,9 +105,14 @@
           <span class="site-footer__icon site-footer__icon--about" aria-hidden="true"></span>
           <span>About the ERC</span>
         </a>
+        <a class="site-footer__link" href="../newsletter/">
+          <span class="site-footer__icon site-footer__icon--news" aria-hidden="true"></span>
+          <span>Join the newsletter</span>
+        </a>
         <a class="site-footer__link" href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">
           <span class="site-footer__icon site-footer__icon--web" aria-hidden="true"></span>
           <span>erc.cehd.tamu.edu</span>
+          <i class="fa-solid fa-arrow-up-right-from-square ext-mark" aria-hidden="true"></i><span class="sr-only"> (opens in new tab)</span>
         </a>
         <a class="site-footer__link" href="mailto:erc@tamu.edu">
           <span class="site-footer__icon site-footer__icon--mail" aria-hidden="true"></span>
@@ -114,13 +127,27 @@
   </footer>
 
 <script>
-// The phone Menu button: same panel as the Exchange's bar.
+// The phone Menu button: the same panel as the Exchange's bar, and it closes
+// the same way, on Escape and on a tap outside the bar.
 (() => {
   const nav = document.querySelector('.topnav');
   const btn = document.getElementById('menu-btn');
+  const close = () => {
+    nav.classList.remove('is-open');
+    btn.setAttribute('aria-expanded', 'false');
+  };
   btn.addEventListener('click', () => {
     const open = nav.classList.toggle('is-open');
     btn.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && nav.classList.contains('is-open')) {
+      close();
+      btn.focus();
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (nav.classList.contains('is-open') && !e.target.closest('.topnav')) close();
   });
 })();
 </script>

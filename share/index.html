@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Share an item · ERC Policy Exchange</title>
   <meta name="description" content="Share an event, research, opportunity, or headline with the Texas A&amp;M Education Research Center for the ERC newsletter and the Policy Exchange." />
+  <!-- Link previews (email, Teams, Slack). -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ERC Policy Exchange" />
+  <meta property="og:title" content="Share an item" />
+  <meta property="og:description" content="Share an event, research, opportunity, or headline with the Texas A&amp;M Education Research Center for the ERC newsletter and the Policy Exchange." />
+  <meta property="og:url" content="https://erc-policy-exchange.vercel.app/share/" />
+  <meta name="twitter:card" content="summary" />
   <link rel="icon" href="../assets/logo/favicon.svg?v=2" type="image/svg+xml" />
   <link rel="icon" href="../assets/logo/favicon-32.png?v=2" sizes="32x32" type="image/png" />
   <link rel="apple-touch-icon" href="../assets/logo/apple-touch-icon.png?v=2" />
@@ -26,9 +33,9 @@
        page has no app.js); the search box hands its query to the home page. -->
   <header class="topnav">
     <div class="topnav__in">
-      <h1 class="topnav__title">
+      <p class="topnav__title">
         <a class="topnav__brand" href="../"><span class="topnav__mark" aria-hidden="true"></span>ERC Policy Exchange</a>
-      </h1>
+      </p>
       <button type="button" class="topnav__menu-btn" id="menu-btn" aria-expanded="false" aria-controls="topnav">
         <i class="fa-solid fa-bars" aria-hidden="true"></i>
         Menu
@@ -55,7 +62,7 @@
   </header>
   <main id="main">
     <div class="section-head">
-      <h2 class="section-head__title" tabindex="-1">Share an item</h2>
+      <h1 class="section-head__title" tabindex="-1">Share an item</h1>
       <p class="section-head__desc">Send the ERC an event, a paper, an opportunity or a headline for the newsletter and the <a href="../">Policy Exchange</a>. We review everything before it goes out.</p>
     </div>
     <div id="root"></div>
@@ -73,9 +80,14 @@
           <span class="site-footer__icon site-footer__icon--about" aria-hidden="true"></span>
           <span>About the ERC</span>
         </a>
+        <a class="site-footer__link" href="../newsletter/">
+          <span class="site-footer__icon site-footer__icon--news" aria-hidden="true"></span>
+          <span>Join the newsletter</span>
+        </a>
         <a class="site-footer__link" href="https://erc.cehd.tamu.edu/" target="_blank" rel="noopener">
           <span class="site-footer__icon site-footer__icon--web" aria-hidden="true"></span>
           <span>erc.cehd.tamu.edu</span>
+          <i class="fa-solid fa-arrow-up-right-from-square ext-mark" aria-hidden="true"></i><span class="sr-only"> (opens in new tab)</span>
         </a>
         <a class="site-footer__link" href="mailto:erc@tamu.edu">
           <span class="site-footer__icon site-footer__icon--mail" aria-hidden="true"></span>
@@ -90,25 +102,57 @@
   </footer>
 
 <script>
-// The phone Menu button: same panel as the Exchange's bar.
+// The phone Menu button: the same panel as the Exchange's bar, and it closes
+// the same way, on Escape and on a tap outside the bar.
 (() => {
   const nav = document.querySelector('.topnav');
   const btn = document.getElementById('menu-btn');
+  const close = () => {
+    nav.classList.remove('is-open');
+    btn.setAttribute('aria-expanded', 'false');
+  };
   btn.addEventListener('click', () => {
     const open = nav.classList.toggle('is-open');
     btn.setAttribute('aria-expanded', String(open));
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && nav.classList.contains('is-open')) {
+      close();
+      btn.focus();
+    }
+  });
+  document.addEventListener('click', (e) => {
+    if (nav.classList.contains('is-open') && !e.target.closest('.topnav')) close();
   });
 })();
 </script>
 <script type="module">
 const DESK = 'https://erc-content-desk.vercel.app';
 
+// The types the desk knows. "Other" goes with no type, and staff sort it.
 const TYPES = [
   ['research', 'New Ed Policy Research'],
   ['event', 'Event / Webinar'],
   ['opportunity', 'Opportunity'],
+  ['headline', 'Headline'],
   ['other', 'Other'],
 ];
+
+// A message written for the reader. Anything else that goes wrong is put into
+// plain words before it shows (Sep 23 audit: raw browser text reached people).
+class UserError extends Error {}
+const plain = err =>
+  err instanceof UserError
+    ? err.message
+    : err instanceof TypeError
+      ? "Couldn't reach the server. Check your connection and try again."
+      : 'Something went wrong on our side. Try again in a moment, or email your item to erc@tamu.edu.';
+// The desk answers in JSON; a crash or timeout page doesn't.
+const readReply = async resp => {
+  const data = await resp.json().catch(() => null);
+  if (!data) throw new Error('The reply was not JSON.');
+  return data;
+};
 
 const el = (tag, cls, text) => {
   const n = document.createElement(tag);
@@ -130,57 +174,68 @@ const dots = () => {
 const root = document.getElementById('root');
 let picked = '';
 let mediaUrl = '';
+let uploading = null;    // the upload in flight, so Submit can wait for it
+let uploadGen = 0;       // moves on when the form starts over, so a late upload can't land in it
+let uploadFailed = false;
+let sendWithout = false; // a second Submit after a failed upload sends without the media
 
+// Link first: it is the one thing a busy submitter always has. Only Media is
+// optional (Kate, Sep 23).
 root.innerHTML = `
   <form id="f" class="form" novalidate>
     <div class="field field--full">
-      <label for="t">Title</label>
-      <input id="t" type="text" autocomplete="off">
-    </div>
-    <div class="field field--full">
-      <label for="d">Description <small>(dates, an abstract, or the whole announcement)</small></label>
-      <textarea id="d" rows="6"></textarea>
-    </div>
-    <div class="field field--full">
       <label for="l">Link</label>
-      <input id="l" type="url" placeholder="https://" autocomplete="off">
+      <input id="l" type="url" placeholder="https://" autocomplete="off" required>
+      <p class="field__error" id="l-err" hidden></p>
     </div>
     <fieldset class="field field--full radios">
       <legend>Type</legend>
       <div id="types" class="radios__list"></div>
+      <p class="field__error" id="type-err" hidden></p>
     </fieldset>
     <div class="field field--full">
-      <span class="field__label">Media <small>(optional: a flyer, PDF, or picture)</small></span>
+      <label for="t">Title</label>
+      <input id="t" type="text" autocomplete="off" required>
+      <p class="field__error" id="t-err" hidden></p>
+    </div>
+    <div class="field field--full">
+      <label for="d">Description <small>(dates, an abstract, or the whole announcement)</small></label>
+      <textarea id="d" rows="6" required></textarea>
+      <p class="field__error" id="d-err" hidden></p>
+    </div>
+    <div class="field field--full">
+      <span class="field__label" id="mlabel">Media <small>(optional: a flyer, PDF, or picture)</small></span>
       <div class="upload">
-        <button type="button" class="btn-outline" id="pick">Upload media</button>
+        <button type="button" class="btn-outline" id="pick" aria-describedby="mlabel mhint mstat">Upload media</button>
         <button type="button" class="btn-text btn-text--quiet" id="rm" hidden>Remove media</button>
-        <span class="upload__hint" id="mhint">PNG, JPG, or PDF under 2.5 MB</span>
-        <span class="upload__status" id="mstat"></span>
+        <span class="upload__hint" id="mhint">PNG, JPG, or PDF</span>
+        <span class="upload__status" id="mstat" role="status"></span>
         <input type="file" id="file" accept=".png,.jpg,.jpeg,.gif,.webp,.pdf" hidden>
       </div>
     </div>
     <div class="field">
       <label for="n">Your name</label>
-      <input id="n" type="text" autocomplete="name">
+      <input id="n" type="text" autocomplete="name" required>
+      <p class="field__error" id="n-err" hidden></p>
     </div>
     <div class="field">
       <label for="e">Your email address</label>
-      <input id="e" type="email" autocomplete="email">
+      <input id="e" type="email" autocomplete="email" required>
+      <p class="field__error" id="e-err" hidden></p>
     </div>
     <label class="check field--full"><input type="checkbox" id="optin"><span>Add me to the ERC newsletter.</span></label>
-    <div class="cf field--full" id="cf"></div>
     <div class="btns field--full">
       <button type="submit" class="btn" id="go">Submit »</button>
-      <button type="reset" class="btn-text">Clear form</button>
     </div>
     <p class="status field--full" id="stat" aria-live="polite"></p>
+    <div class="cf field--full" id="cf"></div>
   </form>
 `;
 
 const typesBox = document.getElementById('types');
 for (const [value, label] of TYPES) {
   const wrap = el('label', 'radio');
-  const input = Object.assign(el('input'), { type: 'radio', name: 'type', value });
+  const input = Object.assign(el('input'), { type: 'radio', name: 'type', value, required: true });
   input.addEventListener('change', () => { picked = value; });
   wrap.append(input, el('span', '', label));
   typesBox.append(wrap);
@@ -207,6 +262,18 @@ function renderTurnstile() {
 }
 window.onTurnstileLoad = renderTurnstile;
 renderTurnstile();
+// The check has to be on the page before anything can go. It normally is
+// within a second; on a network that blocks it, say so now (Sep 23 audit: the
+// page showed "Sending" for a minute, then said to reload, which emptied it).
+async function ensureCheck() {
+  for (let i = 0; i < 16 && widgetId === null; i++) {
+    renderTurnstile();
+    if (widgetId === null) await new Promise(r => setTimeout(r, 500));
+  }
+  if (widgetId === null) {
+    throw new UserError("The spam check didn't load on this network, so the form can't send. Email your item to erc@tamu.edu instead.");
+  }
+}
 function takeToken() {
   return new Promise((resolve, reject) => {
     const take = () => {
@@ -218,7 +285,8 @@ function takeToken() {
     const onToken = () => { clearTimeout(timer); take(); };
     const timer = setTimeout(() => {
       waiting = waiting.filter(fn => fn !== onToken);
-      reject(new Error("Couldn't confirm you're a person. Reload the page and try again."));
+      turnstile.reset(widgetId);
+      reject(new UserError("The spam check didn't finish. Nothing you typed is lost; try again."));
     }, 60000);
     waiting.push(onToken);
   });
@@ -238,77 +306,180 @@ const setStat = (msg, kind) => {
   if (kind === 'busy' && msg) { stat.append(dots(), document.createTextNode(msg)); }
   else stat.textContent = msg;
 };
-// The media line shows the format hint until there is something to say.
-const setMedia = (...nodes) => {
-  mstat.replaceChildren(...nodes);
-  mhint.hidden = nodes.length > 0;
+// The media line shows the format hint until there is something to say; a
+// failure shows in the error colour.
+const setMedia = (msg, kind) => {
+  mstat.className = `upload__status${kind === 'error' ? ' upload__status--error' : ''}`;
+  mstat.replaceChildren();
+  if (kind === 'busy' && msg) mstat.append(dots(), document.createTextNode(msg));
+  else mstat.textContent = msg || '';
+  mhint.hidden = !!msg;
 };
 const clearMedia = () => {
-  mediaUrl = ''; setMedia(); pick.textContent = 'Upload media'; rm.hidden = true;
+  mediaUrl = ''; uploadFailed = false; sendWithout = false;
+  setMedia(''); pick.textContent = 'Upload media'; rm.hidden = true;
 };
 
+// Each problem shows under its own field, and the field is marked for screen
+// readers (Sep 23 audit: they were one line under the buttons).
+const ERR_IDS = ['l', 'type', 't', 'd', 'n', 'e'];
+function setFieldError(id, msg) {
+  const box = document.getElementById(`${id}-err`);
+  box.textContent = msg || '';
+  box.hidden = !msg;
+  const inputs = id === 'type' ? [...typesBox.querySelectorAll('input')] : [document.getElementById(id)];
+  for (const input of inputs) {
+    if (msg) {
+      input.setAttribute('aria-invalid', 'true');
+      input.setAttribute('aria-describedby', `${id}-err`);
+    } else {
+      input.removeAttribute('aria-invalid');
+      input.removeAttribute('aria-describedby');
+    }
+  }
+}
+const clearErrors = () => ERR_IDS.forEach(id => setFieldError(id, ''));
+// A field's message goes as soon as the field is touched again.
+form.addEventListener('input', e => {
+  const id = e.target.name === 'type' ? 'type' : e.target.id;
+  if (ERR_IDS.includes(id)) setFieldError(id, '');
+});
+
+// Big pictures and a PDF's first page go up as JPEG, at most 2000px on the
+// long side, so a phone photo or a photo-heavy flyer fits the 2.5 MB limit
+// instead of being refused (Sep 23 audit).
+const MAX = 2.5 * 1024 * 1024;
+function toJpeg(source, w, h) {
+  const scale = Math.min(1, 2000 / Math.max(w, h));
+  const c = document.createElement('canvas');
+  c.width = Math.round(w * scale);
+  c.height = Math.round(h * scale);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; // a see-through picture gets white, not black
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(source, 0, 0, c.width, c.height);
+  return new Promise((res, rej) =>
+    c.toBlob(b => (b ? res(b) : rej(new UserError("Couldn't prepare that file. Try a PNG or JPG."))), 'image/jpeg', 0.85));
+}
 async function pdfFirstPage(file) {
-  const pdfjs = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs');
+  let pdfjs;
+  try {
+    pdfjs = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.min.mjs');
+  } catch {
+    throw new UserError("Couldn't open PDFs just now. Save the flyer as a PNG or JPG and upload that.");
+  }
   pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.10.38/pdf.worker.min.mjs';
-  const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
-  const page = await doc.getPage(1);
-  const scale = 1200 / page.getViewport({ scale: 1 }).width;
-  const viewport = page.getViewport({ scale });
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(viewport.width);
-  canvas.height = Math.round(viewport.height);
-  await page.render({ canvasContext: canvas.getContext('2d'), viewport, intent: 'print' }).promise;
-  return new Promise((res, rej) => canvas.toBlob(b => b ? res(b) : rej(new Error("Couldn't convert that PDF.")), 'image/png'));
+  try {
+    const doc = await pdfjs.getDocument({ data: await file.arrayBuffer() }).promise;
+    const page = await doc.getPage(1);
+    const scale = 1200 / page.getViewport({ scale: 1 }).width;
+    const viewport = page.getViewport({ scale });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport, intent: 'print' }).promise;
+    return await toJpeg(canvas, canvas.width, canvas.height);
+  } catch (err) {
+    if (err instanceof UserError) throw err;
+    throw new UserError("Couldn't read that PDF. Save the flyer as a PNG or JPG and upload that.");
+  }
 }
 
 const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'image/webp': 'webp' };
 
-pick.addEventListener('click', () => fileIn.click());
-rm.addEventListener('click', clearMedia);
-fileIn.addEventListener('change', async () => {
+// While a file is on its way the button stays put and says it is busy, so
+// keyboard focus stays where it was (it used to vanish with the button).
+pick.addEventListener('click', () => { if (!uploading) fileIn.click(); });
+rm.addEventListener('click', () => { clearMedia(); pick.focus(); });
+fileIn.addEventListener('change', () => {
   const file = fileIn.files[0];
-  if (!file) return;
-  pick.hidden = true; rm.hidden = true;
-  try {
-    let blob = file;
-    let ext = EXT[file.type];
-    if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
-      setMedia(dots(), document.createTextNode('Converting the PDF…'));
-      blob = await pdfFirstPage(file);
-      ext = 'png';
-    }
-    if (!ext) throw new Error('Use a PNG, JPG, or PDF.');
-    if (blob.size > 2.5 * 1024 * 1024) throw new Error('Too big. Keep it under 2.5 MB.');
-    setMedia(dots(), document.createTextNode('Uploading…'));
-    const b64 = await new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(String(r.result).split(',')[1] ?? '');
-      r.onerror = () => rej(new Error("Couldn't read that file."));
-      r.readAsDataURL(blob);
-    });
-    const resp = await fetch(`${DESK}/api/newsletter-image`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: file.name, type: ext, file: b64, turnstile_token: await takeToken() }),
-    });
-    const data = await resp.json();
-    if (!data.ok) throw new Error(data.error || 'upload failed');
-    mediaUrl = data.url;
-    setMedia(document.createTextNode('Added.'));
-    pick.textContent = 'Replace media';
-    rm.hidden = false;
-  } catch (err) {
-    setMedia(document.createTextNode(err.message));
-  }
   fileIn.value = '';
-  pick.hidden = false;
+  if (!file) return;
+  const gen = ++uploadGen;
+  uploadFailed = false; sendWithout = false;
+  pick.setAttribute('aria-disabled', 'true');
+  rm.hidden = true;
+  const job = (async () => {
+    try {
+      let blob = file;
+      let ext = EXT[file.type];
+      if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
+        setMedia('Converting the PDF…', 'busy');
+        blob = await pdfFirstPage(file);
+        ext = 'jpg';
+      } else if (!ext) {
+        throw new UserError('Use a PNG, JPG, or PDF.');
+      } else if (file.size > MAX) {
+        setMedia('Shrinking the picture…', 'busy');
+        let bmp;
+        try { bmp = await createImageBitmap(file); } catch { throw new UserError("Couldn't open that picture. Try a PNG or JPG."); }
+        blob = await toJpeg(bmp, bmp.width, bmp.height);
+        ext = 'jpg';
+      }
+      if (blob.size > MAX) throw new UserError('Too big, even after shrinking it. Keep it under 2.5 MB.');
+      setMedia('Uploading…', 'busy');
+      await ensureCheck();
+      const b64 = await new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(String(r.result).split(',')[1] ?? '');
+        r.onerror = () => rej(new UserError("Couldn't read that file."));
+        r.readAsDataURL(blob);
+      });
+      const resp = await fetch(`${DESK}/api/newsletter-image`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: file.name, type: ext, file: b64, turnstile_token: await takeToken() }),
+      });
+      const data = await readReply(resp);
+      if (!data.ok) throw new UserError("The upload didn't go through. Try again, or send the item without it.");
+      if (gen !== uploadGen) return; // the form was sent or started over meanwhile
+      mediaUrl = data.url;
+      setMedia('Added.');
+      pick.textContent = 'Replace media';
+      rm.hidden = false;
+    } catch (err) {
+      if (gen !== uploadGen) return;
+      uploadFailed = true;
+      setMedia(plain(err), 'error');
+    } finally {
+      if (gen === uploadGen) pick.removeAttribute('aria-disabled');
+    }
+  })();
+  uploading = job;
+  job.then(() => { if (uploading === job) uploading = null; });
 });
 
-// "Clear form" resets the fields; the picked type and the media go with them.
+// The form starts over after a send: the type, the media and the messages go too.
 form.addEventListener('reset', () => {
   picked = '';
+  uploadGen++;
+  uploading = null;
   clearMedia();
+  clearErrors();
   setStat('');
 });
+
+// Leaving with an item half-written asks first; name and email alone don't
+// count (Sep 23 audit: leaving dropped everything without a word).
+window.addEventListener('beforeunload', e => {
+  if (form.hidden) return;
+  const started = ['l', 't', 'd'].some(id => document.getElementById(id).value.trim()) || mediaUrl;
+  if (started) { e.preventDefault(); e.returnValue = ''; }
+});
+
+// The newsletter opt-in is its own call. Its result goes on the thank-you
+// (Sep 23 audit: a failed sign-up was silent).
+async function joinList(name, email) {
+  try {
+    const resp = await fetch(`${DESK}/api/listserv`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, turnstile_token: await takeToken() }),
+    });
+    const data = await readReply(resp);
+    return !!data.ok;
+  } catch {
+    return false;
+  }
+}
 
 const doneBox = el('div', 'done');
 doneBox.hidden = true;
@@ -316,27 +487,52 @@ root.append(doneBox);
 
 form.addEventListener('submit', async event => {
   event.preventDefault();
+  const link = withScheme(document.getElementById('l').value);
+  const title = document.getElementById('t').value.trim();
+  const desc = document.getElementById('d').value.trim();
   const name = document.getElementById('n').value.trim();
   const email = document.getElementById('e').value.trim();
-  const link = withScheme(document.getElementById('l').value);
-  const errors = [];
-  if (!picked) errors.push('Pick a type.');
-  if (!link) errors.push('Add a link.');
-  else if (!/^https?:\/\//i.test(link)) errors.push('The link needs to start with http:// or https://.');
-  if (!name) errors.push('Add your name.');
-  if (!email) errors.push('Add your email address.');
-  else if (!/^\S+@\S+\.\S+$/.test(email)) errors.push("That email address doesn't look right.");
-  if (errors.length) return setStat(errors.join(' '), 'error');
+  const bad = [];
+  if (!link) bad.push(['l', 'Add a link.']);
+  else if (!/^https?:\/\//i.test(link)) bad.push(['l', 'The link needs to start with http:// or https://.']);
+  if (!picked) bad.push(['type', 'Pick a type.']);
+  if (!title) bad.push(['t', 'Add a title.']);
+  if (!desc) bad.push(['d', 'Add a description.']);
+  if (!name) bad.push(['n', 'Add your name.']);
+  if (!email) bad.push(['e', 'Add your email address.']);
+  else if (!/^\S+@\S+\.\S+$/.test(email)) bad.push(['e', "That email address doesn't look right."]);
+  clearErrors();
+  if (bad.length) {
+    bad.forEach(([id, msg]) => setFieldError(id, msg));
+    setStat(bad.length === 1 ? 'One field needs a fix.' : `${bad.length} fields need a fix.`, 'error');
+    const first = bad[0][0] === 'type' ? typesBox.querySelector('input') : document.getElementById(bad[0][0]);
+    first.focus();
+    return;
+  }
 
   const go = document.getElementById('go');
   go.disabled = true;
-  setStat('Sending', 'busy');
   try {
+    // Submit waits for a file still on its way (Sep 23 audit: the item went
+    // without it, and the next item could pick it up).
+    if (uploading) {
+      setStat('Finishing the upload', 'busy');
+      await uploading;
+    }
+    if (uploadFailed && !sendWithout) {
+      sendWithout = true;
+      setStat("The media didn't upload. Press Submit again to send without it, or try the upload again.", 'error');
+      return;
+    }
+    await ensureCheck();
+    setStat('Checking', 'busy');
+    const tok = await takeToken();
+    setStat('Sending', 'busy');
     const resp = await fetch(`${DESK}/api/submit`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        title: document.getElementById('t').value,
-        blurb: document.getElementById('d').value,
+        title,
+        blurb: desc,
         link,
         type: picked === 'other' ? '' : picked,
         subtype: '',
@@ -344,44 +540,52 @@ form.addEventListener('submit', async event => {
         submitter: name,
         submitter_email: email,
         infographic: mediaUrl,
-        turnstile_token: await takeToken(),
+        turnstile_token: tok,
       }),
     });
-    const data = await resp.json();
-    if (!data.ok) throw new Error((data.errors ?? ['Something went wrong. Try again.']).join(' '));
+    if (resp.status === 403) throw new UserError("The spam check didn't pass. Nothing you typed is lost; press Submit to try again.");
+    const data = await readReply(resp);
+    if (!data.ok) throw new UserError((data.errors ?? ["Couldn't save that. Try again in a moment."]).join(' '));
 
     // Opt-in only: never subscribe anyone who did not tick the box. It goes
     // through the desk like the submission, so the list's address stays out
     // of this page; a second token is taken for it.
+    let joined = null;
     if (document.getElementById('optin').checked) {
-      try {
-        await fetch(`${DESK}/api/listserv`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, turnstile_token: await takeToken() }),
-        });
-      } catch { /* the submission already landed; the list can wait */ }
+      setStat('Adding you to the newsletter', 'busy');
+      joined = await joinList(name, email);
     }
 
     form.reset();
-    const title = el('h3', '', 'Received.');
-    title.tabIndex = -1;
-    doneBox.replaceChildren(title);
+    const heading = el('h2', '', 'Received.');
+    heading.tabIndex = -1;
+    doneBox.replaceChildren(heading);
     doneBox.append(el('p', '', 'We review every submission before it goes out.'));
+    if (joined === true) doneBox.append(el('p', '', "You're on the ERC newsletter list too."));
+    if (joined === false) {
+      const p = el('p', '', "The newsletter sign-up didn't go through. ");
+      const a = el('a', '', 'Join the newsletter here');
+      a.href = '../newsletter/';
+      p.append(a, '.');
+      doneBox.append(p);
+    }
     const again = el('button', 'btn-outline', 'Submit another');
     again.type = 'button';
     again.addEventListener('click', () => {
       doneBox.hidden = true; form.hidden = false;
       document.getElementById('n').value = name;
       document.getElementById('e').value = email;
-      document.getElementById('t').focus();
+      document.getElementById('l').focus();
     });
     doneBox.append(again);
     form.hidden = true; doneBox.hidden = false;
-    title.focus();
+    heading.focus();
   } catch (err) {
-    setStat(err instanceof TypeError ? "Couldn't reach the server. Check your connection." : err.message, 'error');
+    setStat(plain(err), 'error');
   } finally {
     go.disabled = false;
+    // A disabled button drops focus; give it back so the next try is one key away.
+    if (!form.hidden && document.activeElement === document.body) go.focus();
   }
 });
 </script>
