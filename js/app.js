@@ -445,7 +445,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=2").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=3").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -637,6 +637,13 @@ function wnShape(url) {
   return wnShapes.get(url);
 }
 
+// The featured title's length class: the card's type steps down as the
+// title gets longer so it always shows whole (Kate, Sep 24; styles.css).
+const wnLen = (it) => {
+  const n = (it.headline || "").trim().length;
+  return n <= 60 ? "short" : n <= 100 ? "mid" : "long";
+};
+
 function wnFeatHTML({ it, tab }, shape) {
   const title = esc(it.headline);
   const id = briefId(it);
@@ -695,7 +702,7 @@ function buildWhatsNew() {
   }
   band.hidden = false;
   $("#wn-split").innerHTML = `
-    <article class="feat no-art" id="wn-feat" aria-live="off">${wnFeatHTML(list[0], "")}</article>
+    <article class="feat no-art" id="wn-feat" data-len="${wnLen(list[0].it)}" aria-live="off">${wnFeatHTML(list[0], "")}</article>
     <div class="caro" role="group" aria-label="Browse new and upcoming items">
       <button type="button" class="caro__btn" data-step="-1" aria-label="Previous item">${faIcon("chevron-left")}</button>
       <span class="caro__count" aria-live="off" aria-atomic="true"><b>1</b> / ${list.length}</span>
@@ -767,6 +774,7 @@ function initWhatsNew(list) {
     const paint = () => {
       feat.className = `feat ${shape ? `has-${shape}` : "no-art"}`;
       feat.dataset.key = wnKey(list[at]);
+      feat.dataset.len = wnLen(list[at].it);
       feat.innerHTML = wnFeatHTML(list[at], shape);
     };
     if (!fade || calm) return paint();

@@ -201,6 +201,19 @@ function note(form, msg, kind) {
   p.textContent = msg || '';
   p.className = `admin-note${kind ? ` admin-note--${kind}` : ''}`;
 }
+// A running count under a title: past 100 characters the New & Upcoming card
+// sets the title smaller and leaves out the summary (Kate, Sep 24).
+function titleCount(input) {
+  const hint = el('p', { class: 'admin-hint', id: `${input.id}-count` });
+  const say = () => {
+    const n = input.value.trim().length;
+    hint.textContent = `${n} characters. Aim for 100 or fewer: longer titles show smaller in New & Upcoming, with no summary.`;
+  };
+  input.addEventListener('input', say);
+  say();
+  input.setAttribute('aria-describedby', `${input.getAttribute('aria-describedby') || ''} ${hint.id}`.trim());
+  return hint;
+}
 function fieldRow(id, label, control, hint) {
   const wrap = el('div', { class: 'admin-field' });
   wrap.append(el('label', { for: id }, label), control);
@@ -233,6 +246,7 @@ function openItem(key) {
     control.value = item[name] || '';
     const row = fieldRow(id, label, control, hint);
     if (name === 'blurb' || name === 'headline' || name === 'infographic') row.classList.add('admin-field--wide');
+    if (name === 'headline') row.append(titleCount(control));
     grid.append(row);
   }
   form.append(grid);
@@ -388,6 +402,7 @@ function openCard(id) {
     fieldRow('c-image', 'Picture link', inputs.image, 'Optional. A direct link to a picture ending .jpg or .png.'),
   ];
   rows[0].classList.add('admin-field--wide');
+  rows[0].append(titleCount(inputs.headline));
   rows[4].classList.add('admin-field--wide');
   rows[5].classList.add('admin-field--wide');
   grid.append(...rows);

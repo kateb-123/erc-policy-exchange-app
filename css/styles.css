@@ -956,6 +956,99 @@ a:hover {
   }
 }
 
+/* The featured title's rules (Kate, Sep 24: "some rules on the length of
+   highlights title ... adaptive to the title length"). The title always
+   shows whole and the type steps down as it gets longer: up to 60
+   characters 24px, up to 100 20px, past 100 18px with no teaser (app.js
+   sets data-len). 82% of the 206 titles are 100 or fewer; the longest is
+   165. Checked with the three longest and the Sep 25 photo card at 375,
+   1201 and 1426: none cut, and the card never changes height. */
+#wn-feat h3 a,
+#wn-feat .feat__plain {
+  -webkit-line-clamp: 6;
+}
+#wn-feat[data-len="mid"] h3 {
+  font-size: 20px;
+}
+#wn-feat[data-len="long"] h3 {
+  font-size: 18px;
+}
+#wn-feat[data-len="long"] .feat__b {
+  display: none;
+}
+/* A picture takes room, so its title goes a step smaller; a wide picture
+   leaves three title lines and one teaser line. */
+#wn-feat:is(.has-pt, .has-sq, .has-wide)[data-len="short"] h3 {
+  font-size: 20px;
+}
+#wn-feat:is(.has-pt, .has-sq, .has-wide)[data-len="mid"] h3 {
+  font-size: 18px;
+}
+#wn-feat.has-wide h3 a,
+#wn-feat.has-wide .feat__plain {
+  -webkit-line-clamp: 3;
+}
+#wn-feat.has-wide .feat__b {
+  -webkit-line-clamp: 1;
+}
+/* Laptops, where the card is 340-377px wide: a narrower picture beside the
+   text (the Sep 24 review: a 160px portrait left the title two words). */
+@media (min-width: 1201px) {
+  #wn-feat.has-pt .feat__media {
+    width: 110px;
+    min-height: 180px;
+  }
+  #wn-feat.has-sq .feat__media {
+    width: 130px;
+    min-height: 130px;
+  }
+  #wn-feat .feat__row {
+    gap: 16px;
+  }
+}
+@media (max-width: 820px) {
+  #wn-feat h3 a,
+  #wn-feat .feat__plain {
+    -webkit-line-clamp: 5;
+  }
+  #wn-feat[data-len="short"] h3 {
+    font-size: 20px;
+  }
+  #wn-feat[data-len="mid"] h3 {
+    font-size: 18px;
+  }
+  #wn-feat[data-len="long"] h3 {
+    font-size: 17px;
+  }
+  #wn-feat[data-len="long"] h3 a,
+  #wn-feat[data-len="long"] .feat__plain {
+    -webkit-line-clamp: 8;
+  }
+  /* 280px holds a picture card too (the Sep 25 photo card was 303px, so
+     the card jumped): a narrower picture and an 18px title. */
+  #wn-feat.has-pt .feat__media {
+    width: 96px;
+    min-height: 150px;
+  }
+  #wn-feat.has-sq .feat__media {
+    width: 110px;
+    min-height: 110px;
+  }
+  #wn-feat .feat__row {
+    gap: 16px;
+  }
+  #wn-feat:is(.has-pt, .has-sq, .has-wide)[data-len] h3 {
+    font-size: 18px;
+  }
+  #wn-feat.has-wide h3 a,
+  #wn-feat.has-wide .feat__plain {
+    -webkit-line-clamp: 2;
+  }
+  #wn-feat.has-wide .feat__b {
+    display: none;
+  }
+}
+
 /* ---------- Layout ---------- */
 main {
   flex: 1 0 auto; /* short pages still push the footer to the viewport bottom */
