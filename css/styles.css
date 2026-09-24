@@ -195,23 +195,16 @@ a:hover {
   text-decoration-thickness: 2px;
   text-underline-offset: 6px;
 }
-/* The right side: Share an item and About the ERC on the first line, the
-   global search under them, both flush right inside the bar. */
+/* The right side: the global search, flush right inside the bar. About the
+   ERC left the bar for the home page's credit line and the footer (Kate,
+   Sep 23). */
 .topnav__side {
   margin-left: auto;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 12px;
   flex-shrink: 1;
   min-width: 0;
-}
-.topnav__utils {
-  display: flex;
-  gap: 28px;
-}
-.topnav__utils .topnav__link {
-  padding: 0;
 }
 /* Mobile-only hamburger: invisible at desktop widths. */
 .topnav__menu-btn {
@@ -267,8 +260,12 @@ a:hover {
     flex: 1 1 auto;
     padding: 16px 0;
   }
+  /* The top row keeps the height it had with About over the search, so the
+     rule under it stays where it was; the search sits where it sat. */
   .topnav__side {
     padding: 12px 0;
+    min-height: 92px;
+    justify-content: flex-end;
   }
   .topnav__links {
     order: 3;
@@ -1108,8 +1105,12 @@ main {
   color: var(--maroon);
   font-size: 14px;
 }
-/* The opened row's summary runs the row's full width. No left edge (Kate,
-   Sep 23); the chevron turning over is the sign it is open. */
+/* The opened row: a solid maroon rule along its foot, the way Aggie UX's
+   slim Details marks an open item (Kate, Sep 23; the left edge is gone). The
+   summary runs the row's full width. */
+.feed-item[data-expanded="true"] {
+  box-shadow: inset 0 -2px 0 var(--maroon);
+}
 .feed-item__detail {
   margin-top: 16px;
 }
@@ -1715,6 +1716,10 @@ main {
   -webkit-mask-image: url("../assets/aggie/paper-plane.svg");
   mask-image: url("../assets/aggie/paper-plane.svg");
 }
+.site-footer__icon--about {
+  -webkit-mask-image: url("../assets/aggie/building-columns.svg");
+  mask-image: url("../assets/aggie/building-columns.svg");
+}
 
 /* ---------- Phones ---------- */
 @media (max-width: 780px) {
@@ -1777,25 +1782,11 @@ main {
     text-decoration: none;
     border-left-color: var(--gold);
   }
-  /* About the ERC joins the open list. */
   .topnav__side {
     flex: 1 1 100%;
     align-items: stretch;
-    gap: 0;
+    min-height: 0;
     padding: 0 0 12px;
-  }
-  .topnav__utils {
-    display: none;
-    flex: 1 1 100%;
-    flex-direction: column;
-    gap: 0;
-    padding-bottom: 8px;
-  }
-  .topnav.is-open .topnav__utils {
-    display: flex;
-  }
-  .topnav__utils .topnav__link {
-    padding: 14px 0 14px 12px;
   }
   /* Its own row, as tall as the Menu button. */
   .topnav__search {
@@ -1879,17 +1870,103 @@ main {
     margin-left: 0;
     gap: 16px;
   }
+  /* Rows, plain (Kate, Sep 23): no frame, split by a rule. The date sits
+     beside the source and the chevron in the top corner, so a row has no
+     line of its own for them. Same-kind items read faster as a list. */
+  .feed {
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
   .feed-item {
-    padding: 16px;
+    margin: 0 -12px;
+    padding: 18px 12px;
   }
   .feed-item__row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "cat chev"
+      "title title"
+      "src date"
+      "meta meta";
+    column-gap: 12px;
+    row-gap: 0;
+    align-items: center;
   }
+  .feed-item__row:not(:has(.feed-item__cat)) {
+    grid-template-areas:
+      "title chev"
+      "src date"
+      "meta meta";
+    align-items: start;
+  }
+  .feed-item__body,
   .feed-item__side {
-    justify-content: space-between;
+    display: contents;
+  }
+  .feed-item__cat {
+    grid-area: cat;
+  }
+  .feed-item__title {
+    grid-area: title;
+    margin-top: 10px;
+    font-size: 18px;
+  }
+  .feed-item__row:not(:has(.feed-item__cat)) .feed-item__title {
+    margin-top: 0;
+  }
+  .feed-item__source {
+    grid-area: src;
+    min-width: 0;
+    margin-top: 6px;
+    font-size: 15px;
+  }
+  .feed-date {
+    grid-area: date;
+    justify-self: end;
+    align-self: start;
+    margin-top: 7px;
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .feed-expand,
+  .feed-goto {
+    grid-area: chev;
+    justify-self: end;
+    width: 40px;
+    height: 40px;
+    margin: -8px -10px -8px 0;
+  }
+  .feed-item__meta {
+    grid-area: meta;
+    font-size: 15px;
   }
   .feed-more {
-    padding: 16px;
+    padding: 16px 0;
+  }
+  /* Headlines' cards, the same: no frame, a rule between, the summary held
+     to three lines. */
+  .ncol {
+    gap: 0;
+  }
+  .ncard {
+    gap: 8px;
+    padding: 18px 0;
+    background: none;
+    box-shadow: none;
+    border-radius: 0;
+  }
+  .ncard + .ncard {
+    border-top: 1px solid var(--g400);
+  }
+  .ncard__title {
+    font-size: 18px;
+  }
+  .ncard p {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
   .brief {
     padding: 32px 0;
