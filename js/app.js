@@ -16,6 +16,8 @@
  * ============================================================ */
 
 const NEWS_CSV = "data/news.csv";
+// The admin door's pins, one-off cards and hidden items (Kate, Sep 23).
+const FEATURED_JSON = "data/featured.json";
 
 // Category tabs across the top — you view one stream at a time (the
 // categories are distinct enough that a mixed "All" view isn't useful).
@@ -89,6 +91,13 @@ const isArchivedResearch = (it) =>
   (it.subtype || "").trim().toLowerCase() !== "erc research" &&
   endOfPeriod(it.date || "") < CUTOFF;
 
+// An item's key: its link, or its title and date when it has none. The admin
+// door keeps pins and hidden items by it (api/_admin.js has the same rule).
+const itemKey = (it) =>
+  (it.link || "").trim() || `${(it.headline || "").trim()}|${(it.date || "").trim()}`;
+// Items the admin hid stay in the file but leave the site.
+const visibleItems = () => state.allItems.filter((it) => !state.featured.hidden.includes(itemKey(it)));
+
 // Feeds reveal this many rows at a time ("Show more" pages in the rest).
 const PAGE_SIZE = 15;
 
@@ -103,6 +112,8 @@ const state = {
   q: "",
   sort: null, // {key,dir} once a sort action is chosen; null = per-tab default
   searchFrom: null, // where to return when the global search box is cleared
+  allItems: [], // every row of the sheet, hidden ones included
+  featured: { pins: [], cards: [], hidden: [] }, // the admin door's file
   briefFrom: null, // the view a brief was opened from, for its way back
   ready: false, // true once the data is in and the page's handlers are live
 };
@@ -264,8 +275,10 @@ function writeURL(push = false) {
 /* ------------------------------------------------------------
  * Init
  * ------------------------------------------------------------ */
-function init(rows, modified) {
-  state.items = rows;
+function init(rows, modified, featured) {
+  state.allItems = rows;
+  state.featured = featured;
+  state.items = visibleItems();
 
   // Last update: when the CSV itself was last touched (the server's
   // Last-Modified, the last deploy that changed it). Fallback: the newest
@@ -428,10 +441,24 @@ function init(rows, modified) {
 
   state.ready = true;
   render();
+  // The admin door: a signed-in admin's browser carries a hint cookie, and
+  // only then is the editor loaded; it asks the server before it shows
+  // anything (Kate, Sep 23).
+  window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY };
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=1").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
   }
+}
+
+// After an admin save the page redraws from the changed items and pins.
+function refresh() {
+  state.items = visibleItems();
+  validateSubtype();
+  buildLanding();
+  buildWhatsNew();
+  render();
 }
 
 // The phone Menu: the button opens and closes the panel; Escape and a tap
@@ -493,6 +520,8 @@ function buildLanding() {
     <a class="slab-btn" href="?type=${t.value}" data-type="${t.value}">${esc(t.nav)} <small>${esc(countLabel(t.value))}</small></a>`
   ).join("");
 
+  if (el.dataset.wired) return;
+  el.dataset.wired = "1";
   el.addEventListener("click", (e) => {
     const btn = e.target.closest(".slab-btn");
     if (!btn || modifiedClick(e)) return;
@@ -535,8 +564,28 @@ function whatsNewFeed(per = WN_PER) {
   // construction rather than merged on date.
   const out = [];
   for (let i = 0; i < per; i++) bags.forEach((bag) => bag[i] && out.push(bag[i]));
-  return out;
+  // The admin door's pins and one-off cards go first while their dates last
+  // (Kate, Sep 23), then the round-robin; twelve in all, unless there are
+  // more pins and cards than that.
+  const tabOf = (it) => NEWS_TABS.find((t) => t.value === (it.type || "").toLowerCase());
+  const pinned = state.featured.pins
+    .filter((p) => (p.until || "") >= TODAY)
+    .map((p) => state.items.find((it) => itemKey(it) === p.key))
+    .filter((it) => it && !isExpired(it) && tabOf(it))
+    .map((it) => ({ it, tab: tabOf(it) }));
+  const cards = state.featured.cards
+    .filter((c) => (c.until || "") >= TODAY)
+    .map((c) => ({
+      it: { headline: c.headline, link: c.link || "", blurb: c.blurb || "", infographic: c.image || "", card: c.id },
+      tab: { value: "", nav: c.label || "ERC" },
+    }));
+  const front = [...pinned, ...cards];
+  const taken = new Set(pinned.map((x) => itemKey(x.it)));
+  const rest = out.filter((x) => !taken.has(itemKey(x.it)));
+  return [...front, ...rest].slice(0, Math.max(per * NEWS_TABS.length, front.length));
 }
+// A New & upcoming entry's key: a one-off card's own id, else the item's.
+const wnKey = ({ it }) => (it.card ? `card:${it.card}` : itemKey(it));
 
 // Opportunities are judged on their deadline, everything else on its date.
 const wnWhen = (it, tab) =>
@@ -584,7 +633,9 @@ function wnFeatHTML({ it, tab }, shape) {
     ? `<a href="?brief=${id}" data-brief="${id}" data-brief-title="${title}">${title}</a>`
     : link
       ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${title} ${faIcon("arrow-up-right-from-square")}${NEW_TAB}</a>`
-      : `<a href="?type=${tab.value}" data-type="${tab.value}">${title}</a>`;
+      : tab.value
+        ? `<a href="?type=${tab.value}" data-type="${tab.value}">${title}</a>`
+        : `<span class="feat__plain">${title}</span>`;
   // Source and date share one line: a long source gives way, the date (or
   // an opportunity's deadline) never does.
   const from = (it.source || "").trim();
@@ -606,10 +657,11 @@ function wnFeatHTML({ it, tab }, shape) {
   return shape === "wide" ? sec + txt + fig : `${sec}<div class="feat__row">${fig}${txt}</div>`;
 }
 
-function wnRowHTML({ it, tab }, i) {
+function wnRowHTML(entry, i) {
+  const { it, tab } = entry;
   const foot = [(it.source || "").trim(), wnWhen(it, tab)].filter(Boolean).map(esc).join(" • ");
   return `
-    <li class="rail__row">
+    <li class="rail__row" data-key="${esc(wnKey(entry))}">
       <button type="button" class="rail__pick" data-i="${i}" aria-describedby="wn-pick-hint">
         <span class="rail__sec">${esc(tab.nav)}</span>
         <span class="rail__hd-line">${esc(it.headline)}</span>
@@ -618,7 +670,10 @@ function wnRowHTML({ it, tab }, i) {
     </li>`;
 }
 
+let wnStop = null;
 function buildWhatsNew() {
+  if (wnStop) wnStop();
+  wnStop = null;
   const band = $("#whats-new");
   const list = whatsNewFeed();
   if (!list.length) {
@@ -656,7 +711,7 @@ function buildWhatsNew() {
       setType(section.dataset.type);
     }
   });
-  initWhatsNew(list);
+  wnStop = initWhatsNew(list);
 }
 
 function initWhatsNew(list) {
@@ -677,6 +732,10 @@ function initWhatsNew(list) {
   let timer = 0;
   let glide = 0;
   let turn = 0; // a slow picture must not land over a newer pick
+  // Listeners on things that outlive a rebuild (the band, the width query)
+  // go when the band is rebuilt.
+  const lasting = new AbortController();
+  const until = { signal: lasting.signal };
 
   list.forEach(({ it }) => wnShape(wnImage(it)));
 
@@ -694,6 +753,7 @@ function initWhatsNew(list) {
     if (mine !== turn) return;
     const paint = () => {
       feat.className = `feat ${shape ? `has-${shape}` : "no-art"}`;
+      feat.dataset.key = wnKey(list[at]);
       feat.innerHTML = wnFeatHTML(list[at], shape);
     };
     if (!fade || calm) return paint();
@@ -795,26 +855,32 @@ function initWhatsNew(list) {
   // Reading beats turning, on the card as much as on the list.
   split.addEventListener("pointerenter", () => {
     held = true;
-  });
+  }, until);
   split.addEventListener("pointerleave", () => {
     held = false;
     schedule();
-  });
+  }, until);
   split.addEventListener("focusin", () => {
     held = true;
-  });
+  }, until);
   split.addEventListener("focusout", (e) => {
     if (split.contains(e.relatedTarget)) return;
     held = false;
     schedule();
-  });
+  }, until);
   phone.addEventListener("change", () => {
     announce();
     if (!phone.matches) glideTo(rows[at], true);
-  });
+  }, until);
 
   sync();
   show(0, { fade: false });
+  return () => {
+    lasting.abort();
+    clearTimeout(timer);
+    cancelAnimationFrame(glide);
+    turn++;
+  };
 }
 
 // "14 upcoming", "23 recent", "8 open": how much is live in a section right now,
@@ -1315,7 +1381,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
         ? `<button type="button" class="feed-expand" aria-expanded="false" aria-controls="${detailId}" aria-label="Show details: ${esc(it.headline)}">${chevronIcon()}</button>`
         : "";
       return `
-        <li class="feed-item" data-expanded="false">
+        <li class="feed-item" data-expanded="false" data-key="${esc(itemKey(it))}">
           <div class="feed-item__row">
             <div class="feed-item__body">
               ${catHTML}
@@ -1354,7 +1420,7 @@ function renderHeadlineCards(results, colorFor, total = results.length) {
         .join(" • ");
       const blurb = cleanBlurb(it.blurb);
       return `
-        <article class="ncard">
+        <article class="ncard" data-key="${esc(itemKey(it))}">
           <span class="tag ${colorFor[subtype] || "tag--teal"}">${esc(subtype || it.type || "")}</span>
           <h3 class="ncard__title">${itemTitleLink(it, true)}</h3>
           ${subhead ? `<span class="ncard__subhead">${subhead}</span>` : ""}
@@ -1450,7 +1516,7 @@ function renderSearch() {
           ? ` data-href="${esc(link)}"`
           : "";
       return `
-        <li class="feed-item feed-item--link"${rowTarget}>
+        <li class="feed-item feed-item--link" data-key="${esc(itemKey(it))}"${rowTarget}>
           <div class="feed-item__row">
             <div class="feed-item__body">
               <h3 class="feed-item__title">${titleHTML}</h3>
@@ -1654,14 +1720,26 @@ async function loadCSV(path) {
   };
 }
 
+// The admin door's file; the site works the same without it.
+async function loadFeatured() {
+  const list = (v) => (Array.isArray(v) ? v : []);
+  try {
+    const res = await fetch(FEATURED_JSON, { cache: "no-store" });
+    const j = res.ok ? await res.json() : {};
+    return { pins: list(j.pins), cards: list(j.cards), hidden: list(j.hidden) };
+  } catch {
+    return { pins: [], cards: [], hidden: [] };
+  }
+}
+
 async function boot() {
   readURL();
   buildNav();
   wireMenu();
   $("#section").hidden = false;
   try {
-    const { rows, modified } = await loadCSV(NEWS_CSV);
-    init(rows, modified);
+    const [{ rows, modified }, featured] = await Promise.all([loadCSV(NEWS_CSV), loadFeatured()]);
+    init(rows, modified, featured);
   } catch (err) {
     // Visitors get plain words and a way out; the local-server hint appears
     // only when the page was opened from the file system, where fetch() is blocked.

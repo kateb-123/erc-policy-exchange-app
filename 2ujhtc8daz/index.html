@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- The admin door's sign-in (Kate, Sep 23, 2026). Nothing links here and
+       search engines are told to stay out; the password, checked on the
+       server, is the lock. -->
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Sign in · ERC Policy Exchange</title>
+  <link rel="icon" href="../assets/logo/favicon.svg?v=2" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Work+Sans:ital,wght@0,400;0,600;0,700;0,900;1,400&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="../css/styles.css?v=84" />
+</head>
+<body>
+  <main id="main" class="admin-signin">
+    <h1 class="section-head__title">Sign in to edit</h1>
+    <p class="section-head__desc" id="lede">For the ERC's editors. Signing in keeps you in for 12 hours on this browser.</p>
+    <form id="f" class="form form--narrow" novalidate>
+      <div class="field field--full">
+        <label for="p">Password</label>
+        <input id="p" type="password" autocomplete="current-password" required>
+      </div>
+      <div class="btns field--full">
+        <button type="submit" class="btn" id="go">Sign in</button>
+        <a href="../">Back to the Exchange</a>
+      </div>
+      <p class="status field--full" id="stat" role="status"></p>
+    </form>
+  </main>
+<script>
+(() => {
+  const form = document.getElementById('f');
+  const stat = document.getElementById('stat');
+  const go = document.getElementById('go');
+  const say = (msg, error) => {
+    stat.textContent = msg;
+    stat.className = `status field--full${error ? ' status--error' : ''}`;
+  };
+  // Already signed in: say so instead of asking again.
+  fetch('/api/admin/session', { cache: 'no-store' })
+    .then((r) => r.json())
+    .then((j) => {
+      if (j.ok) say('You are signed in. Go back to the Exchange to edit.');
+    })
+    .catch(() => {});
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const password = document.getElementById('p').value;
+    if (!password) return say('Enter the password.', true);
+    go.disabled = true;
+    say('Checking…');
+    try {
+      const r = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const j = await r.json().catch(() => ({ ok: false, error: 'Something went wrong on our side. Try again in a minute.' }));
+      if (!j.ok) {
+        go.disabled = false;
+        return say(j.error, true);
+      }
+      location.href = '../';
+    } catch {
+      go.disabled = false;
+      say("Couldn't reach the server. Check your connection and try again.", true);
+    }
+  });
+})();
+</script>
+</body>
+</html>
