@@ -3290,6 +3290,29 @@ main {
   outline: 2px solid var(--g900);
   outline-offset: 2px;
 }
+/* The live card in the Edit dialog. */
+.admin-preview {
+  margin: 0 0 20px;
+}
+.admin-preview__card {
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+#wn-feat.admin-preview__card .hc {
+  display: block;
+}
+.admin-preview__card .hc__ttl a::after,
+.admin-preview__card .hc__q a::after,
+.admin-preview__card .hc__btn::after {
+  display: none; /* nothing to click in the preview */
+}
+.admin-preview__card .hc__ttl a,
+.admin-preview__card .hc__btn {
+  pointer-events: none;
+}
 /* The hero card choice: each template drawn small (Kate, Sep 24). */
 .admin-tiles {
   display: flex;

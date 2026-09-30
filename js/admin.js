@@ -273,6 +273,15 @@ function openItem(key) {
   const d = makeDialog();
   const form = el('form', { class: 'admin-form', novalidate: true });
   form.append(el('h2', { id: 'admin-dlg-h' }, 'Edit item'));
+  // The card itself, drawn live from the form (Kate, Sep 30: "always have a
+  // wireframe on the cards, it is interactive"). Its id lets the site's own
+  // card styles draw it; the real card comes first in the page, so the
+  // site's lookups still find the real one.
+  const preview = el('div', { class: 'admin-preview' });
+  preview.append(el('p', { class: 'admin-tiles__h' }, 'The card in New & Upcoming, as it will draw'));
+  const previewCard = el('div', { id: 'wn-feat', class: 'feat no-art admin-preview__card' });
+  preview.append(previewCard);
+  form.append(preview);
   const grid = el('div', { class: 'admin-grid' });
   for (const [name, label, kind, hint] of FIELDS) {
     const id = `a-${name}`;
@@ -344,6 +353,16 @@ function openItem(key) {
       return darkOn.checked;
     },
   };
+  const paint = () => {
+    const it = { ...item };
+    for (const [name] of FIELDS) it[name] = form.elements[name].value;
+    const tab = X.NEWS_TABS.find((t) => t.value === (it.type || '').toLowerCase()) || { value: '', nav: 'ERC' };
+    previewCard.innerHTML = X.heroCardHTML({ it, tab, hero: tiles.value, dark: tiles.dark });
+    previewCard.dataset.len = previewCard.querySelector('.hc')?.dataset.len || '';
+  };
+  form.addEventListener('input', paint);
+  form.addEventListener('change', paint);
+  paint();
   form.append(pinBox);
 
   form.append(el('p', { class: 'admin-note', role: 'status' }));
