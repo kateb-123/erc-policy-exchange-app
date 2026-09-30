@@ -1141,8 +1141,12 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   padding: calc(56 * var(--u)) calc(64 * var(--u)) calc(48 * var(--u));
 }
 #wn-feat .hc .hc-erc .hc__col {
+  justify-content: center;
   gap: calc(14 * var(--u));
   padding: calc(36 * var(--u)) calc(56 * var(--u)) calc(32 * var(--u)) calc(64 * var(--u));
+}
+#wn-feat .hc .hc-date .hc__col {
+  justify-content: center;
 }
 #wn-feat .hc .hc__fact {
   display: flex;
@@ -1285,13 +1289,17 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   padding: calc(44 * var(--u)) calc(72 * var(--u)) calc(44 * var(--u));
   background: var(--g100);
 }
+#wn-feat .hc .hc-type {
+  justify-content: center; /* the words sit in the middle, not at the top (Kate, Sep 30) */
+}
 #wn-feat .hc .hc-type .hc__ttl {
-  max-width: calc(860 * var(--u));
-  font-size: calc(60 * var(--u));
-  -webkit-line-clamp: 2;
+  max-width: calc(900 * var(--u));
+  font-size: calc(64 * var(--u));
+  -webkit-line-clamp: 3;
 }
 #wn-feat .hc .hc-type .hc__meta {
-  max-width: calc(760 * var(--u));
+  max-width: calc(860 * var(--u));
+  font-size: calc(27 * var(--u));
 }
 #wn-feat .hc .hc__dots {
   position: absolute;
@@ -1338,12 +1346,19 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 }
 /* The strip first: a fixed 220 under the band, the text under it. */
 #wn-feat .hc .hc-band--top .hc__img {
-  flex: 0 0 calc(220 * var(--u));
+  flex: 0 0 calc(250 * var(--u));
 }
 #wn-feat .hc .hc-band--top .hc__col {
   flex: 1 1 auto;
   justify-content: center;
-  padding: calc(22 * var(--u)) calc(72 * var(--u)) calc(20 * var(--u));
+  padding: calc(20 * var(--u)) calc(72 * var(--u)) calc(18 * var(--u));
+}
+#wn-feat .hc .hc-band--top .hc__ttl {
+  font-size: calc(44 * var(--u));
+  -webkit-line-clamp: 2;
+}
+#wn-feat .hc .hc-band--top .hc__meta {
+  font-size: calc(24 * var(--u));
 }
 #wn-feat .hc .hc-band .hc__slot {
   color: var(--maroon-muted);
@@ -1444,8 +1459,20 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   background: var(--maroon);
 }
 #wn-feat .hc .hc-poster--solid .hc__panel2 {
-  width: calc(900 * var(--u));
+  width: calc(940 * var(--u));
   background: none;
+}
+#wn-feat .hc .hc-poster--solid .hc__ttl {
+  font-size: calc(58 * var(--u));
+}
+#wn-feat .hc[data-len="mid"] .hc-poster--solid .hc__ttl {
+  font-size: calc(48 * var(--u));
+}
+#wn-feat .hc[data-len="long"] .hc-poster--solid .hc__ttl {
+  font-size: calc(40 * var(--u));
+}
+#wn-feat .hc .hc-poster--solid .hc__by {
+  font-size: calc(30 * var(--u));
 }
 #wn-feat .hc .hc-poster .hc__ttl {
   font-size: calc(44 * var(--u));
@@ -1687,12 +1714,12 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
   -webkit-line-clamp: 5;
 }
 #wn-feat .hc[data-len="mid"] .hc-type .hc__ttl {
-  font-size: calc(48 * var(--u));
-  -webkit-line-clamp: 4;
+  font-size: calc(54 * var(--u));
+  -webkit-line-clamp: 3;
 }
 #wn-feat .hc[data-len="long"] .hc-type .hc__ttl {
-  font-size: calc(40 * var(--u));
-  -webkit-line-clamp: 5;
+  font-size: calc(44 * var(--u));
+  -webkit-line-clamp: 4;
 }
 #wn-feat .hc[data-len="mid"] .hc-band .hc__ttl,
 #wn-feat .hc[data-len="long"] .hc-band .hc__ttl {
