@@ -1738,6 +1738,21 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
   font-size: calc(36 * var(--u));
   -webkit-line-clamp: 5;
 }
+/* The ERC event card has less room beside its date tile: a longer title
+   steps down to two lines there, and the place line stays on one, so the
+   summary never runs past the frame (audit F45). After the generic rules,
+   so it wins at equal weight. */
+#wn-feat .hc[data-len="mid"] .hc-erc .hc__ttl,
+#wn-feat .hc[data-len="long"] .hc-erc .hc__ttl {
+  font-size: calc(34 * var(--u));
+  -webkit-line-clamp: 2;
+}
+#wn-feat .hc .hc-erc .hc__meta {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+}
 #wn-feat .hc[data-len="mid"] .hc-type .hc__ttl {
   font-size: calc(54 * var(--u));
   -webkit-line-clamp: 3;
