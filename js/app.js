@@ -736,12 +736,16 @@ const hcMode = (loc) => {
   return online ? (both ? "In person and online" : "Online") : "In person";
 };
 
-function heroCardHTML(entry) {
+// loaded: the rotation passes whether the item's picture loaded ("wide") or
+// not (""); a picture that will not load is left out and the words-only
+// layout is drawn, as the text card does (audit F46). The editor's preview
+// and the gallery pass nothing and draw the link as given.
+function heroCardHTML(entry, loaded) {
   const { it, tab } = entry;
   if (it.fixed === "share") return shareCardHTML();
   if (it.hero === "quote") return quoteCardHTML(entry);
   const kind = tab.value;
-  const img = wnImage(it);
+  const img = loaded === "" ? "" : wnImage(it);
   const src = (it.source || "").trim();
   const date = hcDate(it.date);
   const erc = kind === "event" && (/^erc\b/i.test(it.subtype || "") || src === "ERC" || /^ERC\b/.test(it.headline || ""));
@@ -1011,7 +1015,7 @@ function initWhatsNew(list) {
       feat.className = `feat ${shape ? `has-${shape}` : "no-art"}`;
       feat.dataset.key = wnKey(list[at]);
       feat.dataset.len = wnLen(list[at].it);
-      feat.innerHTML = wnFeatHTML(list[at], shape) + heroCardHTML(list[at]);
+      feat.innerHTML = wnFeatHTML(list[at], shape) + heroCardHTML(list[at], shape);
     };
     if (!fade || calm) return paint();
     feat.classList.add("is-out");
