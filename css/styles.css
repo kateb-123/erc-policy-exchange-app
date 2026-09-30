@@ -1230,9 +1230,13 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   flex-direction: column;
   align-items: center;
 }
+#wn-feat .hc .hc-date--pic {
+  grid-template-rows: minmax(0, 1fr); /* the headshot never stretches the card */
+}
 #wn-feat .hc .hc-date--pic .hc__panel {
   justify-content: flex-start;
   align-items: stretch;
+  min-height: 0;
 }
 #wn-feat .hc .hc-date--pic .hc__when {
   padding: calc(18 * var(--u)) 0 calc(14 * var(--u));
@@ -1254,8 +1258,15 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   object-position: 50% 20%;
 }
 #wn-feat .hc .hc-date--pic .hc__col {
-  gap: calc(16 * var(--u));
-  padding: calc(48 * var(--u)) calc(64 * var(--u)) calc(40 * var(--u)) calc(44 * var(--u));
+  gap: calc(14 * var(--u));
+  padding: calc(36 * var(--u)) calc(64 * var(--u)) calc(32 * var(--u)) calc(44 * var(--u));
+}
+#wn-feat .hc .hc-date--pic .hc__ttl {
+  font-size: calc(42 * var(--u));
+  -webkit-line-clamp: 2;
+}
+#wn-feat .hc .hc-date--pic .hc__blurb {
+  -webkit-line-clamp: 3;
 }
 #wn-feat .hc .hc__blurb {
   display: -webkit-box;
