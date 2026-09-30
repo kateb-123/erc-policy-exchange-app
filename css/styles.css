@@ -1016,18 +1016,18 @@ a:hover {
   position: absolute;
   inset: 0 0 auto;
   z-index: 2;
-  height: calc(48 * var(--u));
+  height: calc(56 * var(--u));
   margin: 0;
-  padding: 0 calc(64 * var(--u));
+  padding: 0 calc(56 * var(--u));
   background: var(--maroon); /* #500000, Kate */
-  font: 600 calc(16 * var(--u)) / calc(48 * var(--u)) var(--head);
+  font: 600 calc(22 * var(--u)) / calc(56 * var(--u)) var(--head);
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--cream);
 }
 #wn-feat .hc .hc__v {
   position: absolute;
-  inset: calc(48 * var(--u)) 0 0;
+  inset: calc(56 * var(--u)) 0 0;
 }
 #wn-feat .hc .hc__v--slot {
   display: none !important;
@@ -1349,6 +1349,158 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   color: var(--maroon-muted);
   outline-color: var(--g500);
   background: var(--g200);
+}
+/* Research, Kate's Sep 30 picks. A "Editorial": the byline large under a
+   short rule, the portrait at the right; without one the words fill the
+   card. Sizes step down with the title's length. */
+#wn-feat .hc .hc-edit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(400 * var(--u));
+  background: var(--g100);
+}
+#wn-feat .hc .hc-edit--wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+#wn-feat .hc .hc-edit .hc__col {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  padding: calc(36 * var(--u)) calc(40 * var(--u)) calc(36 * var(--u)) calc(56 * var(--u));
+}
+#wn-feat .hc .hc-edit--wide .hc__col {
+  padding-right: calc(56 * var(--u));
+}
+#wn-feat .hc .hc-edit .hc__ttl {
+  margin-bottom: calc(20 * var(--u));
+  font-size: calc(46 * var(--u));
+  line-height: 1.06;
+  -webkit-line-clamp: 3;
+}
+#wn-feat .hc .hc-edit--wide .hc__ttl {
+  font-size: calc(60 * var(--u));
+}
+#wn-feat .hc[data-len="mid"] .hc-edit .hc__ttl {
+  font-size: calc(40 * var(--u));
+  -webkit-line-clamp: 4;
+}
+#wn-feat .hc[data-len="mid"] .hc-edit--wide .hc__ttl {
+  font-size: calc(50 * var(--u));
+  -webkit-line-clamp: 3;
+}
+#wn-feat .hc[data-len="long"] .hc-edit .hc__ttl {
+  font-size: calc(34 * var(--u));
+  -webkit-line-clamp: 5;
+}
+#wn-feat .hc[data-len="long"] .hc-edit--wide .hc__ttl {
+  font-size: calc(42 * var(--u));
+  -webkit-line-clamp: 4;
+}
+#wn-feat .hc .hc__rule {
+  display: block;
+  width: calc(72 * var(--u));
+  height: calc(3 * var(--u));
+  margin-bottom: calc(18 * var(--u));
+  background: var(--maroon);
+}
+#wn-feat .hc .hc__by {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  margin: 0 0 calc(8 * var(--u));
+  font: 700 calc(28 * var(--u)) / 1.25 var(--head);
+  color: var(--g800);
+}
+#wn-feat .hc .hc__src {
+  margin: 0;
+  font: 400 calc(26 * var(--u)) / 1.25 var(--head);
+  color: var(--g600);
+}
+#wn-feat .hc .hc-edit--wide .hc__by {
+  font-size: calc(32 * var(--u));
+}
+#wn-feat .hc .hc-edit--wide .hc__src {
+  font-size: calc(28 * var(--u));
+}
+/* B "Poster": the wide photo behind a flat maroon panel at the left; with
+   no photo the card is all maroon with the dot grid. */
+#wn-feat .hc .hc-poster {
+  background: var(--maroon);
+}
+#wn-feat .hc .hc-poster .hc__img--full {
+  position: absolute;
+  inset: 0;
+}
+#wn-feat .hc .hc__panel2 {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(16 * var(--u));
+  width: calc(720 * var(--u));
+  padding: calc(36 * var(--u)) calc(56 * var(--u));
+  background: var(--maroon);
+}
+#wn-feat .hc .hc-poster--solid .hc__panel2 {
+  width: calc(900 * var(--u));
+  background: none;
+}
+#wn-feat .hc .hc-poster .hc__ttl {
+  font-size: calc(44 * var(--u));
+  line-height: 1.08;
+  color: #fff;
+}
+#wn-feat .hc[data-len="mid"] .hc-poster .hc__ttl {
+  font-size: calc(38 * var(--u));
+  -webkit-line-clamp: 4;
+}
+#wn-feat .hc[data-len="long"] .hc-poster .hc__ttl {
+  font-size: calc(32 * var(--u));
+  -webkit-line-clamp: 5;
+}
+#wn-feat .hc .hc-poster .hc__by {
+  margin: 0;
+  font-weight: 400;
+  color: var(--cream);
+}
+#wn-feat .hc .hc-poster .hc__src {
+  color: var(--cream);
+}
+/* C "Plain research": white, outlined, the byline in maroon, the source
+   at the foot over a maroon rule. */
+#wn-feat .hc .hc-plainr {
+  display: flex;
+  flex-direction: column;
+  padding: calc(40 * var(--u)) calc(56 * var(--u)) 0;
+  background: #fff;
+  box-shadow: inset 0 0 0 calc(2 * var(--u)) var(--g400);
+}
+#wn-feat .hc .hc-plainr .hc__ttl {
+  font-size: calc(54 * var(--u));
+  line-height: 1.06;
+  color: var(--g800);
+}
+#wn-feat .hc[data-len="mid"] .hc-plainr .hc__ttl {
+  font-size: calc(46 * var(--u));
+  -webkit-line-clamp: 3;
+}
+#wn-feat .hc[data-len="long"] .hc-plainr .hc__ttl {
+  font-size: calc(38 * var(--u));
+  -webkit-line-clamp: 4;
+}
+#wn-feat .hc .hc-plainr .hc__by {
+  margin: calc(18 * var(--u)) 0 0;
+  font: 600 calc(30 * var(--u)) / 1.15 var(--head);
+  color: var(--maroon);
+}
+#wn-feat .hc .hc__foot {
+  margin: auto 0 0;
+  padding: calc(12 * var(--u)) 0 calc(40 * var(--u));
+  border-top: calc(2 * var(--u)) solid var(--maroon);
+  font: 400 calc(26 * var(--u)) / 1.15 var(--head);
+  color: var(--g600);
 }
 /* 2a Research with the picture beside: the text at the left, a 440 x 300
    picture at the right with a thin outline. */

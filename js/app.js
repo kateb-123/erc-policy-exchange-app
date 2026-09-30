@@ -445,7 +445,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=11").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=12").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -776,6 +776,24 @@ function heroCardHTML(entry) {
     kind === "research"
       ? `<div class="hc__v hc-band${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p></div>${pic(url, "hc__img--band", "Landscape photo")}</div>`
       : `<div class="hc__v hc-band hc-band--top${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--band", "Landscape photo")}<div class="hc__col">${head}<p class="hc__meta">${meta}</p></div></div>`;
+  // Kate's picks from the Sep 30 wildcards, for research: A "Editorial"
+  // (the byline large, the portrait at the right, or the words filling the
+  // card), B "Poster" (a maroon panel over the wide photo, or all maroon),
+  // C "Plain research" (white, outlined, the source at the foot).
+  const monthLine = date ? hcFmt(date, { month: "long", year: "numeric" }) : "";
+  const byline = (it.authors || "").trim();
+  const srcLine = [src && `<em>${esc(src)}</em>`, monthLine && esc(monthLine)].filter(Boolean).join(", ");
+  const editV = (url) => `
+    <div class="hc__v hc-edit${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<span class="hc__rule" aria-hidden="true"></span>
+      ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}</div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
+  const editWideV = () => `
+    <div class="hc__v hc-edit hc-edit--wide"><div class="hc__col">${head}<span class="hc__rule" aria-hidden="true"></span>
+      ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}</div></div>`;
+  const posterV = (url) => `
+    <div class="hc__v hc-poster${url ? "" : " hc-poster--solid"}">${url ? `<figure class="hc__img hc__img--full"><img src="${esc(url)}" alt=""></figure>` : `<div class="hc__dots" aria-hidden="true"></div>`}
+      <div class="hc__panel2">${head}${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}</div></div>`;
+  const plainRV = () => `
+    <div class="hc__v hc-plainr">${head}${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}<p class="hc__foot">${srcLine}</p></div>`;
   // 2a: the picture beside the text, 440 x 300 with a thin outline.
   const besideV = (url) => `
     <div class="hc__v hc-beside${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p></div>${pic(url, "hc__img--shot", "Picture 440 x 300")}</div>`;
@@ -789,15 +807,21 @@ function heroCardHTML(entry) {
     kind === "event"
       ? img ? "erc" : date ? "date" : "type"
       : kind === "research"
-        ? img ? "band" : "type"
+        ? "edit"
         : kind === "opportunity"
           ? "type"
           : img ? "photo" : "type";
-  const draw = { erc: ercV, date: dateV, type: typeV, band: bandV, beside: besideV, photo: photoV };
+  const draw = { erc: ercV, date: dateV, type: typeV, band: bandV, beside: besideV, photo: photoV, edit: editV, poster: posterV, plainr: plainRV };
   const want = draw[entry.hero] ? entry.hero : auto;
   let main;
   let slot = "";
-  if (want === "date") {
+  if (want === "edit") {
+    // Without a portrait the words fill the card; an editor sees the slot.
+    main = img ? editV(img) : editWideV();
+    if (!img) slot = editV("");
+  } else if (want === "poster" || want === "plainr") {
+    main = draw[want](img);
+  } else if (want === "date") {
     main = date ? dateV(img) : typeV();
   } else if (want === "type") {
     main = typeV();
@@ -809,7 +833,7 @@ function heroCardHTML(entry) {
   }
   // On Auto an editor still sees where this item's picture would go.
   if (!entry.hero && !img && !slot) {
-    const room = kind === "event" ? "erc" : kind === "research" ? "band" : kind === "headline" || !kind ? "photo" : "";
+    const room = kind === "event" ? "erc" : kind === "headline" || !kind ? "photo" : "";
     if (room) slot = draw[room]("");
   }
   return `<div class="hc" data-len="${wnLen(it)}"><div class="hc__in"><p class="hc__band">${sup}</p>${main}${slot}</div></div>`;
