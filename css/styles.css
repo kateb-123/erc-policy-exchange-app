@@ -3290,7 +3290,28 @@ main {
   outline: 2px solid var(--g900);
   outline-offset: 2px;
 }
-/* The live card in the Edit dialog. */
+/* The live card beside the form (Kate, Sep 30: "more like to the side, a
+   live view as we edit"): the dialog widens, the form runs down the left,
+   the card sits at the right and stays put while the form scrolls. */
+.admin-dlg:has(.admin-form--live) {
+  width: min(1240px, calc(100vw - 32px));
+}
+.admin-form--live {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 460px;
+  column-gap: 28px;
+  align-items: start;
+}
+.admin-form--live > * {
+  grid-column: 1;
+}
+.admin-form--live > .admin-preview {
+  grid-column: 2;
+  grid-row: 1 / span 30;
+  position: sticky;
+  top: 0;
+  margin: 0;
+}
 .admin-preview {
   margin: 0 0 20px;
 }

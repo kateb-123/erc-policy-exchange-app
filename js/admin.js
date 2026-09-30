@@ -271,14 +271,14 @@ function openItem(key) {
   const item = findItem(key);
   if (!item) return toast("That item isn't in the page any more. Reload the page.");
   const d = makeDialog();
-  const form = el('form', { class: 'admin-form', novalidate: true });
+  const form = el('form', { class: 'admin-form admin-form--live', novalidate: true });
   form.append(el('h2', { id: 'admin-dlg-h' }, 'Edit item'));
   // The card itself, drawn live from the form (Kate, Sep 30: "always have a
   // wireframe on the cards, it is interactive"). Its id lets the site's own
   // card styles draw it; the real card comes first in the page, so the
   // site's lookups still find the real one.
   const preview = el('div', { class: 'admin-preview' });
-  preview.append(el('p', { class: 'admin-tiles__h' }, 'The card in New & Upcoming, as it will draw'));
+  preview.append(el('p', { class: 'admin-tiles__h' }, 'The card, as it will draw'));
   const previewCard = el('div', { id: 'wn-feat', class: 'feat no-art admin-preview__card' });
   preview.append(previewCard);
   form.append(preview);
