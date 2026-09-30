@@ -1408,7 +1408,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  margin: 0 0 calc(8 * var(--u));
+  margin: 0 0 calc(16 * var(--u)); /* air before the source line (Kate, Sep 30) */
   font: 700 calc(28 * var(--u)) / 1.25 var(--head);
   color: var(--g800);
 }
@@ -1491,13 +1491,13 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   -webkit-line-clamp: 4;
 }
 #wn-feat .hc .hc-plainr .hc__by {
-  margin: calc(18 * var(--u)) 0 0;
+  margin: calc(22 * var(--u)) 0 0;
   font: 600 calc(30 * var(--u)) / 1.15 var(--head);
   color: var(--maroon);
 }
 #wn-feat .hc .hc__foot {
   margin: auto 0 0;
-  padding: calc(12 * var(--u)) 0 calc(40 * var(--u));
+  padding: calc(16 * var(--u)) 0 calc(40 * var(--u));
   border-top: calc(2 * var(--u)) solid var(--maroon);
   font: 400 calc(26 * var(--u)) / 1.15 var(--head);
   color: var(--g600);
