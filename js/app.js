@@ -86,6 +86,11 @@ const isStaleHeadline = (it) =>
 // never moves to the Archive (Kate, Sep 23: it all belongs on the Research tab).
 const endOfPeriod = (d) =>
   /^\d{4}$/.test(d) ? `${d}-12-31` : /^\d{4}-\d{2}$/.test(d) ? `${d}-31` : d;
+// For sorting, a partial date sits in the middle of what it could mean, so
+// a paper dated only "2026" lands among that year's rows rather than at
+// either end (audit F36: they used to be the last rows of Research).
+const midOfPeriod = (d) =>
+  /^\d{4}$/.test(d) ? `${d}-07-01` : /^\d{4}-\d{2}$/.test(d) ? `${d}-15` : d;
 const isArchivedResearch = (it) =>
   (it.type || "").toLowerCase() === "research" &&
   (it.subtype || "").trim().toLowerCase() !== "erc research" &&
@@ -1333,11 +1338,11 @@ function sortComparator(sort = activeSort()) {
         return da.iso < db.iso ? -1 : da.iso > db.iso ? 1 : 0;
       }
       if (da.firm !== db.firm) return da.firm ? -1 : 1;
-      return (b.date || "").localeCompare(a.date || "");
+      return midOfPeriod(b.date || "").localeCompare(midOfPeriod(a.date || ""));
     };
   }
   // Every remaining sort is by posted date.
-  return (a, b) => (a.date || "").localeCompare(b.date || "") * mult;
+  return (a, b) => midOfPeriod(a.date || "").localeCompare(midOfPeriod(b.date || "")) * mult;
 }
 
 // Whole days from today to an ISO date (used for the "closing soon" cue).
@@ -1692,9 +1697,10 @@ function renderSearch() {
   const terms = searchTerms(q);
   const fields = (it) => [it.headline, it.blurb, it.source, it.authors, it.topic, it.subtype].join("\n");
   // How far from today, by the date a reader goes by: an opportunity's
-  // deadline, anything else's own date. Year-only dates go last.
+  // deadline, anything else's own date. A partial date counts as the middle
+  // of what it could mean (audit F36).
   const distance = (it) => {
-    const iso = (it.type || "").toLowerCase() === "opportunity" ? parseDeadline(it.deadline).iso : it.date || "";
+    const iso = (it.type || "").toLowerCase() === "opportunity" ? parseDeadline(it.deadline).iso : midOfPeriod(it.date || "");
     return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? Math.abs(daysUntil(iso)) : Infinity;
   };
   const results = state.items
