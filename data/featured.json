@@ -29,10 +29,6 @@
   "hidden": [],
   "heroes": [
     {
-      "key": "https://journals.sagepub.com/doi/10.1177/23328584261467394",
-      "hero": "plainr"
-    },
-    {
       "key": "https://doi.org/10.3102/01623737261464169",
       "hero": "type"
     },
@@ -43,6 +39,10 @@
     {
       "key": "https://edworkingpapers.com/ai26-1578",
       "hero": "poster"
+    },
+    {
+      "key": "https://journals.sagepub.com/doi/10.1177/23328584261467394",
+      "hero": "type"
     }
   ]
 }
