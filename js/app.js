@@ -451,7 +451,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=16").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=17").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -774,25 +774,24 @@ function heroCardHTML(entry) {
       ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
   // With a picture the panel splits: the date on top, the headshot under
   // it, and the event's own words under the date line (Kate, Sep 24).
-  const dateV = (url) => `
-    <div class="hc__v hc-date${url ? " hc-date--pic" : ""}"><div class="hc__panel" aria-hidden="true"><div class="hc__when"><span class="hc__k">Upcoming</span>
-      <span class="hc__m">${esc(hcFmt(date, { month: "short" }))}</span><span class="hc__d">${date.getUTCDate()}</span></div>${
-        url ? `<figure class="hc__img hc__img--head"><img src="${esc(url)}" alt=""></figure>` : ""
-      }</div>
+  // The date panel carries the event's words; a picture on it is a small
+  // logo at the top right (a sponsor's mark), never a headshot (Kate, Sep 30).
+  const dateV = (url, slot) => `
+    <div class="hc__v hc-date${url || slot ? " hc-date--logo" : ""}${slot ? " hc__v--slot" : ""}"><div class="hc__panel" aria-hidden="true"><div class="hc__when"><span class="hc__k">Upcoming</span>
+      <span class="hc__m">${esc(hcFmt(date, { month: "short" }))}</span><span class="hc__d">${date.getUTCDate()}</span></div></div>
       <div class="hc__col">${head}<p class="hc__meta">${hcLine([src, (it.location || "").trim() || "Online"])}<br>${hcLine([when, hcMode(it.location) || "Online"])}</p>${
-        url && blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""
-      }</div></div>`;
+        blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""
+      }</div>${url || slot ? pic(url, "hc__img--logo", "Logo 2:1") : ""}</div>`;
   const typeV = () => `
     <div class="hc__v hc-type"><div class="hc__dots" aria-hidden="true"></div>${head}<p class="hc__meta">${meta}</p></div>`;
   // Research keeps the strip under the text; anything else that takes this
   // card gets the strip first, under the band (Kate, Sep 24, for the AEFP
   // call: "above the title and text").
-  const bandV = (url) =>
-    kind === "research" || kind === "opportunity" // (Kate, Sep 30: the photo beneath the text on opportunities too)
-      ? `<div class="hc__v hc-band${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p>${
-          kind === "opportunity" && blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : "" // (Kate, Sep 30: the call needs a description)
-        }</div>${pic(url, "hc__img--band", "Landscape photo")}</div>`
-      : `<div class="hc__v hc-band hc-band--top${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--band", "Landscape photo")}<div class="hc__col">${head}<p class="hc__meta">${meta}</p></div></div>`;
+  const stripText = `<div class="hc__col">${head}<p class="hc__meta">${meta}</p>${
+    kind !== "research" && blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : "" // (Kate, Sep 30: the call needs a description)
+  }</div>`;
+  const bandV = (url) => `<div class="hc__v hc-band${url ? "" : " hc__v--slot"}">${stripText}${pic(url, "hc__img--band", "Landscape photo")}</div>`;
+  const bandTopV = (url) => `<div class="hc__v hc-band hc-band--top${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--band", "Landscape photo")}${stripText}</div>`;
   // Kate's picks from the Sep 30 wildcards, for research: A "Editorial"
   // (the byline large, the portrait at the right, or the words filling the
   // card), B "Poster" (a maroon panel over the wide photo, or all maroon),
@@ -814,7 +813,9 @@ function heroCardHTML(entry) {
     <div class="hc__v hc-plainr">${head}${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}<p class="hc__foot">${srcLine}</p></div>`;
   // 2a: the picture beside the text, 440 x 300 with a thin outline.
   const besideV = (url) => `
-    <div class="hc__v hc-beside${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p></div>${pic(url, "hc__img--shot", "Picture 440 x 300")}</div>`;
+    <div class="hc__v hc-beside${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p>${
+      kind !== "research" && blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""
+    }</div>${pic(url, "hc__img--shot", "Picture 16:9")}</div>`;
   const photoV = (url) => `
     <div class="hc__v hc-photo${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--full", "Photo 1200 x 500")}
       <div class="hc__blk">${head}<p class="hc__meta">${meta}</p></div></div>`;
@@ -827,9 +828,9 @@ function heroCardHTML(entry) {
       : kind === "research"
         ? "edit"
         : kind === "opportunity"
-          ? "type"
+          ? img ? "beside" : "type"
           : img ? "photo" : "type";
-  const draw = { erc: ercV, date: dateV, type: typeV, band: bandV, beside: besideV, photo: photoV, edit: editV, poster: posterV, plainr: plainRV };
+  const draw = { erc: ercV, date: dateV, type: typeV, band: bandV, bandtop: bandTopV, beside: besideV, photo: photoV, edit: editV, poster: posterV, plainr: plainRV };
   const want = draw[entry.hero] ? entry.hero : auto;
   let main;
   let slot = "";
@@ -843,13 +844,14 @@ function heroCardHTML(entry) {
   } else if (want === "plainr") {
     main = img ? editV(img) : editWideV();
   } else if (want === "date") {
-    main = date ? dateV(img) : typeV();
+    main = date ? dateV(img, false) : typeV();
+    if (date && !img) slot = dateV("", true);
   } else if (want === "type") {
     main = typeV();
   } else if (img) {
     main = draw[want](img);
   } else {
-    main = kind === "event" && date ? dateV("") : typeV();
+    main = kind === "event" && date ? dateV("", false) : typeV();
     slot = draw[want]("");
   }
   // On Auto an editor still sees where this item's picture would go.

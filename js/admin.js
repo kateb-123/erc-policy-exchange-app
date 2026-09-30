@@ -181,7 +181,7 @@ const FIELDS = [
   ['medium', 'Medium', 'text', 'Headlines only: radio, TV, newspaper, magazine.'],
   ['topic', 'Topic', 'text'],
   ['blurb', 'Summary', 'area'],
-  ['infographic', 'Picture or infographic link', 'url', 'A direct link to a picture (ending .jpg or .png), or a Google Drive file. New & Upcoming shows pictures at 1200 x 500 pixels.'],
+  ['infographic', 'Picture or infographic link', 'url', 'A direct link to a picture (ending .jpg or .png), or a Google Drive file. Headlines need one. Sizes: a headshot 400 x 500, a wide strip 1200 x 240, a 16:9 picture 960 x 540, the whole card 1200 x 500.'],
 ];
 const SECTIONS = [
   ['research', 'Research'],
@@ -439,6 +439,7 @@ const ART = {
   erc: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#500000"/><rect x="8" y="10" width="22" height="3" fill="#D6D3C4"/><rect x="8" y="18" width="60" height="5" fill="#fff"/><rect x="8" y="26" width="48" height="5" fill="#fff"/><rect x="8" y="37" width="34" height="3" fill="#D6D3C4"/><rect x="80" width="40" height="50" fill="#A7A7A7"/><circle cx="100" cy="19" r="7" fill="#F6F6F6"/><path d="M85 50 Q100 30 115 50Z" fill="#F6F6F6"/></svg>',
   date: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#fff"/><rect x="0.5" y="0.5" width="119" height="49" fill="none" stroke="#D1D1D1"/><rect width="34" height="50" fill="#500000"/><rect x="11" y="10" width="12" height="2" fill="#D6D3C4"/><text x="17" y="36" text-anchor="middle" font-family="Work Sans,sans-serif" font-size="18" font-weight="600" fill="#fff">12</text><rect x="44" y="12" width="22" height="3" fill="#732F2F"/><rect x="44" y="20" width="62" height="5" fill="#500000"/><rect x="44" y="28" width="48" height="5" fill="#500000"/><rect x="44" y="38" width="36" height="3" fill="#3E3E3E"/></svg>',
   type: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#500000"/><rect x="8" y="12" width="22" height="3" fill="#D6D3C4"/><rect x="8" y="20" width="72" height="6" fill="#fff"/><rect x="8" y="29" width="54" height="6" fill="#fff"/><rect x="8" y="40" width="34" height="3" fill="#D6D3C4"/><g fill="#732F2F"><circle cx="98" cy="8" r="1.4"/><circle cx="104" cy="8" r="1.4"/><circle cx="110" cy="8" r="1.4"/><circle cx="98" cy="14" r="1.4"/><circle cx="104" cy="14" r="1.4"/><circle cx="110" cy="14" r="1.4"/><circle cx="98" cy="20" r="1.4"/><circle cx="104" cy="20" r="1.4"/><circle cx="110" cy="20" r="1.4"/></g></svg>',
+  bandtop: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#F6F6F6"/><rect width="120" height="22" fill="#A7A7A7"/><rect x="8" y="29" width="70" height="5" fill="#500000"/><rect x="8" y="37" width="40" height="3" fill="#3E3E3E"/><rect x="8" y="43" width="56" height="3" fill="#535353"/></svg>',
   band: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#F6F6F6"/><rect width="120" height="2" fill="#500000"/><rect x="8" y="8" width="22" height="3" fill="#732F2F"/><rect x="8" y="14" width="70" height="5" fill="#500000"/><rect x="8" y="21" width="40" height="3" fill="#3E3E3E"/><rect y="28" width="120" height="22" fill="#A7A7A7"/></svg>',
   edit: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#F6F6F6"/><rect x="8" y="10" width="62" height="6" fill="#500000"/><rect x="8" y="19" width="48" height="6" fill="#500000"/><rect x="8" y="31" width="56" height="3" fill="#3E3E3E"/><rect x="8" y="37" width="40" height="3" fill="#535353"/><rect x="8" y="43" width="24" height="3" fill="#535353"/><rect x="80" width="40" height="50" fill="#A7A7A7"/><circle cx="100" cy="19" r="7" fill="#F6F6F6"/><path d="M85 50 Q100 30 115 50Z" fill="#F6F6F6"/></svg>',
   poster: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#500000"/><rect x="8" y="10" width="62" height="6" fill="#fff"/><rect x="8" y="19" width="48" height="6" fill="#fff"/><rect x="8" y="31" width="56" height="3" fill="#D6D3C4"/><rect x="8" y="37" width="40" height="3" fill="#D6D3C4"/><rect x="8" y="43" width="24" height="3" fill="#D6D3C4"/><rect x="80" width="40" height="50" fill="#A7A7A7"/><circle cx="100" cy="19" r="7" fill="#F6F6F6"/><path d="M85 50 Q100 30 115 50Z" fill="#F6F6F6"/></svg>',
@@ -454,11 +455,12 @@ const ITEM_CARDS = [
   ['erc', 'ERC event', 'the words at the left, a portrait at the right'],
   ['date', 'Date panel', 'the day in a maroon panel, the words beside it'],
   ['type', 'Plain', 'the words on maroon, no picture'],
-  ['band', 'Wide picture', 'the words over a wide strip of picture (research), or under it'],
-  ['beside', 'Picture beside', 'the words at the left, a 440 x 300 picture at the right'],
+  ['band', 'Wide picture under', 'the words, then a wide strip of picture'],
+  ['bandtop', 'Wide picture above', 'a wide strip of picture, then the words'],
+  ['beside', 'Picture beside', 'the words at the left, a 16:9 picture at the right'],
   ['photo', 'Photo', 'the picture behind, the words in a maroon block'],
 ];
-const ONEOFF_CARDS = [['quote', 'Quote', 'the words, who said them, a portrait']];
+const ONEOFF_CARDS = []; // the Quote card is built but off the menu for now (Kate, Sep 30)
 const isPic = (url) => /\.(jpe?g|png|webp|gif|avif)$/i.test((url || '').trim());
 
 // What Auto picks for an item, and which cards fit what it has.
@@ -467,10 +469,10 @@ function itemAuto(item) {
   const img = isPic(item.infographic);
   const date = /^\d{4}-\d{2}-\d{2}$/.test((item.date || '').trim());
   const auto =
-    kind === 'event' ? (img ? 'erc' : date ? 'date' : 'type') : kind === 'research' ? 'edit' : kind === 'opportunity' ? 'type' : img ? 'photo' : 'type';
-  const research = ['edit', 'poster'];
+    kind === 'event' ? (img ? 'erc' : date ? 'date' : 'type') : kind === 'research' ? 'edit' : kind === 'opportunity' ? (img ? 'beside' : 'type') : img ? 'photo' : 'type';
+  const research = ['edit', 'poster', 'band', 'bandtop'];
   const fits = ITEM_CARDS.filter(([v]) =>
-    kind === 'research' ? research.includes(v) : v === 'type' || (v === 'date' ? date : !research.includes(v) && img)
+    kind === 'research' ? research.includes(v) : v === 'type' || (v === 'date' ? date : !['edit', 'poster'].includes(v) && img)
   ).map(([v]) => v);
   return { auto, fits };
 }

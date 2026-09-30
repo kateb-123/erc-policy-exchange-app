@@ -1227,8 +1227,43 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 #wn-feat .hc .hc__d {
   font: 600 calc(150 * var(--u)) / 1 var(--head);
 }
-/* The date panel with a headshot: the date on top, the picture under it,
-   the text starting further left, the event's words under the date line. */
+/* The date panel with a sponsor's logo: a small box at the top right of the
+   words, the picture shown whole. */
+#wn-feat .hc .hc-date--logo .hc__col {
+  padding-right: calc(280 * var(--u));
+}
+#wn-feat .hc .hc-date--logo .hc__ttl {
+  font-size: calc(40 * var(--u));
+  -webkit-line-clamp: 2;
+}
+#wn-feat .hc .hc-date--logo .hc__blurb {
+  -webkit-line-clamp: 2;
+}
+#wn-feat .hc .hc-date .hc__img--logo {
+  position: absolute;
+  top: calc(40 * var(--u));
+  right: calc(56 * var(--u));
+  width: calc(200 * var(--u));
+  height: calc(100 * var(--u));
+  background: #fff;
+  box-shadow: 0 0 0 calc(2 * var(--u)) var(--g400);
+}
+#wn-feat .hc .hc-date .hc__img--logo img {
+  object-fit: contain;
+  padding: calc(8 * var(--u));
+  box-sizing: border-box;
+}
+#wn-feat .hc .hc-date .hc__slot.hc__img--logo {
+  font-size: calc(14 * var(--u));
+  outline-offset: calc(-6 * var(--u));
+}
+#wn-feat .hc .hc-date .hc__blurb {
+  -webkit-line-clamp: 3;
+}
+html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
+  display: grid !important;
+}
+/* (The date panel with a headshot under the date is gone; Kate dropped it.) */
 #wn-feat .hc .hc__when {
   display: flex;
   flex-direction: column;
@@ -1351,7 +1386,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 }
 /* The strip first: a fixed 220 under the band, the text under it. */
 #wn-feat .hc .hc-band--top .hc__img {
-  flex: 0 0 calc(250 * var(--u));
+  flex: 0 0 calc(210 * var(--u));
 }
 #wn-feat .hc .hc-band--top .hc__col {
   flex: 1 1 auto;
@@ -1359,11 +1394,16 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   padding: calc(20 * var(--u)) calc(72 * var(--u)) calc(18 * var(--u));
 }
 #wn-feat .hc .hc-band--top .hc__ttl {
-  font-size: calc(44 * var(--u));
+  font-size: calc(40 * var(--u));
   -webkit-line-clamp: 2;
 }
 #wn-feat .hc .hc-band--top .hc__meta {
-  font-size: calc(24 * var(--u));
+  font-size: calc(22 * var(--u));
+  -webkit-line-clamp: 3;
+}
+#wn-feat .hc .hc-band--top .hc__blurb {
+  -webkit-line-clamp: 2;
+  font-size: calc(20 * var(--u));
 }
 #wn-feat .hc .hc-band .hc__slot {
   color: var(--maroon-muted);
@@ -1429,7 +1469,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  margin: 0 0 calc(10 * var(--u));
+  margin: 0 0 calc(18 * var(--u)); /* air before the journal (Kate, Sep 30) */
   font: 400 calc(26 * var(--u)) / 1.3 var(--head);
   color: var(--g800);
 }
@@ -1483,9 +1523,13 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 }
 #wn-feat .hc .hc-beside .hc__img--shot {
   width: calc(440 * var(--u));
-  height: calc(300 * var(--u));
+  height: calc(248 * var(--u)); /* 16:9, the shape of her event graphics (Kate, Sep 30) */
   background: #fff;
   box-shadow: 0 0 0 calc(2 * var(--u)) var(--g400);
+}
+#wn-feat .hc .hc-beside .hc__blurb {
+  -webkit-line-clamp: 2;
+  font-size: calc(20 * var(--u));
 }
 html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
   display: grid !important;
