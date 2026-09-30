@@ -198,10 +198,57 @@ function makeDialog() {
   if (dialog) return dialog;
   dialog = el('dialog', { class: 'admin-dlg', 'aria-labelledby': 'admin-dlg-h' });
   document.body.append(dialog);
+  // Every way out that is not Save goes through the open form's guard, which
+  // asks first when something was typed (audit F34). A click on the backdrop
+  // counts only when the press started there too, so a drag that ends on the
+  // grey margin does not close the form.
+  dialog.tryClose = () => (dialog.guard ? dialog.guard() : dialog.close());
+  let downOnBackdrop = false;
+  dialog.addEventListener('pointerdown', (e) => {
+    downOnBackdrop = e.target === dialog;
+  });
   dialog.addEventListener('click', (e) => {
-    if (e.target === dialog) dialog.close(); // a click on the backdrop
+    if (e.target === dialog && downOnBackdrop) dialog.tryClose();
+  });
+  // Escape: caught on the key itself, because the browser skips the dialog's
+  // own cancel event when nothing has been clicked or typed since it opened.
+  dialog.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    e.preventDefault();
+    dialog.tryClose();
+  });
+  dialog.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    dialog.tryClose();
+  });
+  dialog.addEventListener('close', () => {
+    dialog.guard = null;
   });
   return dialog;
+}
+// The guard for one open form: closes at once while nothing changed, and
+// asks once something did. Returns the box the form has to append.
+function closeGuard(d, form, extraButtons = []) {
+  let dirty = false;
+  const mark = () => (dirty = true);
+  form.addEventListener('input', mark);
+  form.addEventListener('change', mark);
+  const box = el('div', { class: 'admin-confirm', hidden: true });
+  const go = el('button', { type: 'button', class: 'btn admin-danger-btn' }, 'Close without saving');
+  const stay = el('button', { type: 'button', class: 'btn-text' }, 'Keep editing');
+  box.append(el('p', {}, 'Close without saving? What you changed here will be lost.'), go, stay);
+  go.addEventListener('click', () => d.close());
+  stay.addEventListener('click', () => {
+    box.hidden = true;
+    (form.querySelector('input:not([type=hidden]):not([type=file]), textarea, select') || form).focus();
+  });
+  d.guard = () => {
+    if (!dirty) return d.close();
+    box.hidden = false;
+    go.focus();
+  };
+  Object.defineProperty(box, 'dirty', { get: () => dirty });
+  return box;
 }
 function note(form, msg, kind) {
   const p = $('.admin-note', form);
@@ -382,9 +429,11 @@ function openItem(key) {
     no
   );
   form.append(confirmBox);
+  const guardBox = closeGuard(d, form);
+  form.append(guardBox);
 
   const busy = (on) => [save, cancel, hide, del, yes, no].forEach((b) => (b.disabled = on));
-  cancel.addEventListener('click', () => d.close());
+  cancel.addEventListener('click', () => d.tryClose());
   del.addEventListener('click', () => {
     confirmBox.hidden = false;
     no.focus();
@@ -766,7 +815,8 @@ function openCard(id) {
     form.append(box);
   }
 
-  cancel.addEventListener('click', () => d.close());
+  form.append(closeGuard(d, form));
+  cancel.addEventListener('click', () => d.tryClose());
   if (remove) {
     remove.addEventListener('click', async () => {
       remove.disabled = true;
