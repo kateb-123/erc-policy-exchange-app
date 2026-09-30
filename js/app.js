@@ -131,6 +131,12 @@ function esc(str) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
 }
+// A title or summary with *stars* round a book or journal name shows that
+// name in italics (Kate, Sep 30: "just the book titles and stuff"). mark()
+// draws it; plain() is the same words for a tooltip, a label or a tab title.
+const STARS = /\*([^*\n]+)\*/g;
+const mark = (str) => esc(str).replace(STARS, "<em>$1</em>");
+const plain = (str) => String(str ?? "").replace(STARS, "$1");
 
 // One Font Awesome icon (solid, Free, same set as the Content Desk). Decorative:
 // the neighbouring text carries the meaning, so every icon is aria-hidden.
@@ -445,7 +451,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=13").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=14").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -658,11 +664,11 @@ const wnLen = (it) => {
 // its source, a one-off card with no link in its section, if it has one. No
 // new-tab icon on the scrolling card (Kate, Sep 24); screen readers still hear it.
 function wnTitleLink({ it, tab }) {
-  const title = esc(it.headline);
+  const title = mark(it.headline);
   const id = briefId(it);
   const link = (it.link || "").trim();
   return id
-    ? `<a href="?brief=${id}" data-brief="${id}" data-brief-title="${title}">${title}</a>`
+    ? `<a href="?brief=${id}" data-brief="${id}" data-brief-title="${esc(plain(it.headline))}">${title}</a>`
     : link
       ? `<a href="${esc(link)}" target="_blank" rel="noopener noreferrer">${title}${NEW_TAB}</a>`
       : tab.value
@@ -685,7 +691,7 @@ function wnFeatHTML({ it, tab }, shape) {
     <div class="feat__txt">
       <h3>${a}</h3>
       ${sub ? `<p class="feat__src">${sub}</p>` : ""}
-      ${blurb ? `<p class="feat__b">${esc(blurb)}</p>` : ""}
+      ${blurb ? `<p class="feat__b">${mark(blurb)}</p>` : ""}
     </div>`;
   if (!shape) return sec + txt;
   // The picture is decorative: the headline names the talk and the speaker.
@@ -737,7 +743,7 @@ function heroCardHTML(entry) {
         ? [src && esc(src), deadline && esc(deadline === "Rolling" ? "Rolling deadline" : `Apply by ${deadline}`)].filter(Boolean).join("<br>")
         : kind === "headline" || kind === "event"
           ? hcLine([src, date && formatDate(it.date)])
-          : esc(cleanBlurb(it.blurb).slice(0, 140));
+          : mark(cleanBlurb(it.blurb).slice(0, 140));
   const when = date
     ? hcLine([hcFmt(date, { weekday: "long", month: "long", day: "numeric" }), (it.time || "").trim()])
     : "";
@@ -756,7 +762,7 @@ function heroCardHTML(entry) {
       <p class="hc__meta">${hcLine([src === "ERC" ? "Education Research Center" : src, (it.location || "").trim()])}<span class="sr-only">. ${hcLine([
         date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
         (it.time || "").trim(),
-      ])}</span></p>${blurb ? `<p class="hc__blurb">${esc(blurb)}</p>` : ""}</div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
+      ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
   // With a picture the panel splits: the date on top, the headshot under
   // it, and the event's own words under the date line (Kate, Sep 24).
   const dateV = (url) => `
@@ -765,7 +771,7 @@ function heroCardHTML(entry) {
         url ? `<figure class="hc__img hc__img--head"><img src="${esc(url)}" alt=""></figure>` : ""
       }</div>
       <div class="hc__col">${head}<p class="hc__meta">${hcLine([src, (it.location || "").trim() || "Online"])}<br>${when}</p>${
-        url && blurb ? `<p class="hc__blurb">${esc(blurb)}</p>` : ""
+        url && blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""
       }</div></div>`;
   const typeV = () => `
     <div class="hc__v hc-type"><div class="hc__dots" aria-hidden="true"></div>${head}<p class="hc__meta">${meta}</p></div>`;
@@ -877,7 +883,7 @@ function wnRowHTML(entry, i) {
     <li class="rail__row" data-key="${esc(wnKey(entry))}">
       <button type="button" class="rail__pick" data-i="${i}" aria-describedby="wn-pick-hint">
         <span class="rail__sec">${esc(tab.nav)}</span>
-        <span class="rail__hd-line">${esc(it.headline)}</span>
+        <span class="rail__hd-line">${mark(it.headline)}</span>
         ${foot ? `<span class="rail__src">${foot}</span>` : ""}
       </button>
     </li>`;
@@ -1186,7 +1192,7 @@ function setTitle() {
     title = `Search: ${state.q.trim()} · ${SITE_NAME}`;
   } else if (state.view === "brief") {
     const it = state.items.find((x) => briefId(x) === state.brief);
-    title = `${it ? it.headline : state.briefTitle || "ERC Research"} · ${SITE_NAME}`;
+    title = `${it ? plain(it.headline) : state.briefTitle || "ERC Research"} · ${SITE_NAME}`;
   } else if (state.view === "section") {
     const tab = NEWS_TABS.find((x) => x.value === state.type);
     const archive = state.type === "research" && state.archive ? ": Archive" : "";
@@ -1368,10 +1374,10 @@ const SEP = `<span class="feed-meta-sep" aria-hidden="true">·</span>`;
 const NEW_TAB = `<span class="sr-only"> (opens in new tab)</span>`;
 const titleLink = (link, headline, ext = false) =>
   link
-    ? `<a class="feed-title-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${esc(headline)}${
+    ? `<a class="feed-title-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${mark(headline)}${
         ext ? `&nbsp;${faIcon("arrow-up-right-from-square", "feed-ext")}` : "" // nbsp keeps the arrow on the last word's line
       }${NEW_TAB}</a>`
-    : `<span class="feed-title-link">${esc(headline)}</span>`;
+    : `<span class="feed-title-link">${mark(headline)}</span>`;
 
 // ERC Research Briefs live on Google Drive; instead of bouncing readers out,
 // they open in an in-app viewer (?brief=<drive file id>) that iframes Drive's
@@ -1390,7 +1396,7 @@ const briefId = (it) =>
 const itemTitleLink = (it, ext = false) => {
   const id = briefId(it);
   return id
-    ? `<a class="feed-title-link" href="?brief=${id}" data-brief="${id}">${esc(it.headline)}</a>`
+    ? `<a class="feed-title-link" href="?brief=${id}" data-brief="${id}">${mark(it.headline)}</a>`
     : titleLink((it.link || "").trim(), it.headline, ext);
 };
 // The expanded "Read the full …" link mirrors the title: a brief opens the
@@ -1562,7 +1568,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
       const igId = driveId(infographic);
       const infographicHTML = infographic
         ? igId
-          ? `<a class="feed-link" href="?brief=${igId}" data-brief="${igId}" data-brief-title="${esc(it.headline)} infographic">View infographic »</a>`
+          ? `<a class="feed-link" href="?brief=${igId}" data-brief="${igId}" data-brief-title="${esc(plain(it.headline))} infographic">View infographic »</a>`
           : `<a class="feed-link" href="${esc(infographic)}" target="_blank" rel="noopener noreferrer">View infographic »${NEW_TAB}</a>`
         : "";
       const actions = [itemDetailLink(it), infographicHTML].filter(Boolean).join("");
@@ -1570,11 +1576,11 @@ function renderFeedCards(results, colorFor, total = results.length) {
       const detailHTML =
         blurb || actions
           ? `<div class="feed-item__detail" id="${detailId}" hidden>${
-              blurb ? `<p class="feed-detail__blurb">${esc(blurb)}</p>` : ""
+              blurb ? `<p class="feed-detail__blurb">${mark(blurb)}</p>` : ""
             }${actions ? `<div class="feed-actions">${actions}</div>` : ""}</div>`
           : "";
       const toggleHTML = detailHTML
-        ? `<button type="button" class="feed-expand" aria-expanded="false" aria-controls="${detailId}" aria-label="Show details: ${esc(it.headline)}">${chevronIcon()}</button>`
+        ? `<button type="button" class="feed-expand" aria-expanded="false" aria-controls="${detailId}" aria-label="Show details: ${esc(plain(it.headline))}">${chevronIcon()}</button>`
         : "";
       return `
         <li class="feed-item" data-expanded="false" data-key="${esc(itemKey(it))}">
@@ -1706,7 +1712,7 @@ function renderSearch() {
       // the way its title does, never in Drive.
       const bid = briefId(it);
       const rowTarget = bid
-        ? ` data-brief-row="${bid}" data-brief-title="${esc(it.headline)}"`
+        ? ` data-brief-row="${bid}" data-brief-title="${esc(plain(it.headline))}"`
         : link
           ? ` data-href="${esc(link)}"`
           : "";
@@ -1755,7 +1761,7 @@ function renderBrief() {
   const it = state.items.find((x) => briefId(x) === state.brief);
   // Title: the matching brief row when there is one; otherwise whatever the
   // opener passed (an infographic isn't its own row) or a generic fallback.
-  const label = it ? it.headline : state.briefTitle || "ERC Research";
+  const label = it ? plain(it.headline) : state.briefTitle || "ERC Research";
   const driveView = `https://drive.google.com/file/d/${esc(state.brief)}/view`;
   const head = $("#section-head");
   if (head) head.hidden = true;

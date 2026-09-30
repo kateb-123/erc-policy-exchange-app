@@ -286,6 +286,7 @@ function openItem(key) {
     const row = fieldRow(id, label, control, hint);
     if (name === 'blurb' || name === 'headline' || name === 'infographic') row.classList.add('admin-field--wide');
     if (name === 'headline') row.append(titleCount(control));
+    if (name === 'headline' || name === 'blurb') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics.'));
     if (name === 'infographic') row.append(pictureUpload(control));
     grid.append(row);
   }
@@ -552,6 +553,7 @@ function openCard(id) {
   ];
   rows[0].classList.add('admin-field--wide');
   rows[1].classList.add('admin-field--wide');
+  rows[1].append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics.'));
   rows[1].append(
     titleCount(inputs.headline, (n) =>
       isQuote()
