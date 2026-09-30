@@ -1282,7 +1282,9 @@ function sortSubtypes(subs, type) {
 function validateSubtype() {
   if (state.subtype === "all") return;
   const subs = distinct("subtype", liveItemsOfType(state.type));
-  if (!subs.includes(state.subtype)) state.subtype = "all";
+  // A newsletter link may spell the category in any case (audit F48).
+  const match = subs.find((s) => fold(s) === fold(state.subtype));
+  state.subtype = match || "all";
 }
 
 // Every non-expired item in a category — the basis for that tab's feed,
