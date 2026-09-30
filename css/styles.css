@@ -3170,6 +3170,30 @@ main {
   font-size: 13px;
   color: var(--g600);
 }
+/* A picture from her computer: the file box is hidden, its label is the
+   button; the word after it says how the save went. */
+.admin-upload {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+}
+.admin-field .admin-upload input[type="file"] {
+  position: absolute;
+  width: 1px;
+  min-height: 0;
+  height: 1px;
+  padding: 0;
+  opacity: 0;
+}
+.admin-upload__btn {
+  cursor: pointer;
+}
+.admin-upload input:focus-visible + .admin-upload__btn {
+  outline: 2px solid var(--g900);
+  outline-offset: 2px;
+}
 /* The hero card choice: each template drawn small (Kate, Sep 24). */
 .admin-tiles {
   display: flex;

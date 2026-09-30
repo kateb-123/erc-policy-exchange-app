@@ -205,6 +205,10 @@ function findRow(text, original) {
   throw new Conflict('This item changed since the page loaded. Reload the page and try again.');
 }
 
+// A picture is a web address, or one saved from her computer into the
+// site's own files (assets/pictures/, written by the picture op below).
+const isPictureLink = (v) => /^https?:\/\/\S+$/i.test(v) || /^assets\/pictures\/[a-z0-9-]+\.(jpe?g|png|webp)$/.test(v);
+
 function cleanFields(fields) {
   const out = {};
   for (const k of COLUMNS) {
@@ -215,10 +219,9 @@ function cleanFields(fields) {
   }
   if ('headline' in out && !out.headline) throw new BadRequest('An item needs a title.');
   if ('type' in out && !TYPES.includes(out.type)) throw new BadRequest('Pick a section.');
-  for (const k of ['link', 'infographic']) {
-    if (out[k] && !/^https?:\/\/\S+$/i.test(out[k])) {
-      throw new BadRequest(`The ${k === 'link' ? 'link' : 'picture link'} needs to start with http:// or https://.`);
-    }
+  if (out.link && !/^https?:\/\/\S+$/i.test(out.link)) throw new BadRequest('The link needs to start with http:// or https://.');
+  if (out.infographic && !isPictureLink(out.infographic)) {
+    throw new BadRequest('The picture link needs to start with http:// or https://, or be a picture saved from your computer.');
   }
   if (out.date && !/^\d{4}(-\d{2}(-\d{2})?)?$/.test(out.date)) {
     throw new BadRequest('Write the date as 2026-10-01.');
@@ -326,10 +329,9 @@ function applyFeatured(f, op, body) {
     };
     if (!card.headline) throw new BadRequest('A card needs a title.');
     if (!HERO_CARDS.includes(card.hero)) throw new BadRequest('Pick a hero card from the list.');
-    for (const k of ['link', 'image']) {
-      if (card[k] && !/^https?:\/\/\S+$/i.test(card[k])) {
-        throw new BadRequest(`The ${k === 'link' ? 'link' : 'picture link'} needs to start with http:// or https://.`);
-      }
+    if (card.link && !/^https?:\/\/\S+$/i.test(card.link)) throw new BadRequest('The link needs to start with http:// or https://.');
+    if (card.image && !isPictureLink(card.image)) {
+      throw new BadRequest('The picture link needs to start with http:// or https://, or be a picture saved from your computer.');
     }
     if (!ISO_DAY.test(card.until)) throw new BadRequest('Pick the last day to show the card.');
     const replace = String(body.replace || '');
@@ -403,14 +405,14 @@ function github(env, fetchImpl = globalThis.fetch) {
       if (!raw.ok) throw new Error(`GitHub read ${path}: ${raw.status}`);
       return { text: await raw.text(), sha: j.sha };
     },
-    async put(path, text, sha, message) {
+    async put(path, text, sha, message, encoding = 'utf8') {
       const who = { name: 'Kate Barnes', email: env.ADMIN_COMMIT_EMAIL || 'kl.barnestn@gmail.com' };
       const r = await fetchImpl(url(path), {
         method: 'PUT',
         headers: { ...headers, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message,
-          content: Buffer.from(text, 'utf8').toString('base64'),
+          content: encoding === 'base64' ? text : Buffer.from(text, 'utf8').toString('base64'),
           branch,
           author: who,
           committer: who,
@@ -426,6 +428,25 @@ function github(env, fetchImpl = globalThis.fetch) {
       return (await r.json()).commit.sha;
     },
   };
+}
+
+// A picture from her computer (Kate, Sep 30): jpg, png or webp, 3 MB at
+// most, saved into the repo as assets/pictures/<name>-<hash>.<ext>. It shows
+// on the site with the next publish, like every other save.
+const PICTURE_TYPES = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+async function savePicture(gh, body) {
+  const ext = PICTURE_TYPES[String(body.type || '')];
+  if (!ext) throw new BadRequest('Pictures need to be .jpg, .png or .webp.');
+  const data = String(body.data || '');
+  if (!data) throw new BadRequest('No picture came through.');
+  if (data.length > 4_000_000) throw new BadRequest('That picture is over 3 MB. Make it smaller first.');
+  if (!/^[A-Za-z0-9+/]+=*$/.test(data)) throw new BadRequest('That picture did not come through whole.');
+  const base = String(body.name || 'picture').replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'picture';
+  const hash = crypto.createHash('sha1').update(data).digest('hex').slice(0, 8);
+  const path = `assets/pictures/${base}-${hash}.${ext}`;
+  const { sha } = await gh.get(path);
+  await gh.put(path, data, sha, 'Admin: add a picture', 'base64');
+  return path;
 }
 
 // Read, change, write; if the file moved on in between (another save, the
@@ -470,7 +491,7 @@ async function readBody(req) {
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > 200000) throw new BadRequest('That change is too big.');
+    if (size > 4_400_000) throw new BadRequest('That change is too big.');
     chunks.push(chunk);
   }
   try {
@@ -521,6 +542,10 @@ async function handleSave(req, res, { env = process.env, gh = github(env) } = {}
   try {
     const body = await readBody(req);
     const op = String(body.op || '');
+    if (op === 'picture') {
+      const path = await savePicture(gh, body);
+      return send(res, 200, { ok: true, path });
+    }
     if (op === 'edit' || op === 'delete') {
       const out = await withFile(gh, CSV_PATH, (text) => {
         if (text === null) throw new Error('news.csv is missing.');
@@ -568,6 +593,8 @@ module.exports = {
   keyOf,
   findRow,
   cleanFields,
+  isPictureLink,
+  savePicture,
   editRow,
   deleteRow,
   readFeatured,

@@ -184,6 +184,22 @@ function call(handler, { method = 'POST', headers = {}, body, deps }) {
     assert.strictEqual(r.status, 409);
     assert.strictEqual(gh.files['data/featured.json'], '{"pins": [ <<<<<<< HEAD');
   });
+  await okA('save: a picture from her computer lands in assets/pictures', async () => {
+    const gh = fakeGh({});
+    const png = Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex').toString('base64');
+    let r = await call(A.handleSave, { headers: { cookie }, body: { op: 'picture', name: 'Mark Hlavacik (1).PNG', type: 'image/png', data: png }, deps: { env, gh } });
+    assert.strictEqual(r.status, 200); assert.ok(/^assets\/pictures\/mark-hlavacik-1-[0-9a-f]{8}\.png$/.test(r.body.path), r.body.path);
+    assert.strictEqual(gh.files[r.body.path], png); assert.strictEqual(gh.writes[0].message, 'Admin: add a picture');
+    r = await call(A.handleSave, { headers: { cookie }, body: { op: 'picture', name: 'x.gif', type: 'image/gif', data: png }, deps: { env, gh } });
+    assert.strictEqual(r.status, 400);
+    r = await call(A.handleSave, { headers: { cookie }, body: { op: 'picture', name: 'x.png', type: 'image/png', data: 'A'.repeat(4_100_000) }, deps: { env, gh } });
+    assert.strictEqual(r.status, 400);
+    r = await call(A.handleSave, { headers: { cookie }, body: { op: 'picture', name: 'x.png', type: 'image/png', data: '' }, deps: { env, gh } });
+    assert.strictEqual(r.status, 400);
+    // and a site path is a fine picture link on an item or a card
+    assert.strictEqual(A.cleanFields({ infographic: 'assets/pictures/a-1b2c3d4e.jpg' }).infographic, 'assets/pictures/a-1b2c3d4e.jpg');
+    assert.throws(() => A.cleanFields({ infographic: 'assets/../x.jpg' }), A.BadRequest);
+  });
   await okA('save: changing a card is one checked write', async () => {
     const gh = fakeGh({ 'data/news.csv': csv });
     let r = await call(A.handleSave, { headers: { cookie }, body: { op: 'card', card: { headline: 'First', until: '2026-10-20' } }, deps: { env, gh } });

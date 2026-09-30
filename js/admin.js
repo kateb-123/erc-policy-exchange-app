@@ -231,6 +231,39 @@ function fieldRow(id, label, control, hint) {
   return wrap;
 }
 
+// A picture from her computer (Kate, Sep 30): read it, send it, and put the
+// path it was saved under into the picture link box beside it.
+function pictureUpload(linkInput) {
+  const wrap = el('div', { class: 'admin-upload' });
+  const input = el('input', { type: 'file', id: `${linkInput.id}-file`, accept: 'image/jpeg,image/png,image/webp' });
+  const label = el('label', { for: input.id, class: 'btn-text admin-upload__btn' }, 'Or choose a picture from your computer');
+  const say = el('span', { class: 'admin-hint', role: 'status' });
+  input.addEventListener('change', async () => {
+    const f = input.files[0];
+    if (!f) return;
+    if (f.size > 3 * 1024 * 1024) {
+      say.textContent = 'That picture is over 3 MB. Make it smaller first.';
+      input.value = '';
+      return;
+    }
+    say.textContent = 'Saving the picture…';
+    const data = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(String(r.result).split(',')[1] || '');
+      r.onerror = rej;
+      r.readAsDataURL(f);
+    });
+    const r = await api('save', { op: 'picture', name: f.name, type: f.type, data });
+    input.value = '';
+    if (!r.ok) return (say.textContent = r.error);
+    linkInput.value = r.path;
+    linkInput.dispatchEvent(new Event('input'));
+    say.textContent = 'Picture saved. Now save this form to use it; the live site shows it after the next publish.';
+  });
+  wrap.append(input, label, say);
+  return wrap;
+}
+
 function openItem(key) {
   const item = findItem(key);
   if (!item) return toast("That item isn't in the page any more. Reload the page.");
@@ -253,6 +286,7 @@ function openItem(key) {
     const row = fieldRow(id, label, control, hint);
     if (name === 'blurb' || name === 'headline' || name === 'infographic') row.classList.add('admin-field--wide');
     if (name === 'headline') row.append(titleCount(control));
+    if (name === 'infographic') row.append(pictureUpload(control));
     grid.append(row);
   }
   form.append(grid);
@@ -527,6 +561,7 @@ function openCard(id) {
   );
   rows[5].classList.add('admin-field--wide');
   rows[6].classList.add('admin-field--wide');
+  rows[6].append(pictureUpload(inputs.image));
   grid.append(...rows);
   // Each template shows only its own fields.
   const shape = () => {
