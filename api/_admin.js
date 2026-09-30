@@ -289,9 +289,10 @@ function applyFeatured(f, op, body) {
   if (op === 'hero') {
     const hero = short(body.hero, 20, 'hero card');
     if (!HERO_ITEMS.includes(hero)) throw new BadRequest('Pick a hero card from the list.');
+    const dark = body.dark === true; // the dark look, a switch beside the card (Kate, Sep 30)
     f.heroes = f.heroes.filter((h) => h.key !== key);
-    if (hero) f.heroes.push({ key, hero });
-    return hero ? `Admin: choose the ${hero} card for an item` : 'Admin: let an item pick its card again';
+    if (hero || dark) f.heroes.push(dark ? { key, hero, dark: true } : { key, hero });
+    return hero || dark ? `Admin: choose the ${hero || 'auto'}${dark ? ', dark' : ''} card for an item` : 'Admin: let an item pick its card again';
   }
   if (op === 'pin') {
     if (!ISO_DAY.test(String(body.until || ''))) throw new BadRequest('Pick the last day to keep it pinned.');

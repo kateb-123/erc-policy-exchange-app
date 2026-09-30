@@ -1470,29 +1470,34 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
   padding-right: calc(56 * var(--u));
 }
 #wn-feat .hc .hc-edit .hc__ttl {
-  margin-bottom: calc(24 * var(--u));
-  font-size: calc(50 * var(--u));
+  margin-bottom: calc(20 * var(--u));
+  font-size: calc(46 * var(--u));
   line-height: 1.08;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
+}
+#wn-feat .hc .hc-edit .hc__blurb {
+  margin-top: calc(16 * var(--u));
+  -webkit-line-clamp: 2;
+  font-size: calc(20 * var(--u));
 }
 #wn-feat .hc .hc-edit--wide .hc__ttl {
   font-size: calc(58 * var(--u));
 }
 #wn-feat .hc[data-len="mid"] .hc-edit .hc__ttl {
-  font-size: calc(42 * var(--u));
-  -webkit-line-clamp: 4;
-}
-#wn-feat .hc[data-len="mid"] .hc-edit--wide .hc__ttl {
-  font-size: calc(50 * var(--u));
+  font-size: calc(38 * var(--u));
   -webkit-line-clamp: 3;
 }
+#wn-feat .hc[data-len="mid"] .hc-edit--wide .hc__ttl {
+  font-size: calc(46 * var(--u));
+  -webkit-line-clamp: 2;
+}
 #wn-feat .hc[data-len="long"] .hc-edit .hc__ttl {
-  font-size: calc(36 * var(--u));
-  -webkit-line-clamp: 5;
+  font-size: calc(32 * var(--u));
+  -webkit-line-clamp: 4;
 }
 #wn-feat .hc[data-len="long"] .hc-edit--wide .hc__ttl {
-  font-size: calc(42 * var(--u));
-  -webkit-line-clamp: 4;
+  font-size: calc(38 * var(--u));
+  -webkit-line-clamp: 3;
 }
 #wn-feat .hc .hc-edit--dark .hc__ttl {
   color: #fff;
@@ -1740,6 +1745,52 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
 }
 #wn-feat .hc[data-len="long"] .hc__blk .hc__ttl {
   font-size: calc(36 * var(--u));
+}
+/* The dark look on any card (Kate, Sep 30): maroon under the band, the
+   title white, the rest cream; the date tile flips to cream; boxes with a
+   picture stay white. Last, so it wins over each card's own colours. */
+#wn-feat .hc--dark .hc-erc,
+#wn-feat .hc--dark .hc-date,
+#wn-feat .hc--dark .hc-type,
+#wn-feat .hc--dark .hc-band,
+#wn-feat .hc--dark .hc-beside,
+#wn-feat .hc--dark .hc-edit {
+  background: var(--maroon);
+}
+#wn-feat .hc--dark .hc__band {
+  background: var(--maroon-dark);
+}
+#wn-feat .hc--dark .hc__ttl,
+#wn-feat .hc--dark .hc__by,
+#wn-feat .hc--dark .hc__fline {
+  color: #fff;
+}
+#wn-feat .hc--dark .hc__meta,
+#wn-feat .hc--dark .hc__blurb,
+#wn-feat .hc--dark .hc__src,
+#wn-feat .hc--dark .hc__src em,
+#wn-feat .hc--dark .hc__fline small,
+#wn-feat .hc--dark .hc__foot {
+  color: var(--cream);
+}
+#wn-feat .hc--dark .hc__tile {
+  background: var(--cream);
+  color: var(--maroon);
+}
+#wn-feat .hc--dark .hc__tile small {
+  color: var(--maroon-muted);
+}
+#wn-feat .hc--dark .hc__dots {
+  background-image: radial-gradient(circle, var(--maroon-muted) calc(3.5 * var(--u)), transparent calc(4 * var(--u)));
+}
+#wn-feat .hc--dark .hc__slot {
+  outline-color: var(--cream);
+  color: var(--cream);
+  background: #5c1010;
+}
+#wn-feat .hc--dark .hc__img--logo,
+#wn-feat .hc--dark .hc__img--shot {
+  background: #fff;
 }
 @media (min-width: 1201px) {
   #wn-feat .hc {
@@ -3232,6 +3283,15 @@ main {
 .admin-upload input:focus-visible + .admin-upload__btn {
   outline: 2px solid var(--g900);
   outline-offset: 2px;
+}
+/* The Italic button over the summary. */
+.admin-fmt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-fmt__btn {
+  font-style: italic;
 }
 /* The hero card choice: each template drawn small (Kate, Sep 24). */
 .admin-tiles {

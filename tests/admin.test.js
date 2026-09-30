@@ -105,6 +105,13 @@ ok('featured changes', () => {
   A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'type' });
   A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo' });
   assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: 'photo' }]);
+  // Dark is a switch beside the card, kept only when on; the card may be Auto.
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo', dark: true });
+  assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: 'photo', dark: true }]);
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: '', dark: true });
+  assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: '', dark: true }]);
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo', dark: false });
+  assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: 'photo' }]);
   assert.throws(() => A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'banner' }), A.BadRequest);
   assert.throws(() => A.applyFeatured(f, 'hero', { key: '', hero: 'type' }), A.BadRequest);
   assert.ok(A.rekeyFeatured(f, 'https://a', 'https://a2')); assert.strictEqual(f.pins[0].key, 'https://a2');

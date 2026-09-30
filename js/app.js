@@ -451,7 +451,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=18").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=21").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -600,14 +600,18 @@ function whatsNewFeed(per = WN_PER) {
   const list = front.length ? front : out.slice(0, per * NEWS_TABS.length);
   // An item carries the hero card the editor chose for it, if any.
   list.forEach((e) => {
-    if (!e.it.card) e.hero = heroOf(itemKey(e.it));
+    if (!e.it.card) {
+      const h = heroOf(itemKey(e.it));
+      e.hero = h.hero || "";
+      e.dark = !!h.dark;
+    }
   });
   // The Share card closes the rotation where the hero cards show (Kate,
   // Sep 24: "Share only", wide screens only); phones have the Share button.
   if (matchMedia(WIDE).matches) list.push(SHARE_CARD);
   return list;
 }
-const heroOf = (key) => ((state.featured.heroes || []).find((h) => h.key === key) || {}).hero || "";
+const heroOf = (key) => (state.featured.heroes || []).find((h) => h.key === key) || {};
 // Wide screens show the hero cards (styles.css .hc) and the Share card.
 const WIDE = "(min-width: 1201px)";
 const SHARE_CARD = {
@@ -808,7 +812,9 @@ function heroCardHTML(entry) {
   // else the words take the card.
   const researchV = (url, dark, slot) => `
     <div class="hc__v hc-edit${dark ? " hc-edit--dark" : ""}${url || slot ? "" : " hc-edit--wide"}${slot ? " hc__v--slot" : ""}"><div class="hc__col">${head}
-      ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}</div>${url || slot ? pic(url, "hc__img--pt", "Portrait 4:5") : ""}</div>`;
+      ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}${
+        blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : "" // (Kate, Sep 30: "the summary isn't even on the card")
+      }</div>${url || slot ? pic(url, "hc__img--pt", "Portrait 4:5") : ""}</div>`;
   const editV = (url) => researchV(url, false, !url);
   const editWideV = () => researchV("", false, false);
   const posterV = (url) => researchV(url, true, false);
@@ -837,23 +843,21 @@ function heroCardHTML(entry) {
           : img ? "photo" : "type";
   const draw = { erc: ercV, date: dateV, type: typeV, band: bandV, bandtop: bandTopV, beside: besideV, photo: photoV, edit: editV, poster: posterV, plainr: plainRV };
   const want = draw[entry.hero] || entry.hero === "words" || entry.hero === "wordsdark" ? entry.hero : auto;
+  // The dark look (Kate, Sep 30: "a light and dark mode for each"): a switch
+  // on the item, or the two older dark research keys.
+  const dark = !!entry.dark || want === "poster" || want === "wordsdark";
   let main;
   let slot = "";
   if (want === "words" || want === "wordsdark") {
     // The category's card with no picture at all, whatever is on the item.
     main =
-      kind === "research" ? researchV("", want === "wordsdark", false)
+      kind === "research" ? researchV("", dark, false)
       : kind === "event" && date ? dateV("", false)
       : typeV();
-  } else if (want === "edit") {
+  } else if (want === "edit" || want === "poster" || want === "plainr") {
     // Without a portrait the words fill the card; an editor sees the slot.
-    main = img ? editV(img) : editWideV();
-    if (!img) slot = editV("");
-  } else if (want === "poster") {
-    main = researchV(img, true, false);
-    if (!img) slot = researchV("", true, true);
-  } else if (want === "plainr") {
-    main = img ? editV(img) : editWideV();
+    main = researchV(img, dark, false);
+    if (!img) slot = researchV("", dark, true);
   } else if (want === "date") {
     main = date ? dateV(img, false) : typeV();
     if (date && !img) slot = dateV("", true);
@@ -870,7 +874,7 @@ function heroCardHTML(entry) {
     const room = kind === "event" ? "erc" : kind === "headline" || !kind ? "photo" : "";
     if (room) slot = draw[room]("");
   }
-  return `<div class="hc" data-len="${wnLen(it)}"><div class="hc__in"><p class="hc__band">${sup}</p>${main}${slot}</div></div>`;
+  return `<div class="hc${dark ? " hc--dark" : ""}" data-len="${wnLen(it)}"><div class="hc__in"><p class="hc__band">${sup}</p>${main}${slot}</div></div>`;
 }
 
 // Her Share card (6b): the invitation, with the button drawn in; the whole

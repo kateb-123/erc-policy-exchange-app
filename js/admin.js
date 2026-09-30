@@ -174,15 +174,18 @@ const FIELDS = [
   ['subtype', 'Category', 'text', 'The tag on the item, for example Working Paper or Texas.'],
   ['source', 'Source', 'text'],
   ['date', 'Date', 'text', 'Written 2026-10-01. For an event, the day it happens.'],
-  ['deadline', 'Deadline', 'text', 'Opportunities: 2026-10-01, or "rolling".'],
-  ['time', 'Time', 'text', 'Events only.'],
-  ['location', 'Location', 'text', 'Events only. The room, or Online; a room plus "and online" shows as both.'],
-  ['authors', 'Authors', 'text', 'Research only.'],
-  ['medium', 'Medium', 'text', 'Headlines only: radio, TV, newspaper, magazine.'],
+  ['deadline', 'Deadline', 'text', '2026-10-01, or "rolling".'],
+  ['time', 'Time', 'text'],
+  ['location', 'Location', 'text', 'The room, or Online; a room plus "and online" shows as both.'],
+  ['authors', 'Authors', 'text'],
+  ['medium', 'Medium', 'text', 'Radio, TV, newspaper, magazine.'],
   ['topic', 'Topic', 'text'],
   ['blurb', 'Summary', 'area'],
   ['infographic', 'Picture or infographic link', 'url', 'A direct link to a picture (ending .jpg or .png), or a Google Drive file. Headlines need one. Sizes: a headshot 400 x 500, a wide strip 1200 x 240, a 16:9 picture 960 x 540, the whole card 1200 x 500.'],
 ];
+// Which fields belong to which section; the rest stay out of the way
+// (Kate, Sep 30: "why do we have authors for things that don't have authors?").
+const ONLY_FOR = { deadline: ['opportunity'], time: ['event'], location: ['event'], authors: ['research'], medium: ['headline'] };
 const SECTIONS = [
   ['research', 'Research'],
   ['event', 'Events'],
@@ -233,6 +236,24 @@ function fieldRow(id, label, control, hint) {
 
 // A picture from her computer (Kate, Sep 30): read it, send it, and put the
 // path it was saved under into the picture link box beside it.
+// One formatting button on the summary: Italic wraps the selection in
+// stars (a book or journal name), the only mark the site draws.
+function italicButton(area) {
+  const bar = el('div', { class: 'admin-fmt' });
+  const b = el('button', { type: 'button', class: 'btn-text admin-fmt__btn', title: 'Italic: a book or journal name' }, 'Italic');
+  b.addEventListener('click', () => {
+    const a = area.selectionStart;
+    const z = area.selectionEnd;
+    const picked = area.value.slice(a, z);
+    const wrapped = /^\*.*\*$/.test(picked) ? picked.slice(1, -1) : `*${picked || 'name'}*`;
+    area.setRangeText(wrapped, a, z, 'select');
+    area.focus();
+    area.dispatchEvent(new Event('input'));
+  });
+  bar.append(b, el('span', { class: 'admin-hint' }, 'Select a book or journal name, then Italic.'));
+  return bar;
+}
+
 function pictureUpload(linkInput) {
   const wrap = el('div', { class: 'admin-upload' });
   const input = el('input', { type: 'file', id: `${linkInput.id}-file`, accept: 'image/jpeg,image/png,image/webp' });
@@ -286,11 +307,20 @@ function openItem(key) {
     const row = fieldRow(id, label, control, hint);
     if (name === 'blurb' || name === 'headline' || name === 'infographic') row.classList.add('admin-field--wide');
     if (name === 'headline') row.append(titleCount(control));
-    if (name === 'headline' || name === 'blurb') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics.'));
+    if (name === 'headline') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics.'));
+    if (name === 'blurb') row.prepend(italicButton(control));
     if (name === 'infographic') row.append(pictureUpload(control));
+    if (ONLY_FOR[name]) row.dataset.onlyFor = ONLY_FOR[name].join(' ');
     grid.append(row);
   }
   form.append(grid);
+  // The fields for this section only.
+  const showFields = () => {
+    const t = form.elements.type.value;
+    grid.querySelectorAll('[data-only-for]').forEach((row) => (row.hidden = !row.dataset.onlyFor.split(' ').includes(t)));
+  };
+  form.elements.type.addEventListener('change', showFields);
+  showFields();
 
   const pin = pinOf(key);
   const pinBox = el('fieldset', { class: 'admin-pin' });
@@ -304,9 +334,30 @@ function openItem(key) {
   pinBox.append(onLabel, fieldRow('a-until', 'until', pinUntil));
   // The card it is drawn as there: Suggested (what fits what it has) first,
   // then the rest (Kate, Sep 24).
-  const heroWas = (X.state.featured.heroes || []).find((h) => h.key === key)?.hero || '';
-  const tiles = heroPicker((item.type || '').toLowerCase(), heroWas);
-  pinBox.append(tiles);
+  // The card: two switches (Kate, Sep 30: "a checkbox for photo, a checkbox
+  // for light/dark"). The picture's place is the section's own.
+  const heroRow = (X.state.featured.heroes || []).find((h) => h.key === key) || {};
+  const heroWas = heroRow.hero || '';
+  const darkWas = !!heroRow.dark || heroWas === 'poster' || heroWas === 'wordsdark';
+  const picWas = !(heroWas === 'words' || heroWas === 'wordsdark');
+  const picOn = el('input', { type: 'checkbox', id: 'a-pic' });
+  picOn.checked = picWas;
+  const darkOn = el('input', { type: 'checkbox', id: 'a-dark' });
+  darkOn.checked = darkWas;
+  const picLabel = el('label', { class: 'admin-check', for: 'a-pic' });
+  picLabel.append(picOn, document.createTextNode(' Show the picture on the card'));
+  const darkLabel = el('label', { class: 'admin-check', for: 'a-dark' });
+  darkLabel.append(darkOn, document.createTextNode(' Dark card'));
+  pinBox.append(picLabel, darkLabel);
+  const tiles = {
+    get value() {
+      if (!picOn.checked) return 'words';
+      return heroWas === 'words' || heroWas === 'wordsdark' || heroWas === 'poster' ? '' : heroWas;
+    },
+    get dark() {
+      return darkOn.checked;
+    },
+  };
   form.append(pinBox);
 
   form.append(el('p', { class: 'admin-note', role: 'status' }));
@@ -404,8 +455,8 @@ function openItem(key) {
       X.state.featured = r.featured;
     }
     // The hero card, if she changed it.
-    if (tiles.value !== heroWas) {
-      const r = await api('save', { op: 'hero', key: newKey, hero: tiles.value });
+    if (tiles.value !== heroWas || tiles.dark !== darkWas) {
+      const r = await api('save', { op: 'hero', key: newKey, hero: tiles.value, dark: tiles.dark });
       if (!r.ok) {
         busy(false);
         X.refresh();
@@ -473,41 +524,41 @@ function itemAuto(item) {
 
 // The card chooser, one card per category with its options (Kate, Sep 30:
 // "group these, with options to add things"). Reads and sets like a select.
+const LOOK = ['Look', [['light', 'Light', 'grey', 'edit'], ['dark', 'Dark', 'maroon', 'poster']]];
 const PICKERS = {
   research: {
     name: 'Research card',
-    groups: [
-      ['Look', [['light', 'Light', 'grey', 'edit'], ['dark', 'Dark', 'maroon', 'poster']]],
-      ['Picture', [['portrait', 'Beside, as a portrait', '', 'edit'], ['under', 'A wide strip under the words', 'light only', 'band'], ['above', 'A wide strip above the words', 'light only', 'bandtop'], ['none', 'None', 'the words alone', 'edit']]],
-    ],
-    key: (o) => (o.picture === 'none' ? (o.look === 'dark' ? 'wordsdark' : 'words') : o.picture === 'under' ? 'band' : o.picture === 'above' ? 'bandtop' : o.look === 'dark' ? 'poster' : 'edit'),
-    read: (k) => ({ look: k === 'poster' || k === 'wordsdark' ? 'dark' : 'light', picture: k === 'band' ? 'under' : k === 'bandtop' ? 'above' : k === 'words' || k === 'wordsdark' ? 'none' : 'portrait' }),
+    groups: [LOOK, ['Picture', [['portrait', 'Beside, as a portrait', '', 'edit'], ['under', 'A wide strip under the words', '', 'band'], ['above', 'A wide strip above the words', '', 'bandtop'], ['none', 'None', 'the words alone', 'edit']]]],
+    key: (o) => (o.picture === 'none' ? 'words' : o.picture === 'under' ? 'band' : o.picture === 'above' ? 'bandtop' : 'edit'),
+    read: (k) => ({ picture: k === 'band' ? 'under' : k === 'bandtop' ? 'above' : k === 'words' || k === 'wordsdark' ? 'none' : 'portrait' }),
   },
   event: {
     name: 'Event card',
-    groups: [['Picture', [['headshot', 'A headshot at the right', '4 wide by 5 tall', 'erc'], ['logo', 'A logo in a box', 'shown whole', 'date'], ['none', 'None', 'the words alone', 'date']]]],
+    groups: [LOOK, ['Picture', [['headshot', 'A headshot at the right', '4 wide by 5 tall', 'erc'], ['logo', 'A logo in a box', 'shown whole', 'date'], ['none', 'None', 'the words alone', 'date']]]],
     key: (o) => (o.picture === 'logo' ? 'date' : o.picture === 'none' ? 'words' : 'erc'),
     read: (k) => ({ picture: k === 'date' ? 'logo' : k === 'words' ? 'none' : 'headshot' }),
   },
   opportunity: {
     name: 'Opportunity card',
-    groups: [['Picture', [['beside', 'Beside the words, 16:9', 'the title on top', 'beside'], ['under', 'A wide strip under the words', '', 'band'], ['above', 'A wide strip above the words', '', 'bandtop'], ['none', 'None', 'the words alone', 'type']]]],
+    groups: [LOOK, ['Picture', [['beside', 'Beside the words, 16:9', 'the title on top', 'beside'], ['under', 'A wide strip under the words', '', 'band'], ['above', 'A wide strip above the words', '', 'bandtop'], ['none', 'None', 'the words alone', 'type']]]],
     key: (o) => (o.picture === 'under' ? 'band' : o.picture === 'above' ? 'bandtop' : o.picture === 'none' ? 'words' : 'beside'),
     read: (k) => ({ picture: k === 'band' ? 'under' : k === 'bandtop' ? 'above' : k === 'words' ? 'none' : 'beside' }),
   },
   headline: {
     name: 'Headline card',
-    groups: [['Picture', [['behind', 'Behind the words', 'the words in a maroon block', 'photo'], ['none', 'None', 'the words alone', 'type']]]],
+    groups: [LOOK, ['Picture', [['behind', 'Behind the words', 'the words in a maroon block', 'photo'], ['none', 'None', 'the words alone', 'type']]]],
     key: (o) => (o.picture === 'none' ? 'words' : 'photo'),
     read: (k) => ({ picture: k === 'words' ? 'none' : 'behind' }),
   },
 };
-function heroPicker(kind, current) {
+// The chooser: the category's card, its Look (light or dark) and its
+// Picture. Reads like a select: .value is the card key, .dark the look.
+function heroPicker(kind, current, dark) {
   const P = PICKERS[kind] || PICKERS.headline;
   const box = el('fieldset', { class: 'admin-tiles admin-tiles--item', id: 'c-hero' });
   box.append(el('legend', {}, P.name));
-  const state = current ? P.read(current) : Object.fromEntries(P.groups.map(([g, opts]) => [g.toLowerCase(), opts[0][0]]));
-  const auto = Object.fromEntries(P.groups.map(([g, opts]) => [g.toLowerCase(), opts[0][0]]));
+  const first = P.groups[1][1][0][0];
+  const state = { look: dark || current === 'poster' || current === 'wordsdark' ? 'dark' : 'light', ...(current ? P.read(current) : { picture: first }) };
   P.groups.forEach(([title, opts]) => {
     const g = el('div', { class: 'admin-tiles__group' });
     g.append(el('span', { class: 'admin-tiles__h' }, title));
@@ -524,14 +575,12 @@ function heroPicker(kind, current) {
     g.append(grid);
     box.append(g);
   });
-  const chosen = () => Object.fromEntries(P.groups.map(([g]) => [g.toLowerCase(), ($(`input[name="c-${g.toLowerCase()}"]:checked`, box) || {}).value]));
+  const pick = (g) => ($(`input[name="c-${g}"]:checked`, box) || {}).value;
   Object.defineProperty(box, 'value', {
-    // Auto (nothing saved) when every option is the first one.
-    get: () => {
-      const o = chosen();
-      return Object.keys(auto).every((k) => o[k] === auto[k]) ? '' : P.key(o);
-    },
+    // Auto (nothing saved) when the picture option is the first one.
+    get: () => (pick('picture') === first ? '' : P.key({ picture: pick('picture') })),
   });
+  Object.defineProperty(box, 'dark', { get: () => pick('look') === 'dark' });
   return box;
 }
 function heroTiles(current, groups) {
