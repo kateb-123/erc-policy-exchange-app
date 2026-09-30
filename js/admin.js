@@ -22,7 +22,8 @@ async function api(path, body) {
       cache: 'no-store',
     });
     const data = await res.json().catch(() => null);
-    return data || { ok: false, error: 'Something went wrong on our side. Try again in a minute.' };
+    // The status rides along, so a form can tell a lapsed sign-in (401) apart.
+    return data ? { status: res.status, ...data } : { ok: false, status: res.status, error: 'Something went wrong on our side. Try again in a minute.' };
   } catch {
     return { ok: false, error: "Couldn't reach the server. Check your connection and try again." };
   }
@@ -56,25 +57,48 @@ async function start() {
   stayAwake();
 }
 
+// The door: the page with the password box. Only an editor's own screens
+// link to it (the strip's warning, the sign-out toast, a form whose sign-in
+// ran out), never the public pages.
+const DOOR = '/2ujhtc8daz/';
+let warnTimer = 0;
 function stayAwake() {
   clearTimeout(idleTimer);
+  clearTimeout(warnTimer);
   idleTimer = setTimeout(goQuiet, IDLE_MS);
+  warnTimer = setTimeout(warnQuiet, IDLE_MS - 60 * 1000);
+  const w = $('.admin-bar__warn');
+  if (w) w.hidden = true;
   if (Date.now() - lastRenew > 60 * 1000) {
     api('session').then((s) => {
       if (!s.ok) goQuiet();
     });
   }
 }
+// A minute before the editor turns off, the strip says so (audit F35); any
+// click or key keeps it on.
+function warnQuiet() {
+  const w = $('.admin-bar__warn');
+  if (w) w.hidden = false;
+}
 
 function goQuiet() {
   clearTimeout(idleTimer);
+  clearTimeout(warnTimer);
   ['pointerdown', 'keydown'].forEach((ev) => document.removeEventListener(ev, stayAwake, true));
   if (observer) observer.disconnect();
-  if (dialog && dialog.open) dialog.close();
+  // A form with changes in it stays open, with a way to sign in beside it
+  // (audit F35); an untouched one closes.
+  const keep = dialog && dialog.open && $('.admin-confirm[data-guard]', dialog)?.dirty;
+  if (dialog && dialog.open && !keep) dialog.close();
   document.querySelectorAll('.admin-bar, .admin-edit').forEach((n) => n.remove());
   document.documentElement.classList.remove('admin-on');
   api('logout', {});
-  toast('Editing turned off after 10 minutes without use. Sign in again to edit.');
+  if (keep) {
+    const form = $('form', dialog);
+    if (form) noteSignIn(form);
+  }
+  toast('Editing turned off after 10 minutes without use.', { link: DOOR, linkText: 'Sign in again' });
 }
 
 /* ---------- Small helpers ---------- */
@@ -99,11 +123,19 @@ const findItem = (key) => X.state.allItems.find((it) => X.itemKey(it) === key);
 const pinOf = (key) => X.state.featured.pins.find((p) => p.key === key);
 
 let toastTimer = 0;
-function toast(msg) {
+// A toast goes after 6 seconds; one with a link stays until it is dismissed.
+function toast(msg, { link, linkText } = {}) {
   const t = $('.admin-toast');
   t.textContent = msg;
   t.hidden = false;
   clearTimeout(toastTimer);
+  if (link) {
+    t.append(' ', el('a', { href: link, target: '_blank', rel: 'noopener' }, linkText));
+    const x = el('button', { type: 'button', class: 'admin-toast__x', 'aria-label': 'Dismiss' }, '×');
+    x.addEventListener('click', () => (t.hidden = true));
+    t.append(' ', x);
+    return;
+  }
   toastTimer = setTimeout(() => {
     t.hidden = true;
   }, 6000);
@@ -117,7 +149,8 @@ function buildBar() {
     el('span', { class: 'admin-bar__on' }, 'Editing is on'),
     el('button', { type: 'button', 'data-admin': 'card' }, 'Add to New & Upcoming'),
     el('button', { type: 'button', 'data-admin': 'hidden' }, 'Hidden items'),
-    el('button', { type: 'button', 'data-admin': 'out' }, 'Sign out')
+    el('button', { type: 'button', 'data-admin': 'out' }, 'Sign out'),
+    el('span', { class: 'admin-bar__warn', role: 'status', hidden: true }, 'Editing turns off in 1 minute. Click anywhere to stay.')
   );
   bar.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-admin]');
@@ -233,7 +266,7 @@ function closeGuard(d, form, extraButtons = []) {
   const mark = () => (dirty = true);
   form.addEventListener('input', mark);
   form.addEventListener('change', mark);
-  const box = el('div', { class: 'admin-confirm', hidden: true });
+  const box = el('div', { class: 'admin-confirm', 'data-guard': true, hidden: true });
   const go = el('button', { type: 'button', class: 'btn admin-danger-btn' }, 'Close without saving');
   const stay = el('button', { type: 'button', class: 'btn-text' }, 'Keep editing');
   box.append(el('p', {}, 'Close without saving? What you changed here will be lost.'), go, stay);
@@ -250,10 +283,24 @@ function closeGuard(d, form, extraButtons = []) {
   Object.defineProperty(box, 'dirty', { get: () => dirty });
   return box;
 }
-function note(form, msg, kind) {
+function note(form, msg, kind, link) {
   const p = $('.admin-note', form);
   p.textContent = msg || '';
+  if (link) p.append(' ', el('a', { href: link.href, target: '_blank', rel: 'noopener' }, link.text));
   p.className = `admin-note${kind ? ` admin-note--${kind}` : ''}`;
+  // An error is announced at once; a status line waits its turn.
+  p.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+}
+// A sign-in that ran out mid-edit: the form keeps everything typed and
+// offers the door in a new tab; once signed in there, Save works here again
+// (audit F35).
+function noteSignIn(form) {
+  note(form, 'Your sign-in ran out. Nothing here is lost:', 'error', { href: DOOR, text: 'sign in again in a new tab, then Save.' });
+}
+// A failed call: the sign-in case gets its link, the rest their message.
+function fail(form, r) {
+  if (r.status === 401) return noteSignIn(form);
+  return fail(form, r);
 }
 // A running count under a title: past 100 characters the New & Upcoming card
 // sets the title smaller and leaves out the summary (Kate, Sep 24).
@@ -448,7 +495,7 @@ function openItem(key) {
     note(form, 'Deleting…', 'busy');
     const r = await api('save', { op: 'delete', original: { ...item } });
     busy(false);
-    if (!r.ok) return note(form, r.error, 'error');
+    if (!r.ok) return fail(form, r);
     X.state.allItems.splice(X.state.allItems.indexOf(item), 1);
     X.refresh();
     d.close();
@@ -460,7 +507,7 @@ function openItem(key) {
     note(form, 'Hiding…', 'busy');
     const r = await api('save', { op: 'hide', key });
     busy(false);
-    if (!r.ok) return note(form, r.error, 'error');
+    if (!r.ok) return fail(form, r);
     X.state.featured = r.featured;
     X.refresh();
     d.close();
@@ -482,7 +529,7 @@ function openItem(key) {
       const r = await api('save', { op: 'edit', original: { ...item }, fields });
       if (!r.ok) {
         busy(false);
-        return note(form, r.error, 'error');
+        return fail(form, r);
       }
       Object.assign(item, r.row);
       if (r.featured) X.state.featured = r.featured;
@@ -801,7 +848,7 @@ function openCard(id) {
         const r = await api('save', { op: 'uncard', id: c.id });
         if (!r.ok) {
           rm.disabled = false;
-          return note(form, r.error, 'error');
+          return fail(form, r);
         }
         X.state.featured = r.featured;
         X.refresh();
@@ -823,7 +870,7 @@ function openCard(id) {
       note(form, 'Removing…', 'busy');
       const r = await api('save', { op: 'uncard', id: existing.id });
       remove.disabled = false;
-      if (!r.ok) return note(form, r.error, 'error');
+      if (!r.ok) return fail(form, r);
       X.state.featured = r.featured;
       X.refresh();
       d.close();
@@ -843,7 +890,7 @@ function openCard(id) {
     // A changed card replaces the old one in one checked save.
     const r = await api('save', { op: 'card', card, replace: existing ? existing.id : '' });
     save.disabled = false;
-    if (!r.ok) return note(form, r.error, 'error');
+    if (!r.ok) return fail(form, r);
     X.state.featured = r.featured;
     X.refresh();
     d.close();

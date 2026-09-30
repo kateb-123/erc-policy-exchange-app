@@ -3511,6 +3511,29 @@ ul.admin-list {
   color: #fff;
   font-size: 15px;
 }
+/* A toast with a link stays until dismissed (audit F35). */
+.admin-toast a {
+  color: #fff;
+  font-weight: 700;
+}
+.admin-toast__x {
+  margin-left: 8px;
+  border: 0;
+  background: none;
+  color: #fff;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+/* The strip's one-minute warning before editing turns off. */
+.admin-bar__warn {
+  margin-left: auto;
+  font-weight: 700;
+}
+.admin-note a {
+  color: inherit;
+  font-weight: 700;
+}
 .admin-signin {
   max-width: 480px;
   margin: 0 auto;
