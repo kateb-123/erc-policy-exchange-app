@@ -613,16 +613,25 @@ function whatsNewFeed(per = WN_PER) {
   });
   // The Share card closes the rotation where the hero cards show (Kate,
   // Sep 24: "Share only", wide screens only); phones have the Share button.
-  if (matchMedia(WIDE).matches) list.push(SHARE_CARD);
+  // With nothing to show there is nothing to close (audit F60).
+  if (matchMedia(WIDE).matches && list.length) list.push(SHARE_CARD);
   return list;
 }
-const heroOf = (key) => (state.featured.heroes || []).find((h) => h.key === key) || {};
+// The older "plainr" choice draws as the editorial card, so it reads as one
+// (audit F61); two live pins still carry it.
+const heroOf = (key) => {
+  const h = (state.featured.heroes || []).find((h) => h.key === key) || {};
+  return h.hero === "plainr" ? { ...h, hero: "edit" } : h;
+};
 // Wide screens show the hero cards (styles.css .hc) and the Share card.
 const WIDE = "(min-width: 1201px)";
 const SHARE_CARD = {
   it: { headline: "Know of a study, event or opportunity we missed?", blurb: "", fixed: "share" },
   tab: { value: "", nav: "Contribute" },
 };
+// What a rebuild across the 1200px line keeps: whether the reader had
+// paused, and which card was up (audit F59).
+let wnKeep = null;
 // A New & upcoming entry's key: a fixed card's name, a one-off card's own
 // id, else the item's.
 const wnKey = ({ it }) => (it.fixed ? `fixed:${it.fixed}` : it.card ? `card:${it.card}` : itemKey(it));
@@ -784,6 +793,7 @@ function heroCardHTML(entry, loaded) {
       <p class="hc__meta">${hcLine([src === "ERC" ? "Education Research Center" : src, (it.location || "").trim()])}<span class="sr-only">. ${hcLine([
         date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
         (it.time || "").trim(),
+        hcMode(it.location), // spoken too (audit F64)
       ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
   // With a picture the panel splits: the date on top, the headshot under
   // it, and the event's own words under the date line (Kate, Sep 24).
@@ -795,6 +805,7 @@ function heroCardHTML(entry, loaded) {
       <p class="hc__meta">${hcLine([src, (it.location || "").trim()])}<span class="sr-only">. ${hcLine([
         date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
         (it.time || "").trim(),
+        hcMode(it.location),
       ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${
         url || slot ? `<div class="hc__side">${pic(url, "hc__img--logo", "Logo 2:1")}</div>` : ""
       }</div>`;
@@ -943,7 +954,7 @@ function buildWhatsNew() {
   band.hidden = false;
   $("#wn-split").innerHTML = `
     <article class="feat no-art" id="wn-feat" data-len="${wnLen(list[0].it)}" aria-live="off">${wnFeatHTML(list[0], "")}${heroCardHTML(list[0])}</article>
-    <div class="caro" role="group" aria-label="Browse new and upcoming items">
+    <div class="caro" role="group" aria-label="Browse new and upcoming items"${list.length > 1 ? "" : " hidden"}>
       <button type="button" class="caro__btn" data-step="-1" aria-label="Previous item">${faIcon("chevron-left")}</button>
       <button type="button" class="rail__pause"></button>
       <button type="button" class="caro__btn" data-step="1" aria-label="Next item">${faIcon("chevron-right")}</button>
@@ -1057,7 +1068,8 @@ function initWhatsNew(list) {
     if (!off) timer = setTimeout(tick, WN_TURN_MS);
   }
   function tick() {
-    if (!held && !phone.matches && !$("#landing").hidden && !document.hidden) show(at + 1);
+    // One card has nowhere to turn to (audit F60).
+    if (list.length > 1 && !held && !phone.matches && !$("#landing").hidden && !document.hidden) show(at + 1);
     schedule();
   }
 
@@ -1074,8 +1086,11 @@ function initWhatsNew(list) {
   // and a card that turns over by itself is not read aloud.
   function sync() {
     btn.innerHTML = faIcon(off ? "play" : "pause");
-    btn.title = off ? "Resume auto-scrolling" : "Pause auto-scrolling";
-    btn.setAttribute("aria-label", `${btn.title} the list`);
+    // Laptops see the cards turn; narrower screens see the list walk
+    // (audit F57: the label named a list nobody at laptop width sees).
+    const what = matchMedia(WIDE).matches ? "the cards" : "the list";
+    btn.title = off ? `Resume ${what}` : `Pause ${what}`;
+    btn.setAttribute("aria-label", btn.title);
     announce();
     schedule();
   }
@@ -1134,11 +1149,24 @@ function initWhatsNew(list) {
     if (!phone.matches) glideTo(rows[at], true);
   }, until);
   // Crossing into or out of the wide layout adds or drops the Share card,
-  // so the rotation is built again.
-  matchMedia(WIDE).addEventListener("change", buildWhatsNew, until);
+  // so the rotation is built again; the pause and the place survive it.
+  matchMedia(WIDE).addEventListener(
+    "change",
+    () => {
+      wnKeep = { off, key: wnKey(list[at]) };
+      buildWhatsNew();
+    },
+    until
+  );
 
+  if (wnKeep) {
+    off = wnKeep.off || calm;
+    const i = list.findIndex((e) => wnKey(e) === wnKeep.key);
+    if (i >= 0) at = i;
+    wnKeep = null;
+  }
   sync();
-  show(0, { fade: false });
+  show(at, { fade: false });
   return () => {
     lasting.abort();
     clearTimeout(timer);
