@@ -735,8 +735,8 @@ function heroCardHTML(entry) {
       : `<div class="hc__img ${cls} hc__slot"><span>${label}</span></div>`;
   const deadline = parseDeadline(it.deadline).label.replace(/^Due /, "");
   const meta =
-    kind === "research" // the authors on their own line, then the source and month (Kate, Sep 24)
-      ? [(it.authors || "").trim() && esc(it.authors.trim()), hcLine([src, date && hcFmt(date, { month: "long", year: "numeric" })])]
+    kind === "research" // the authors, the journal in italics, the month: a line each (Kate, Sep 30)
+      ? [(it.authors || "").trim() && esc(it.authors.trim()), src && `<em>${esc(src)}</em>`, date && esc(hcFmt(date, { month: "long", year: "numeric" }))]
           .filter(Boolean)
           .join("<br>")
       : kind === "opportunity" // the deadline on its own line (Kate, Sep 24)
@@ -779,7 +779,7 @@ function heroCardHTML(entry) {
   // card gets the strip first, under the band (Kate, Sep 24, for the AEFP
   // call: "above the title and text").
   const bandV = (url) =>
-    kind === "research"
+    kind === "research" || kind === "opportunity" // (Kate, Sep 30: the photo beneath the text on opportunities too)
       ? `<div class="hc__v hc-band${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p></div>${pic(url, "hc__img--band", "Landscape photo")}</div>`
       : `<div class="hc__v hc-band hc-band--top${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--band", "Landscape photo")}<div class="hc__col">${head}<p class="hc__meta">${meta}</p></div></div>`;
   // Kate's picks from the Sep 30 wildcards, for research: A "Editorial"
@@ -788,7 +788,7 @@ function heroCardHTML(entry) {
   // C "Plain research" (white, outlined, the source at the foot).
   const monthLine = date ? hcFmt(date, { month: "long", year: "numeric" }) : "";
   const byline = (it.authors || "").trim();
-  const srcLine = [src && `<em>${esc(src)}</em>`, monthLine && esc(monthLine)].filter(Boolean).join(", ");
+  const srcLine = [src && `<em>${esc(src)}</em>`, monthLine && esc(monthLine)].filter(Boolean).join("<br>");
   const editV = (url) => `
     <div class="hc__v hc-edit${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<span class="hc__rule" aria-hidden="true"></span>
       ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}</div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;

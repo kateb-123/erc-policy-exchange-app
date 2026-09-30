@@ -1334,7 +1334,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 #wn-feat .hc .hc-band .hc__meta {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   overflow: hidden;
 }
 #wn-feat .hc .hc-band .hc__meta {
