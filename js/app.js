@@ -1756,6 +1756,20 @@ function renderSearch() {
       ]
         .filter(Boolean)
         .join(SEP);
+      // When the words are not in the title, say where they were found, so
+      // the row does not look like a wrong answer (audit F51).
+      const hitIn = hasAll(it.headline, terms)
+        ? ""
+        : [
+            ["authors", it.authors],
+            ["summary", it.blurb],
+            ["topic", it.topic],
+            ["category", it.subtype],
+          ]
+            .filter(([, text]) => text && terms.some((t) => t.test(fold(text))))
+            .map(([name]) => name)
+            .join(", ");
+      const hit = hitIn ? `<div class="feed-item__hit">Matched in the ${esc(hitIn)}</div>` : "";
       // An ERC brief opens in the site's own viewer from anywhere on its row,
       // the way its title does, never in Drive.
       const bid = briefId(it);
@@ -1769,7 +1783,7 @@ function renderSearch() {
           <div class="feed-item__row">
             <div class="feed-item__body">
               <h3 class="feed-item__title">${titleHTML}</h3>
-              <div class="feed-item__meta">${meta}</div>
+              <div class="feed-item__meta">${meta}</div>${hit}
             </div>
             <div class="feed-item__side">
               ${link && !bid ? `${faIcon("arrow-up-right-from-square", "feed-goto")}` : ""}

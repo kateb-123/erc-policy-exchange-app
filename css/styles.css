@@ -2192,6 +2192,12 @@ main {
 /* Research: the authors. Events: time · location. Search: section · source · date.
    16px / 1.5 is the AUX Paragraph spec, and the 1.5 is a WCAG 2.1 AA line-height
    requirement in this system, not a preference. */
+/* Search: why a row matched when the words are not in its title (audit F51). */
+.feed-item__hit {
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--g600);
+}
 .feed-item__meta {
   font-size: 16px;
   line-height: 1.5;
