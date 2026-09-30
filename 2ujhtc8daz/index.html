@@ -25,7 +25,10 @@
     <form id="f" class="form form--narrow" novalidate>
       <div class="field field--full">
         <label for="p">Password</label>
-        <input id="p" type="password" autocomplete="current-password" required>
+        <!-- The cursor starts here, and Show lets a long password be read
+             back before Sign in (Sep 30 audit). -->
+        <input id="p" type="password" autocomplete="current-password" required autofocus>
+        <button type="button" class="btn-text btn-text--quiet" id="show" aria-pressed="false" aria-controls="p">Show the password</button>
       </div>
       <div class="btns field--full">
         <button type="submit" class="btn" id="go">Sign in</button>
@@ -33,6 +36,7 @@
       </div>
       <p class="status field--full" id="stat" role="status"></p>
     </form>
+    <p id="already" hidden>You are signed in. <a href="../">Go back to the Exchange</a> to edit.</p>
   </main>
 <script>
 (() => {
@@ -43,13 +47,25 @@
     stat.textContent = msg;
     stat.className = `status field--full${error ? ' status--error' : ''}`;
   };
-  // Already signed in: say so instead of asking again.
+  // Already signed in: say so instead of asking again, with the form away
+  // (Sep 30 audit: both showed at once).
   fetch('/api/admin/session', { cache: 'no-store' })
     .then((r) => r.json())
     .then((j) => {
-      if (j.ok) say('You are signed in. Go back to the Exchange to edit.');
+      if (!j.ok) return;
+      form.hidden = true;
+      document.getElementById('already').hidden = false;
     })
     .catch(() => {});
+  const show = document.getElementById('show');
+  const p = document.getElementById('p');
+  show.addEventListener('click', () => {
+    const on = p.type === 'password';
+    p.type = on ? 'text' : 'password';
+    show.setAttribute('aria-pressed', String(on));
+    show.textContent = on ? 'Hide the password' : 'Show the password';
+    p.focus();
+  });
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     const password = document.getElementById('p').value;
