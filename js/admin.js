@@ -371,7 +371,9 @@ function openItem(key) {
   // wireframe on the cards, it is interactive"). Its id lets the site's own
   // card styles draw it; the real card comes first in the page, so the
   // site's lookups still find the real one.
-  const preview = el('div', { class: 'admin-preview' });
+  // Inert: the card's title is a real link, and it must not take the Tab
+  // key or an Enter mid-edit (audit F37).
+  const preview = el('div', { class: 'admin-preview', inert: true });
   preview.append(el('p', { class: 'admin-tiles__h' }, 'The card, as it will draw'));
   const previewCard = el('div', { id: 'wn-feat', class: 'feat no-art admin-preview__card' });
   preview.append(previewCard);
