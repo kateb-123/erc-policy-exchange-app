@@ -317,6 +317,50 @@ function titleCount(input, text) {
   input.setAttribute('aria-describedby', `${input.getAttribute('aria-describedby') || ''} ${hint.id}`.trim());
   return hint;
 }
+// The checks a form can make before the save, the same rules the server
+// keeps (audit F38). A failing field wears the error colour and says why
+// under itself; Save waits until the marked fields are fixed.
+const RULES = {
+  link: (v) => (v && !/^https?:\/\/\S+$/i.test(v) ? 'The link needs to start with http:// or https://.' : ''),
+  picture: (v) =>
+    v && !(/^https?:\/\/\S+$/i.test(v) || /^assets\/pictures\/[a-z0-9-]+\.(jpe?g|png|webp)$/.test(v))
+      ? 'The picture link needs to start with http:// or https://, or be a picture saved from your computer.'
+      : '',
+  date: (v) => (v && !/^\d{4}(-\d{2}(-\d{2})?)?$/.test(v) ? 'Write the date as 2026-10-01.' : ''),
+};
+// pairs: [input, rule]. Returns a function that checks them all, focuses the
+// first one that fails, and says whether the form may be sent.
+function fieldChecks(pairs) {
+  const check = (input, rule) => {
+    const msg = rule(input.value.trim());
+    let p = input.parentElement.querySelector('.admin-field__error');
+    if (!p) {
+      p = el('p', { class: 'admin-field__error', id: `${input.id}-err`, hidden: true });
+      input.after(p);
+    }
+    p.textContent = msg;
+    p.hidden = !msg;
+    const desc = (input.getAttribute('aria-describedby') || '').split(/\s+/).filter((x) => x && x !== p.id);
+    if (msg) {
+      input.setAttribute('aria-invalid', 'true');
+      desc.unshift(p.id);
+    } else {
+      input.removeAttribute('aria-invalid');
+    }
+    input.setAttribute('aria-describedby', desc.join(' '));
+    return !msg;
+  };
+  pairs.forEach(([input, rule]) => {
+    input.addEventListener('blur', () => check(input, rule));
+    // Once marked, the mark goes as soon as the value is right.
+    input.addEventListener('input', () => input.getAttribute('aria-invalid') && check(input, rule));
+  });
+  return () => {
+    const bad = pairs.filter(([input, rule]) => !check(input, rule)).map(([input]) => input);
+    if (bad.length) bad[0].focus();
+    return !bad.length;
+  };
+}
 function fieldRow(id, label, control, hint) {
   const wrap = el('div', { class: 'admin-field' });
   wrap.append(el('label', { for: id }, label), control);
@@ -401,6 +445,11 @@ function openItem(key) {
     grid.append(row);
   }
   form.append(grid);
+  const checkAll = fieldChecks([
+    [form.elements.link, RULES.link],
+    [form.elements.infographic, RULES.picture],
+    [form.elements.date, RULES.date],
+  ]);
   // The fields for this section only.
   const showFields = () => {
     const t = form.elements.type.value;
@@ -523,7 +572,11 @@ function openItem(key) {
       const v = form.elements[name].value.trim();
       if (v !== (item[name] || '')) fields[name] = v;
     }
-    if ('headline' in fields && !fields.headline) return note(form, 'An item needs a title.', 'error');
+    if ('headline' in fields && !fields.headline) {
+      form.elements.headline.focus();
+      return note(form, 'An item needs a title.', 'error');
+    }
+    if (!checkAll()) return note(form, 'Fix the field marked in red first.', 'error');
     busy(true);
     note(form, 'Saving…', 'busy');
     let newKey = key;
@@ -809,6 +862,10 @@ function openCard(id) {
   rows[6].classList.add('admin-field--wide');
   rows[6].append(pictureUpload(inputs.image));
   grid.append(...rows);
+  const checkAll = fieldChecks([
+    [inputs.link, RULES.link],
+    [inputs.image, RULES.picture],
+  ]);
   // Each template shows only its own fields.
   const shape = () => {
     const q = isQuote();
@@ -886,7 +943,11 @@ function openCard(id) {
     if (!isQuote()) card.who = card.role = '';
     else card.label = card.blurb = '';
     if (!card.headline) return note(form, isQuote() ? 'A card needs the quote.' : 'A card needs a title.', 'error');
-    if (!card.until) return note(form, 'Pick the last day to show the card.', 'error');
+    if (!card.until) {
+      inputs.until.focus();
+      return note(form, 'Pick the last day to show the card.', 'error');
+    }
+    if (!checkAll()) return note(form, 'Fix the field marked in red first.', 'error');
     save.disabled = true;
     note(form, 'Saving…', 'busy');
     // A changed card replaces the old one in one checked save.

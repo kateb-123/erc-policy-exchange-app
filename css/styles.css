@@ -3263,6 +3263,17 @@ main {
 .admin-field textarea {
   resize: vertical;
 }
+/* A field that fails a check wears the error colour and says why under
+   itself (audit F38), the way the Share form does. */
+.admin-field :is(input, textarea)[aria-invalid="true"] {
+  box-shadow: inset 0 0 0 2px var(--error);
+}
+.admin-field__error {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--error);
+}
 .admin-hint {
   margin: 0;
   font-size: 13px;
