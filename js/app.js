@@ -451,7 +451,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=21").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=22").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -812,9 +812,9 @@ function heroCardHTML(entry) {
   // else the words take the card.
   const researchV = (url, dark, slot) => `
     <div class="hc__v hc-edit${dark ? " hc-edit--dark" : ""}${url || slot ? "" : " hc-edit--wide"}${slot ? " hc__v--slot" : ""}"><div class="hc__col">${head}
-      ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}${
-        blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : "" // (Kate, Sep 30: "the summary isn't even on the card")
-      }</div>${url || slot ? pic(url, "hc__img--pt", "Portrait 4:5") : ""}</div>`;
+      ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}</div>${
+        url || slot ? pic(url, "hc__img--pt", "Portrait 4:5") : "" // no summary on research (Kate, Sep 30)
+      }</div>`;
   const editV = (url) => researchV(url, false, !url);
   const editWideV = () => researchV("", false, false);
   const posterV = (url) => researchV(url, true, false);
@@ -936,9 +936,9 @@ function buildWhatsNew() {
     <article class="feat no-art" id="wn-feat" data-len="${wnLen(list[0].it)}" aria-live="off">${wnFeatHTML(list[0], "")}${heroCardHTML(list[0])}</article>
     <div class="caro" role="group" aria-label="Browse new and upcoming items">
       <button type="button" class="caro__btn" data-step="-1" aria-label="Previous item">${faIcon("chevron-left")}</button>
-      <span class="caro__count" aria-live="off" aria-atomic="true"><b>1</b> / ${list.length}</span>
       <button type="button" class="rail__pause"></button>
       <button type="button" class="caro__btn" data-step="1" aria-label="Next item">${faIcon("chevron-right")}</button>
+      <span class="caro__count" aria-live="off" aria-atomic="true"><b>1</b> / ${list.length}</span>
     </div>
     <div class="rail">
       <span id="wn-pick-hint" hidden>Shows this item in the featured card</span>

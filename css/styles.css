@@ -719,9 +719,15 @@ a:hover {
    since the list is hidden. */
 .caro {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: 4px;
+}
+/* The count sits under the arrows and the pause (Kate, Sep 30). */
+.caro__count {
+  flex: 0 0 100%;
+  margin-top: 2px;
 }
 .caro__btn {
   display: grid;
@@ -3283,15 +3289,6 @@ main {
 .admin-upload input:focus-visible + .admin-upload__btn {
   outline: 2px solid var(--g900);
   outline-offset: 2px;
-}
-/* The Italic button over the summary. */
-.admin-fmt {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.admin-fmt__btn {
-  font-style: italic;
 }
 /* The hero card choice: each template drawn small (Kate, Sep 24). */
 .admin-tiles {

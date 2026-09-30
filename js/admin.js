@@ -236,24 +236,6 @@ function fieldRow(id, label, control, hint) {
 
 // A picture from her computer (Kate, Sep 30): read it, send it, and put the
 // path it was saved under into the picture link box beside it.
-// One formatting button on the summary: Italic wraps the selection in
-// stars (a book or journal name), the only mark the site draws.
-function italicButton(area) {
-  const bar = el('div', { class: 'admin-fmt' });
-  const b = el('button', { type: 'button', class: 'btn-text admin-fmt__btn', title: 'Italic: a book or journal name' }, 'Italic');
-  b.addEventListener('click', () => {
-    const a = area.selectionStart;
-    const z = area.selectionEnd;
-    const picked = area.value.slice(a, z);
-    const wrapped = /^\*.*\*$/.test(picked) ? picked.slice(1, -1) : `*${picked || 'name'}*`;
-    area.setRangeText(wrapped, a, z, 'select');
-    area.focus();
-    area.dispatchEvent(new Event('input'));
-  });
-  bar.append(b, el('span', { class: 'admin-hint' }, 'Select a book or journal name, then Italic.'));
-  return bar;
-}
-
 function pictureUpload(linkInput) {
   const wrap = el('div', { class: 'admin-upload' });
   const input = el('input', { type: 'file', id: `${linkInput.id}-file`, accept: 'image/jpeg,image/png,image/webp' });
@@ -308,7 +290,7 @@ function openItem(key) {
     if (name === 'blurb' || name === 'headline' || name === 'infographic') row.classList.add('admin-field--wide');
     if (name === 'headline') row.append(titleCount(control));
     if (name === 'headline') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics.'));
-    if (name === 'blurb') row.prepend(italicButton(control));
+    if (name === 'blurb') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics.'));
     if (name === 'infographic') row.append(pictureUpload(control));
     if (ONLY_FOR[name]) row.dataset.onlyFor = ONLY_FOR[name].join(' ');
     grid.append(row);
@@ -348,11 +330,15 @@ function openItem(key) {
   picLabel.append(picOn, document.createTextNode(' Show the picture on the card'));
   const darkLabel = el('label', { class: 'admin-check', for: 'a-dark' });
   darkLabel.append(darkOn, document.createTextNode(' Dark card'));
-  pinBox.append(picLabel, darkLabel);
+  // With the picture on, where it goes and the size to make it (Kate, Sep 30).
+  const places = picturePlaces((item.type || '').toLowerCase(), heroWas);
+  places.hidden = !picOn.checked;
+  picOn.addEventListener('change', () => (places.hidden = !picOn.checked));
+  pinBox.append(picLabel, darkLabel, places);
   const tiles = {
     get value() {
       if (!picOn.checked) return 'words';
-      return heroWas === 'words' || heroWas === 'wordsdark' || heroWas === 'poster' ? '' : heroWas;
+      return places.value;
     },
     get dark() {
       return darkOn.checked;
@@ -551,6 +537,33 @@ const PICKERS = {
     read: (k) => ({ picture: k === 'words' ? 'none' : 'behind' }),
   },
 };
+// Where the picture goes on this section's card, drawn small with the size
+// to make it; the first is what the card does on its own.
+const PLACES = {
+  research: [['', 'Beside, as a portrait', '400 x 500', 'edit'], ['band', 'A wide strip under the words', '1200 x 240', 'band'], ['bandtop', 'A wide strip above the words', '1200 x 240', 'bandtop']],
+  event: [['', 'A headshot at the right', '400 x 500', 'erc'], ['date', 'A logo in a box', '400 x 200, shown whole', 'date']],
+  opportunity: [['', 'Beside the words, 16:9', '960 x 540', 'beside'], ['band', 'A wide strip under the words', '1200 x 240', 'band'], ['bandtop', 'A wide strip above the words', '1200 x 240', 'bandtop']],
+  headline: [['', 'Behind the words', '1200 x 500', 'photo']],
+};
+function picturePlaces(kind, current) {
+  const opts = PLACES[kind] || PLACES.headline;
+  const box = el('div', { class: 'admin-tiles admin-tiles--item' });
+  box.append(el('span', { class: 'admin-tiles__h' }, 'Where the picture goes, and the size to make it'));
+  const grid = el('div', { class: 'admin-tiles__grid' });
+  const known = opts.some(([v]) => v === current) ? current : '';
+  opts.forEach(([v, name, size, art]) => {
+    const tile = el('label', { class: 'admin-tile' });
+    const r = el('input', { type: 'radio', name: 'c-place', value: v });
+    r.checked = v === known;
+    const pic = el('span', { class: 'admin-tile__art' });
+    pic.innerHTML = ART[art] || ART.auto;
+    tile.append(r, pic, el('span', { class: 'admin-tile__name' }, name), el('small', {}, size));
+    grid.append(tile);
+  });
+  box.append(grid);
+  Object.defineProperty(box, 'value', { get: () => ($('input[name="c-place"]:checked', box) || {}).value || '' });
+  return box;
+}
 // The chooser: the category's card, its Look (light or dark) and its
 // Picture. Reads like a select: .value is the card key, .dark the look.
 function heroPicker(kind, current, dark) {
