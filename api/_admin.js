@@ -440,7 +440,9 @@ async function savePicture(gh, body) {
   if (!ext) throw new BadRequest('Pictures need to be .jpg, .png or .webp.');
   const data = String(body.data || '');
   if (!data) throw new BadRequest('No picture came through.');
-  if (data.length > 4_000_000) throw new BadRequest('That picture is over 3 MB. Make it smaller first.');
+  // 3 MB of file is 4,194,304 characters of base64, the same line the form
+  // draws (audit F39: the two limits used to differ).
+  if (data.length > 4_194_304) throw new BadRequest('That picture is over 3 MB. Make it smaller first.');
   if (!/^[A-Za-z0-9+/]+=*$/.test(data)) throw new BadRequest('That picture did not come through whole.');
   const base = String(body.name || 'picture').replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'picture';
   const hash = crypto.createHash('sha1').update(data).digest('hex').slice(0, 8);

@@ -199,7 +199,7 @@ function call(handler, { method = 'POST', headers = {}, body, deps }) {
     assert.strictEqual(gh.files[r.body.path], png); assert.strictEqual(gh.writes[0].message, 'Admin: add a picture');
     r = await call(A.handleSave, { headers: { cookie }, body: { op: 'picture', name: 'x.gif', type: 'image/gif', data: png }, deps: { env, gh } });
     assert.strictEqual(r.status, 400);
-    r = await call(A.handleSave, { headers: { cookie }, body: { op: 'picture', name: 'x.png', type: 'image/png', data: 'A'.repeat(4_100_000) }, deps: { env, gh } });
+    r = await call(A.handleSave, { headers: { cookie }, body: { op: 'picture', name: 'x.png', type: 'image/png', data: 'A'.repeat(4_200_000) }, deps: { env, gh } });
     assert.strictEqual(r.status, 400);
     r = await call(A.handleSave, { headers: { cookie }, body: { op: 'picture', name: 'x.png', type: 'image/png', data: '' }, deps: { env, gh } });
     assert.strictEqual(r.status, 400);

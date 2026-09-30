@@ -29,6 +29,29 @@ async function api(path, body) {
   }
 }
 
+// The picture upload goes the old way, so it can report how far along it
+// is; the answer looks like api()'s.
+function uploadPicture(body, onProgress) {
+  lastRenew = Date.now();
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', '/api/admin/save');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress(Math.min(99, Math.round((e.loaded / e.total) * 100)));
+    };
+    xhr.onload = () => {
+      let data = null;
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {}
+      resolve(data ? { status: xhr.status, ...data } : { ok: false, status: xhr.status, error: 'Something went wrong on our side. Try again in a minute.' });
+    };
+    xhr.onerror = () => resolve({ ok: false, status: 0, error: "Couldn't reach the server. Check your connection and try again." });
+    xhr.send(JSON.stringify(body));
+  });
+}
+
 // The editor is for a laptop or desktop (Kate, Sep 24: no editing on a
 // phone); at phone widths it doesn't load at all.
 const PHONE = '(max-width: 780px)';
@@ -379,27 +402,37 @@ function pictureUpload(linkInput) {
   const input = el('input', { type: 'file', id: `${linkInput.id}-file`, accept: 'image/jpeg,image/png,image/webp' });
   const label = el('label', { for: input.id, class: 'btn-text admin-upload__btn' }, 'Or choose a picture from your computer');
   const say = el('span', { class: 'admin-hint', role: 'status' });
+  // What the upload says: a percentage while it runs, red when it fails
+  // (audit F39). The form's Save waits until it is done.
+  const tell = (msg, bad) => {
+    say.textContent = msg;
+    say.classList.toggle('admin-note--error', !!bad);
+  };
+  const saveBtn = () => linkInput.form && linkInput.form.querySelector('button[type="submit"]');
   input.addEventListener('change', async () => {
     const f = input.files[0];
     if (!f) return;
     if (f.size > 3 * 1024 * 1024) {
-      say.textContent = 'That picture is over 3 MB. Make it smaller first.';
+      tell('That picture is over 3 MB. Make it smaller first.', true);
       input.value = '';
       return;
     }
-    say.textContent = 'Saving the picture…';
+    tell('Saving the picture… 0%');
+    const btn = saveBtn();
+    if (btn) btn.disabled = true;
     const data = await new Promise((res, rej) => {
       const r = new FileReader();
       r.onload = () => res(String(r.result).split(',')[1] || '');
       r.onerror = rej;
       r.readAsDataURL(f);
     });
-    const r = await api('save', { op: 'picture', name: f.name, type: f.type, data });
+    const r = await uploadPicture({ op: 'picture', name: f.name, type: f.type, data }, (pct) => tell(`Saving the picture… ${pct}%`));
     input.value = '';
-    if (!r.ok) return (say.textContent = r.error);
+    if (btn) btn.disabled = false;
+    if (!r.ok) return tell(r.status === 401 ? 'Your sign-in ran out. Sign in again in a new tab, then pick the picture again.' : r.error, true);
     linkInput.value = r.path;
-    linkInput.dispatchEvent(new Event('input'));
-    say.textContent = 'Picture saved. Now save this form to use it; the live site shows it after the next publish.';
+    linkInput.dispatchEvent(new Event('input', { bubbles: true }));
+    tell('Picture saved. Now save this form to use it; the live site shows it after the next publish.');
   });
   wrap.append(input, label, say);
   return wrap;
