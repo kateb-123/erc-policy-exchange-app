@@ -202,7 +202,7 @@ function findRow(text, original) {
     const row = rowOf(header, rec.cells);
     if (header.every((h) => row[h] === String((original || {})[h] ?? '').trim())) return { header, rec, row };
   }
-  throw new Conflict('This item changed since the page loaded. Reload the page and try again.');
+  throw new Conflict('This item changed since the page loaded, so this save was refused. Copy what you typed somewhere first, then reload the page and make the change again.');
 }
 
 // A picture is a web address, or one saved from her computer into the
@@ -337,7 +337,7 @@ function applyFeatured(f, op, body) {
     if (!ISO_DAY.test(card.until)) throw new BadRequest('Pick the last day to show the card.');
     const replace = String(body.replace || '');
     const at = replace ? f.cards.findIndex((c) => c.id === replace) : -1;
-    if (replace && at < 0) throw new Conflict('That card is gone already. Reload the page.');
+    if (replace && at < 0) throw new Conflict('That card is gone already. Copy what you typed first, then reload the page.');
     if (at >= 0) {
       f.cards[at] = { ...card, id: replace };
       return `Admin: change the card "${card.headline}"`;
