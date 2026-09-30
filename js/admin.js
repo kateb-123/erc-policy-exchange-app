@@ -511,6 +511,13 @@ const ITEM_CARDS = [
   ['photo', 'Photo', 'the picture behind, the words in a maroon block'],
 ];
 const ONEOFF_CARDS = []; // the Quote card is built but off the menu for now (Kate, Sep 30)
+// The picture hint under a one-off card's picture link (the item dialog has
+// its own, in FIELDS). Audit F33: the constant went missing in the Sep 30
+// dialog rewrite and the card dialog died before it opened.
+const PICTURE_HINTS = {
+  auto: 'A direct link to a picture (ending .jpg or .png), a Google Drive file, or one from your computer. The whole card is 1200 x 500.',
+  quote: 'A headshot, 400 x 500.',
+};
 const isPic = (url) => /\.(jpe?g|png|webp|gif|avif)$/i.test((url || '').trim());
 
 // What Auto picks for an item, and which cards fit what it has.
