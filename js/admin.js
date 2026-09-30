@@ -304,14 +304,8 @@ function openItem(key) {
   pinBox.append(onLabel, fieldRow('a-until', 'until', pinUntil));
   // The card it is drawn as there: Suggested (what fits what it has) first,
   // then the rest (Kate, Sep 24).
-  const { auto, fits } = itemAuto(item);
-  const autoName = ITEM_CARDS.find(([v]) => v === auto)[1];
   const heroWas = (X.state.featured.heroes || []).find((h) => h.key === key)?.hero || '';
-  const tiles = heroTiles(heroWas, [
-    ['Suggested', [['', 'Auto', `picks ${autoName} for this item`], ...ITEM_CARDS.filter(([v]) => fits.includes(v))]],
-    ['The rest', ITEM_CARDS.filter(([v]) => !fits.includes(v))],
-  ]);
-  tiles.classList.add('admin-tiles--item');
+  const tiles = heroPicker((item.type || '').toLowerCase(), heroWas);
   pinBox.append(tiles);
   form.append(pinBox);
 
@@ -477,6 +471,69 @@ function itemAuto(item) {
   return { auto, fits };
 }
 
+// The card chooser, one card per category with its options (Kate, Sep 30:
+// "group these, with options to add things"). Reads and sets like a select.
+const PICKERS = {
+  research: {
+    name: 'Research card',
+    groups: [
+      ['Look', [['light', 'Light', 'grey', 'edit'], ['dark', 'Dark', 'maroon', 'poster']]],
+      ['Picture', [['portrait', 'Beside, as a portrait', '', 'edit'], ['under', 'A wide strip under the words', 'light only', 'band'], ['above', 'A wide strip above the words', 'light only', 'bandtop'], ['none', 'None', 'the words alone', 'edit']]],
+    ],
+    key: (o) => (o.picture === 'none' ? (o.look === 'dark' ? 'wordsdark' : 'words') : o.picture === 'under' ? 'band' : o.picture === 'above' ? 'bandtop' : o.look === 'dark' ? 'poster' : 'edit'),
+    read: (k) => ({ look: k === 'poster' || k === 'wordsdark' ? 'dark' : 'light', picture: k === 'band' ? 'under' : k === 'bandtop' ? 'above' : k === 'words' || k === 'wordsdark' ? 'none' : 'portrait' }),
+  },
+  event: {
+    name: 'Event card',
+    groups: [['Picture', [['headshot', 'A headshot at the right', '4 wide by 5 tall', 'erc'], ['logo', 'A logo in a box', 'shown whole', 'date'], ['none', 'None', 'the words alone', 'date']]]],
+    key: (o) => (o.picture === 'logo' ? 'date' : o.picture === 'none' ? 'words' : 'erc'),
+    read: (k) => ({ picture: k === 'date' ? 'logo' : k === 'words' ? 'none' : 'headshot' }),
+  },
+  opportunity: {
+    name: 'Opportunity card',
+    groups: [['Picture', [['beside', 'Beside the words, 16:9', 'the title on top', 'beside'], ['under', 'A wide strip under the words', '', 'band'], ['above', 'A wide strip above the words', '', 'bandtop'], ['none', 'None', 'the words alone', 'type']]]],
+    key: (o) => (o.picture === 'under' ? 'band' : o.picture === 'above' ? 'bandtop' : o.picture === 'none' ? 'words' : 'beside'),
+    read: (k) => ({ picture: k === 'band' ? 'under' : k === 'bandtop' ? 'above' : k === 'words' ? 'none' : 'beside' }),
+  },
+  headline: {
+    name: 'Headline card',
+    groups: [['Picture', [['behind', 'Behind the words', 'the words in a maroon block', 'photo'], ['none', 'None', 'the words alone', 'type']]]],
+    key: (o) => (o.picture === 'none' ? 'words' : 'photo'),
+    read: (k) => ({ picture: k === 'words' ? 'none' : 'behind' }),
+  },
+};
+function heroPicker(kind, current) {
+  const P = PICKERS[kind] || PICKERS.headline;
+  const box = el('fieldset', { class: 'admin-tiles admin-tiles--item', id: 'c-hero' });
+  box.append(el('legend', {}, P.name));
+  const state = current ? P.read(current) : Object.fromEntries(P.groups.map(([g, opts]) => [g.toLowerCase(), opts[0][0]]));
+  const auto = Object.fromEntries(P.groups.map(([g, opts]) => [g.toLowerCase(), opts[0][0]]));
+  P.groups.forEach(([title, opts]) => {
+    const g = el('div', { class: 'admin-tiles__group' });
+    g.append(el('span', { class: 'admin-tiles__h' }, title));
+    const grid = el('div', { class: 'admin-tiles__grid' });
+    opts.forEach(([v, name, desc, art]) => {
+      const tile = el('label', { class: 'admin-tile' });
+      const r = el('input', { type: 'radio', name: `c-${title.toLowerCase()}`, value: v });
+      r.checked = state[title.toLowerCase()] === v;
+      const pic = el('span', { class: 'admin-tile__art' });
+      pic.innerHTML = ART[art] || ART.auto;
+      tile.append(r, pic, el('span', { class: 'admin-tile__name' }, name), el('small', {}, desc));
+      grid.append(tile);
+    });
+    g.append(grid);
+    box.append(g);
+  });
+  const chosen = () => Object.fromEntries(P.groups.map(([g]) => [g.toLowerCase(), ($(`input[name="c-${g.toLowerCase()}"]:checked`, box) || {}).value]));
+  Object.defineProperty(box, 'value', {
+    // Auto (nothing saved) when every option is the first one.
+    get: () => {
+      const o = chosen();
+      return Object.keys(auto).every((k) => o[k] === auto[k]) ? '' : P.key(o);
+    },
+  });
+  return box;
+}
 function heroTiles(current, groups) {
   const box = el('fieldset', { class: 'admin-tiles', id: 'c-hero' });
   box.append(el('legend', {}, 'Hero card'));

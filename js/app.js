@@ -451,7 +451,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=17").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=18").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -836,10 +836,16 @@ function heroCardHTML(entry) {
           ? img ? "beside" : "type"
           : img ? "photo" : "type";
   const draw = { erc: ercV, date: dateV, type: typeV, band: bandV, bandtop: bandTopV, beside: besideV, photo: photoV, edit: editV, poster: posterV, plainr: plainRV };
-  const want = draw[entry.hero] ? entry.hero : auto;
+  const want = draw[entry.hero] || entry.hero === "words" || entry.hero === "wordsdark" ? entry.hero : auto;
   let main;
   let slot = "";
-  if (want === "edit") {
+  if (want === "words" || want === "wordsdark") {
+    // The category's card with no picture at all, whatever is on the item.
+    main =
+      kind === "research" ? researchV("", want === "wordsdark", false)
+      : kind === "event" && date ? dateV("", false)
+      : typeV();
+  } else if (want === "edit") {
     // Without a portrait the words fill the card; an editor sees the slot.
     main = img ? editV(img) : editWideV();
     if (!img) slot = editV("");
