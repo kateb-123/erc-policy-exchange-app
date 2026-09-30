@@ -496,9 +496,9 @@ function openItem(key) {
     const row = fieldRow(id, label, control, kind === 'day' && control.type === 'text' ? `Written 2026-10-01, or a year or month on its own. ${hint}` : hint);
     if (name === 'blurb' || name === 'headline' || name === 'infographic') row.classList.add('admin-field--wide');
     if (name === 'headline') row.append(titleCount(control));
-    if (name === 'headline') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics.'));
     if (name === 'blurb') row.append(titleCount(control, (n) => `${n} characters. Aim for ${SUMMARY_MAX} or fewer, so the summary fits every card whole.`));
-    if (name === 'blurb') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics.'));
+    // The stars hint once, under Summary; it holds for the title too (audit F55).
+    if (name === 'blurb') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics, in the title too.'));
     if (name === 'infographic') row.append(pictureUpload(control));
     if (ONLY_FOR[name]) row.dataset.onlyFor = ONLY_FOR[name].join(' ');
     grid.append(row);
@@ -526,7 +526,10 @@ function openItem(key) {
   pinUntil.value = pin ? pin.until : addDays(14);
   const onLabel = el('label', { class: 'admin-check', for: 'a-pin' });
   onLabel.append(pinOn, document.createTextNode(' Pin it to the front'));
-  pinBox.append(onLabel, fieldRow('a-until', 'until', pinUntil));
+  pinBox.append(onLabel, fieldRow('a-until', 'Until', pinUntil));
+  // The date only matters while the pin is on (audit F55).
+  pinUntil.disabled = !pinOn.checked;
+  pinOn.addEventListener('change', () => (pinUntil.disabled = !pinOn.checked));
   // The card it is drawn as there: Suggested (what fits what it has) first,
   // then the rest (Kate, Sep 24).
   // The card: two switches (Kate, Sep 30: "a checkbox for photo, a checkbox
@@ -794,8 +797,10 @@ const PLACES = {
 };
 function picturePlaces(kind, current) {
   const opts = PLACES[kind] || PLACES.headline;
-  const box = el('div', { class: 'admin-tiles admin-tiles--item' });
-  box.append(el('span', { class: 'admin-tiles__h' }, 'Where the picture goes, and the size to make it'));
+  // A fieldset, so a screen reader hears the group's name with each choice
+  // (audit F55).
+  const box = el('fieldset', { class: 'admin-tiles admin-tiles--item' });
+  box.append(el('legend', { class: 'admin-tiles__h' }, 'Where the picture goes, and the size to make it'));
   const grid = el('div', { class: 'admin-tiles__grid' });
   const known = opts.some(([v]) => v === current) ? current : '';
   opts.forEach(([v, name, size, art]) => {
@@ -908,6 +913,9 @@ function openCard(id) {
   const isQuote = () => inputs.hero.value === 'quote';
   const heroRow = el('div', { class: 'admin-field' });
   heroRow.append(inputs.hero, el('p', { class: 'admin-hint' }, 'How the card is drawn in New & Upcoming on laptops.'));
+  // One tile is no choice: the chooser waits until more cards are on the
+  // menu (audit F55).
+  heroRow.hidden = !ONEOFF_CARDS.length;
   const rows = [
     heroRow,
     fieldRow('c-headline', 'Title', inputs.headline),
