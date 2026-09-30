@@ -1477,7 +1477,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
 }
 #wn-feat .hc .hc-edit .hc__blurb {
   margin-top: calc(16 * var(--u));
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3; /* measured Sep 30: three lines fit, about 200 characters */
   font-size: calc(20 * var(--u));
 }
 #wn-feat .hc .hc-edit--wide .hc__ttl {
@@ -1570,7 +1570,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
   font-size: calc(22 * var(--u));
 }
 #wn-feat .hc .hc-beside .hc__blurb {
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 4;
   font-size: calc(20 * var(--u));
 }
 #wn-feat .hc .hc-beside .hc__img--shot {
