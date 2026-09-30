@@ -441,10 +441,28 @@ function pictureUpload(linkInput) {
   return wrap;
 }
 
+// When a dialog closes, focus goes back to the button that opened it, or to
+// the Edit sticker of the item just saved (the rows are redrawn on save, so
+// the old sticker is gone), or to the strip (audit F42).
+function returnFocus(d, opener, where) {
+  d.addEventListener(
+    'close',
+    () =>
+      setTimeout(() => {
+        const t = (where && where()) || (opener && opener.isConnected && opener) || $('.admin-bar button');
+        if (t) t.focus();
+      }, 60),
+    { once: true }
+  );
+}
+const stickerFor = (key) => document.querySelector(`[data-key="${CSS.escape(key)}"] .admin-edit`);
+
 function openItem(key) {
   const item = findItem(key);
   if (!item) return toast("That item isn't in the page any more. Reload the page.");
   const d = makeDialog();
+  let focusKey = key;
+  returnFocus(d, document.activeElement, () => stickerFor(focusKey));
   const form = el('form', { class: 'admin-form admin-form--live', novalidate: true });
   form.append(el('h2', { id: 'admin-dlg-h' }, 'Edit item'));
   // The card itself, drawn live from the form (Kate, Sep 30: "always have a
@@ -630,6 +648,7 @@ function openItem(key) {
       Object.assign(item, r.row);
       if (r.featured) X.state.featured = r.featured;
       newKey = X.itemKey(item);
+      focusKey = newKey;
     }
     // The pin: add, move its date, or take it off.
     const had = pinOf(newKey);
@@ -848,6 +867,7 @@ function heroTiles(current, groups) {
 function openCard(id) {
   const existing = id ? X.state.featured.cards.find((c) => c.id === id) : null;
   const d = makeDialog();
+  returnFocus(d, document.activeElement, () => existing && stickerFor(`card:${existing.id}`));
   const form = el('form', { class: 'admin-form', novalidate: true });
   form.append(el('h2', { id: 'admin-dlg-h' }, existing ? 'Edit card' : 'Add to New & Upcoming'));
   form.append(
@@ -1011,6 +1031,7 @@ function openCard(id) {
 
 function openHidden() {
   const d = makeDialog();
+  returnFocus(d, document.activeElement);
   const box = el('div', { class: 'admin-form' });
   box.append(el('h2', { id: 'admin-dlg-h' }, 'Hidden items'));
   const hidden = X.state.featured.hidden;
