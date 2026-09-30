@@ -451,7 +451,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=15").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=16").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -800,15 +800,16 @@ function heroCardHTML(entry) {
   const monthLine = date ? hcFmt(date, { month: "long", year: "numeric" }) : "";
   const byline = (it.authors || "").trim();
   const srcLine = [src && `<em>${esc(src)}</em>`, monthLine && esc(monthLine)].filter(Boolean).join("<br>");
-  const editV = (url) => `
-    <div class="hc__v hc-edit${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<span class="hc__rule" aria-hidden="true"></span>
-      ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}</div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
-  const editWideV = () => `
-    <div class="hc__v hc-edit hc-edit--wide"><div class="hc__col">${head}<span class="hc__rule" aria-hidden="true"></span>
-      ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}</div></div>`;
-  const posterV = (url) => `
-    <div class="hc__v hc-poster${url ? "" : " hc-poster--solid"}">${url ? `<figure class="hc__img hc__img--full"><img src="${esc(url)}" alt=""></figure>` : `<div class="hc__dots" aria-hidden="true"></div>`}
-      <div class="hc__panel2">${head}${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}</div></div>`;
+  // The research card (Kate, Sep 30: "one bold thing"): the title bold, then
+  // the authors, the journal in italics and the month, all regular weight,
+  // stepping down. Light or dark; a portrait at the right when there is one,
+  // else the words take the card.
+  const researchV = (url, dark, slot) => `
+    <div class="hc__v hc-edit${dark ? " hc-edit--dark" : ""}${url || slot ? "" : " hc-edit--wide"}${slot ? " hc__v--slot" : ""}"><div class="hc__col">${head}
+      ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}</div>${url || slot ? pic(url, "hc__img--pt", "Portrait 4:5") : ""}</div>`;
+  const editV = (url) => researchV(url, false, !url);
+  const editWideV = () => researchV("", false, false);
+  const posterV = (url) => researchV(url, true, false);
   const plainRV = () => `
     <div class="hc__v hc-plainr">${head}${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}<p class="hc__foot">${srcLine}</p></div>`;
   // 2a: the picture beside the text, 440 x 300 with a thin outline.
@@ -836,8 +837,11 @@ function heroCardHTML(entry) {
     // Without a portrait the words fill the card; an editor sees the slot.
     main = img ? editV(img) : editWideV();
     if (!img) slot = editV("");
-  } else if (want === "poster" || want === "plainr") {
-    main = draw[want](img);
+  } else if (want === "poster") {
+    main = researchV(img, true, false);
+    if (!img) slot = researchV("", true, true);
+  } else if (want === "plainr") {
+    main = img ? editV(img) : editWideV();
   } else if (want === "date") {
     main = date ? dateV(img) : typeV();
   } else if (want === "type") {

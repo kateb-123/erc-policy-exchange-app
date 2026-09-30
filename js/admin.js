@@ -440,8 +440,8 @@ const ART = {
   date: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#fff"/><rect x="0.5" y="0.5" width="119" height="49" fill="none" stroke="#D1D1D1"/><rect width="34" height="50" fill="#500000"/><rect x="11" y="10" width="12" height="2" fill="#D6D3C4"/><text x="17" y="36" text-anchor="middle" font-family="Work Sans,sans-serif" font-size="18" font-weight="600" fill="#fff">12</text><rect x="44" y="12" width="22" height="3" fill="#732F2F"/><rect x="44" y="20" width="62" height="5" fill="#500000"/><rect x="44" y="28" width="48" height="5" fill="#500000"/><rect x="44" y="38" width="36" height="3" fill="#3E3E3E"/></svg>',
   type: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#500000"/><rect x="8" y="12" width="22" height="3" fill="#D6D3C4"/><rect x="8" y="20" width="72" height="6" fill="#fff"/><rect x="8" y="29" width="54" height="6" fill="#fff"/><rect x="8" y="40" width="34" height="3" fill="#D6D3C4"/><g fill="#732F2F"><circle cx="98" cy="8" r="1.4"/><circle cx="104" cy="8" r="1.4"/><circle cx="110" cy="8" r="1.4"/><circle cx="98" cy="14" r="1.4"/><circle cx="104" cy="14" r="1.4"/><circle cx="110" cy="14" r="1.4"/><circle cx="98" cy="20" r="1.4"/><circle cx="104" cy="20" r="1.4"/><circle cx="110" cy="20" r="1.4"/></g></svg>',
   band: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#F6F6F6"/><rect width="120" height="2" fill="#500000"/><rect x="8" y="8" width="22" height="3" fill="#732F2F"/><rect x="8" y="14" width="70" height="5" fill="#500000"/><rect x="8" y="21" width="40" height="3" fill="#3E3E3E"/><rect y="28" width="120" height="22" fill="#A7A7A7"/></svg>',
-  edit: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#F6F6F6"/><rect x="8" y="10" width="62" height="6" fill="#500000"/><rect x="8" y="19" width="48" height="6" fill="#500000"/><rect x="8" y="29" width="14" height="2" fill="#500000"/><rect x="8" y="34" width="56" height="4" fill="#3E3E3E"/><rect x="8" y="41" width="40" height="3" fill="#535353"/><rect x="80" width="40" height="50" fill="#A7A7A7"/><circle cx="100" cy="19" r="7" fill="#F6F6F6"/><path d="M85 50 Q100 30 115 50Z" fill="#F6F6F6"/></svg>',
-  poster: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#A7A7A7"/><rect width="72" height="50" fill="#500000"/><rect x="8" y="12" width="52" height="6" fill="#fff"/><rect x="8" y="21" width="40" height="6" fill="#fff"/><rect x="8" y="32" width="48" height="3" fill="#D6D3C4"/><rect x="8" y="38" width="36" height="3" fill="#D6D3C4"/></svg>',
+  edit: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#F6F6F6"/><rect x="8" y="10" width="62" height="6" fill="#500000"/><rect x="8" y="19" width="48" height="6" fill="#500000"/><rect x="8" y="31" width="56" height="3" fill="#3E3E3E"/><rect x="8" y="37" width="40" height="3" fill="#535353"/><rect x="8" y="43" width="24" height="3" fill="#535353"/><rect x="80" width="40" height="50" fill="#A7A7A7"/><circle cx="100" cy="19" r="7" fill="#F6F6F6"/><path d="M85 50 Q100 30 115 50Z" fill="#F6F6F6"/></svg>',
+  poster: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#500000"/><rect x="8" y="10" width="62" height="6" fill="#fff"/><rect x="8" y="19" width="48" height="6" fill="#fff"/><rect x="8" y="31" width="56" height="3" fill="#D6D3C4"/><rect x="8" y="37" width="40" height="3" fill="#D6D3C4"/><rect x="8" y="43" width="24" height="3" fill="#D6D3C4"/><rect x="80" width="40" height="50" fill="#A7A7A7"/><circle cx="100" cy="19" r="7" fill="#F6F6F6"/><path d="M85 50 Q100 30 115 50Z" fill="#F6F6F6"/></svg>',
   plainr: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#fff"/><rect x="0.5" y="0.5" width="119" height="49" fill="none" stroke="#D1D1D1"/><rect x="8" y="10" width="70" height="6" fill="#3E3E3E"/><rect x="8" y="19" width="52" height="6" fill="#3E3E3E"/><rect x="8" y="29" width="60" height="4" fill="#500000"/><rect x="8" y="39" width="104" height="1.5" fill="#500000"/><rect x="8" y="43" width="44" height="3" fill="#535353"/></svg>',
   beside: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#F6F6F6"/><rect x="0.5" y="0.5" width="119" height="49" fill="none" stroke="#D1D1D1"/><rect x="8" y="12" width="22" height="3" fill="#732F2F"/><rect x="8" y="19" width="56" height="5" fill="#500000"/><rect x="8" y="27" width="44" height="5" fill="#500000"/><rect x="8" y="37" width="36" height="3" fill="#3E3E3E"/><rect x="72" y="10" width="40" height="30" fill="#A7A7A7" stroke="#D1D1D1"/></svg>',
   photo: '<svg viewBox="0 0 120 50" aria-hidden="true"><rect width="120" height="50" fill="#D1D1D1"/><rect y="22" width="78" height="28" fill="#500000"/><rect x="6" y="28" width="24" height="3" fill="#D6D3C4"/><rect x="6" y="34" width="60" height="4" fill="#fff"/><rect x="6" y="41" width="44" height="4" fill="#fff"/></svg>',
@@ -449,9 +449,8 @@ const ART = {
 };
 // value, name, what it needs (in words)
 const ITEM_CARDS = [
-  ['edit', 'Editorial', 'the byline large; a portrait at the right, or the words fill the card'],
-  ['poster', 'Poster', 'a maroon panel over the wide photo, or all maroon'],
-  ['plainr', 'Plain research', 'white, outlined, the source at the foot'],
+  ['edit', 'Research, light', 'grey; the title, then authors, journal and month; a portrait at the right if there is one'],
+  ['poster', 'Research, dark', 'the same on maroon'],
   ['erc', 'ERC event', 'the words at the left, a portrait at the right'],
   ['date', 'Date panel', 'the day in a maroon panel, the words beside it'],
   ['type', 'Plain', 'the words on maroon, no picture'],
@@ -469,7 +468,7 @@ function itemAuto(item) {
   const date = /^\d{4}-\d{2}-\d{2}$/.test((item.date || '').trim());
   const auto =
     kind === 'event' ? (img ? 'erc' : date ? 'date' : 'type') : kind === 'research' ? 'edit' : kind === 'opportunity' ? 'type' : img ? 'photo' : 'type';
-  const research = ['edit', 'poster', 'plainr'];
+  const research = ['edit', 'poster'];
   const fits = ITEM_CARDS.filter(([v]) =>
     kind === 'research' ? research.includes(v) : v === 'type' || (v === 'date' ? date : !research.includes(v) && img)
   ).map(([v]) => v);
