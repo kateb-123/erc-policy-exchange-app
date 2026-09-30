@@ -37,12 +37,12 @@
       "hero": "plainr"
     },
     {
-      "key": "https://aefpweb.org/callforproposals",
-      "hero": "beside"
-    },
-    {
       "key": "https://doi.org/10.3102/01623737261464169",
       "hero": "type"
+    },
+    {
+      "key": "https://aefpweb.org/callforproposals",
+      "hero": "band"
     }
   ]
 }
