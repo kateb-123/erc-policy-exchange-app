@@ -1343,6 +1343,11 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 }
 #wn-feat .hc .hc-band .hc__img {
   flex: 1 1 auto;
+  min-height: calc(150 * var(--u)); /* the words may take more, the strip keeps at least this */
+}
+#wn-feat .hc .hc-band .hc__blurb {
+  -webkit-line-clamp: 2;
+  font-size: calc(21 * var(--u));
 }
 /* The strip first: a fixed 220 under the band, the text under it. */
 #wn-feat .hc .hc-band--top .hc__img {

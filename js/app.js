@@ -789,7 +789,9 @@ function heroCardHTML(entry) {
   // call: "above the title and text").
   const bandV = (url) =>
     kind === "research" || kind === "opportunity" // (Kate, Sep 30: the photo beneath the text on opportunities too)
-      ? `<div class="hc__v hc-band${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p></div>${pic(url, "hc__img--band", "Landscape photo")}</div>`
+      ? `<div class="hc__v hc-band${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p>${
+          kind === "opportunity" && blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : "" // (Kate, Sep 30: the call needs a description)
+        }</div>${pic(url, "hc__img--band", "Landscape photo")}</div>`
       : `<div class="hc__v hc-band hc-band--top${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--band", "Landscape photo")}<div class="hc__col">${head}<p class="hc__meta">${meta}</p></div></div>`;
   // Kate's picks from the Sep 30 wildcards, for research: A "Editorial"
   // (the byline large, the portrait at the right, or the words filling the
@@ -914,8 +916,8 @@ function buildWhatsNew() {
     <div class="caro" role="group" aria-label="Browse new and upcoming items">
       <button type="button" class="caro__btn" data-step="-1" aria-label="Previous item">${faIcon("chevron-left")}</button>
       <span class="caro__count" aria-live="off" aria-atomic="true"><b>1</b> / ${list.length}</span>
-      <button type="button" class="caro__btn" data-step="1" aria-label="Next item">${faIcon("chevron-right")}</button>
       <button type="button" class="rail__pause"></button>
+      <button type="button" class="caro__btn" data-step="1" aria-label="Next item">${faIcon("chevron-right")}</button>
     </div>
     <div class="rail">
       <span id="wn-pick-hint" hidden>Shows this item in the featured card</span>
