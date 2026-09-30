@@ -208,7 +208,7 @@ root.innerHTML = `
       <div class="upload">
         <button type="button" class="btn-outline" id="pick" aria-describedby="mlabel mhint mstat">Upload media</button>
         <button type="button" class="btn-text btn-text--quiet" id="rm" hidden>Remove media</button>
-        <span class="upload__hint" id="mhint">PNG, JPG, or PDF</span>
+        <span class="upload__hint" id="mhint">PNG, JPG, GIF, WebP, or PDF (its first page only)</span>
         <span class="upload__status" id="mstat" role="status"></span>
         <input type="file" id="file" accept=".png,.jpg,.jpeg,.gif,.webp,.pdf" hidden>
       </div>
@@ -403,12 +403,13 @@ fileIn.addEventListener('change', () => {
     try {
       let blob = file;
       let ext = EXT[file.type];
-      if (file.type === 'application/pdf' || /\.pdf$/i.test(file.name)) {
+      const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
+      if (isPdf) {
         setMedia('Converting the PDF…', 'busy');
         blob = await pdfFirstPage(file);
         ext = 'jpg';
       } else if (!ext) {
-        throw new UserError('Use a PNG, JPG, or PDF.');
+        throw new UserError('Use a PNG, JPG, GIF, WebP, or PDF.');
       } else if (file.size > MAX) {
         setMedia('Shrinking the picture…', 'busy');
         let bmp;
@@ -433,7 +434,8 @@ fileIn.addEventListener('change', () => {
       if (!data.ok) throw new UserError("The upload didn't go through. Try again, or send the item without it.");
       if (gen !== uploadGen) return; // the form was sent or started over meanwhile
       mediaUrl = data.url;
-      setMedia('Added.');
+      // Says what went up, and that a PDF went as its first page (Sep 30 audit).
+      setMedia(isPdf ? `Added the first page of ${file.name}.` : `Added ${file.name}.`);
       pick.textContent = 'Replace media';
       rm.hidden = false;
     } catch (err) {
