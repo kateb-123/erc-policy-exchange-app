@@ -229,7 +229,7 @@ const FIELDS = [
   ['type', 'Section', 'type'],
   ['subtype', 'Category', 'text', 'The tag on the item, for example Working Paper or Texas.'],
   ['source', 'Source', 'text'],
-  ['date', 'Date', 'text', 'Written 2026-10-01. For an event, the day it happens.'],
+  ['date', 'Date', 'day', 'For an event, the day it happens.'],
   ['deadline', 'Deadline', 'text', '2026-10-01, or "rolling".'],
   ['time', 'Time', 'text'],
   ['location', 'Location', 'text', 'The room, or Online; a room plus "and online" shows as both.'],
@@ -467,11 +467,15 @@ function openItem(key) {
     } else if (kind === 'type') {
       control = el('select', { id, name });
       SECTIONS.forEach(([v, l]) => control.append(el('option', { value: v }, l)));
+    } else if (kind === 'day' && /^(\d{4}-\d{2}-\d{2})?$/.test(item[name] || '')) {
+      // A date picker, like the pin's "until" (audit F41). A row that carries
+      // only a year or a month keeps a text box, so that value is not lost.
+      control = el('input', { id, name, type: 'date' });
     } else {
       control = el('input', { id, name, type: kind === 'url' ? 'url' : 'text', autocomplete: 'off' });
     }
     control.value = item[name] || '';
-    const row = fieldRow(id, label, control, hint);
+    const row = fieldRow(id, label, control, kind === 'day' && control.type === 'text' ? `Written 2026-10-01, or a year or month on its own. ${hint}` : hint);
     if (name === 'blurb' || name === 'headline' || name === 'infographic') row.classList.add('admin-field--wide');
     if (name === 'headline') row.append(titleCount(control));
     if (name === 'headline') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics.'));
