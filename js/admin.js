@@ -544,10 +544,17 @@ function openItem(key) {
   const darkLabel = el('label', { class: 'admin-check', for: 'a-dark' });
   darkLabel.append(darkOn, document.createTextNode(' Dark card'));
   // With the picture on, where it goes and the size to make it (Kate, Sep 30).
-  const places = picturePlaces((item.type || '').toLowerCase(), heroWas);
+  let places = picturePlaces((item.type || '').toLowerCase(), heroWas);
   places.hidden = !picOn.checked;
   picOn.addEventListener('change', () => (places.hidden = !picOn.checked));
   pinBox.append(picLabel, darkLabel, places);
+  // A new section has its own places; the box is drawn again (audit F54).
+  form.elements.type.addEventListener('change', () => {
+    const fresh = picturePlaces(form.elements.type.value, places.value);
+    fresh.hidden = places.hidden;
+    places.replaceWith(fresh);
+    places = fresh;
+  });
   const tiles = {
     get value() {
       if (!picOn.checked) return 'words';
@@ -628,7 +635,10 @@ function openItem(key) {
     e.preventDefault();
     const fields = {};
     for (const [name] of FIELDS) {
-      const v = form.elements[name].value.trim();
+      const control = form.elements[name];
+      // A field the section hides is not sent (audit F54).
+      if (control.closest('.admin-field')?.hidden) continue;
+      const v = control.value.trim();
       if (v !== (item[name] || '')) fields[name] = v;
     }
     if ('headline' in fields && !fields.headline) {
