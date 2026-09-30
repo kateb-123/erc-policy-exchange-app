@@ -451,7 +451,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=14").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=15").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -717,6 +717,15 @@ const hcDate = (iso) => {
 };
 const hcFmt = (date, opts) => date.toLocaleDateString("en-US", { timeZone: "UTC", ...opts });
 const hcLine = (parts) => parts.filter(Boolean).map(esc).join(" · ");
+// In person, online, or both, read from the Location field (Kate, Sep 30):
+// "Online" or "Zoom" alone is online; a room plus "and online" is both.
+const hcMode = (loc) => {
+  const l = (loc || "").trim();
+  if (!l) return "";
+  const online = /online|zoom|virtual|webinar|teams|hybrid/i.test(l);
+  const both = /hybrid|\b(and|or|plus)\b|[+/]/i.test(l);
+  return online ? (both ? "In person and online" : "Online") : "In person";
+};
 
 function heroCardHTML(entry) {
   const { it, tab } = entry;
@@ -755,7 +764,7 @@ function heroCardHTML(entry) {
   const fact = date
     ? `<div class="hc__fact" aria-hidden="true"><span class="hc__tile"><small>${esc(hcFmt(date, { month: "short" }))}</small><b>${date.getUTCDate()}</b></span><span class="hc__fline">${esc(
         hcFmt(date, { weekday: "long" })
-      )}${it.time ? `<small>${esc(it.time.trim())}</small>` : ""}</span></div>`
+      )}<small>${hcLine([(it.time || "").trim(), hcMode(it.location)])}</small></span></div>`
     : "";
   const ercV = (url) => `
     <div class="hc__v hc-erc${url ? "" : " hc__v--slot"}"><div class="hc__col">${fact}${head}
@@ -770,7 +779,7 @@ function heroCardHTML(entry) {
       <span class="hc__m">${esc(hcFmt(date, { month: "short" }))}</span><span class="hc__d">${date.getUTCDate()}</span></div>${
         url ? `<figure class="hc__img hc__img--head"><img src="${esc(url)}" alt=""></figure>` : ""
       }</div>
-      <div class="hc__col">${head}<p class="hc__meta">${hcLine([src, (it.location || "").trim() || "Online"])}<br>${when}</p>${
+      <div class="hc__col">${head}<p class="hc__meta">${hcLine([src, (it.location || "").trim() || "Online"])}<br>${hcLine([when, hcMode(it.location) || "Online"])}</p>${
         url && blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""
       }</div></div>`;
   const typeV = () => `

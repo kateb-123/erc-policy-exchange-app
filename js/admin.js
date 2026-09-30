@@ -176,7 +176,7 @@ const FIELDS = [
   ['date', 'Date', 'text', 'Written 2026-10-01. For an event, the day it happens.'],
   ['deadline', 'Deadline', 'text', 'Opportunities: 2026-10-01, or "rolling".'],
   ['time', 'Time', 'text', 'Events only.'],
-  ['location', 'Location', 'text', 'Events only.'],
+  ['location', 'Location', 'text', 'Events only. The room, or Online; a room plus "and online" shows as both.'],
   ['authors', 'Authors', 'text', 'Research only.'],
   ['medium', 'Medium', 'text', 'Headlines only: radio, TV, newspaper, magazine.'],
   ['topic', 'Topic', 'text'],
