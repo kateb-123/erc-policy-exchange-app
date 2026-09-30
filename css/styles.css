@@ -3109,6 +3109,9 @@ main {
     background: none;
     box-shadow: none;
     border-radius: 0;
+    /* No frame here, so nothing to clip: the title's focus ring used to lose
+       its sides at the card's edges (audit F52). */
+    overflow: visible;
   }
   .ncard + .ncard {
     border-top: 1px solid var(--g400);
