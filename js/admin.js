@@ -325,15 +325,18 @@ function fail(form, r) {
   if (r.status === 401) return noteSignIn(form);
   return fail(form, r);
 }
-// A running count under a title: past 100 characters the New & Upcoming card
-// sets the title smaller and leaves out the summary (Kate, Sep 24).
+// A running count under a box. The house rule (Kate, Sep 30, the desk's
+// rewrite prompt): titles 80 characters, summaries 180, so they fit every
+// card; past 100 the card sets the title smaller and leaves out the summary.
+const TITLE_MAX = 80;
+const SUMMARY_MAX = 180;
 function titleCount(input, text) {
   const hint = el('p', { class: 'admin-hint', id: `${input.id}-count` });
   const say = () => {
     const n = input.value.trim().length;
     hint.textContent = text
       ? text(n)
-      : `${n} characters. Aim for 100 or fewer: longer titles show smaller in New & Upcoming, with no summary.`;
+      : `${n} characters. Aim for ${TITLE_MAX} or fewer: past 100 the New & Upcoming card sets the title smaller and drops the summary.`;
   };
   input.addEventListener('input', say);
   say();
@@ -472,6 +475,7 @@ function openItem(key) {
     if (name === 'blurb' || name === 'headline' || name === 'infographic') row.classList.add('admin-field--wide');
     if (name === 'headline') row.append(titleCount(control));
     if (name === 'headline') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics.'));
+    if (name === 'blurb') row.append(titleCount(control, (n) => `${n} characters. Aim for ${SUMMARY_MAX} or fewer, so the summary fits every card whole.`));
     if (name === 'blurb') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics.'));
     if (name === 'infographic') row.append(pictureUpload(control));
     if (ONLY_FOR[name]) row.dataset.onlyFor = ONLY_FOR[name].join(' ');
@@ -888,9 +892,10 @@ function openCard(id) {
     titleCount(inputs.headline, (n) =>
       isQuote()
         ? `${n} characters. Aim for 120 or fewer: longer quotes show smaller in New & Upcoming.`
-        : `${n} characters. Aim for 100 or fewer: longer titles show smaller in New & Upcoming, with no summary.`
+        : `${n} characters. Aim for ${TITLE_MAX} or fewer: past 100 the card sets the title smaller and drops the summary.`
     )
   );
+  rows[5].append(titleCount(inputs.blurb, (n) => `${n} characters. Aim for ${SUMMARY_MAX} or fewer, so the summary fits the card whole.`));
   rows[5].classList.add('admin-field--wide');
   rows[6].classList.add('admin-field--wide');
   rows[6].append(pictureUpload(inputs.image));
