@@ -378,8 +378,8 @@ function init(rows, modified, featured) {
       // Clicking the active category pill again deselects it (same as Clear).
       state.subtype =
         btn.dataset.subtype === state.subtype ? "all" : btn.dataset.subtype;
-      // Clear also backs out of the Archive view.
-      if (btn.dataset.subtype === "all") state.archive = false;
+      // Clear and All reset the category only; the Archive toggle is the one
+      // way in and out of the Archive (audit F47).
     }
     render();
     writeURL();
@@ -1507,7 +1507,7 @@ function renderToolbar() {
   // No "All" button — clicking a category filters, and the quiet Clear text
   // action beside the buttons resets to everything (dimmed until a filter is on).
   const clearBtn = `<button type="button" class="tclear" data-subtype="all"${
-    state.subtype === "all" && !state.archive ? " disabled" : ""
+    state.subtype === "all" ? " disabled" : ""
   }>Clear</button>`;
   // Research keeps its 60-day+ items behind an Archive toggle at the row's end.
   const archiveBtn =
@@ -1516,9 +1516,13 @@ function renderToolbar() {
           state.archive ? " is-active" : ""
         }" data-archive aria-pressed="${state.archive}">Archive</button>`
       : "";
+  // The Archive toggle is its own group, so a screen reader hears it as a
+  // view and not as a category (audit F47); the row looks the same.
   const catGroup = `
-    <div class="tgroup tgroup--show" role="group" aria-label="Quick search by category">
-      <span class="tgroup__label">Quick search</span>${catBtns}${clearBtn}${archiveBtn}
+    <div class="tgroup tgroup--show">
+      <span class="tgroup__set" role="group" aria-label="Quick search by category"><span class="tgroup__label">Quick search</span>${catBtns}${clearBtn}</span>${
+        archiveBtn ? `<span class="tgroup__set" role="group" aria-label="View">${archiveBtn}</span>` : ""
+      }
     </div>`;
   // Phones get the same choices as one row of filter chips that slides
   // sideways, "All" first and Archive last (Kate, Sep 23). CSS shows this row

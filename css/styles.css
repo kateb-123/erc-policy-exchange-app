@@ -1981,6 +1981,13 @@ main {
   flex: 1 1 100%;
   padding-bottom: 16px;
 }
+/* The two sets inside the row lay out like the row itself. */
+.tgroup__set {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
 .tgroup__label {
   font-family: var(--head);
   font-size: 12px;
