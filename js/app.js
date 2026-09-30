@@ -774,14 +774,17 @@ function heroCardHTML(entry) {
       ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
   // With a picture the panel splits: the date on top, the headshot under
   // it, and the event's own words under the date line (Kate, Sep 24).
-  // The date panel carries the event's words; a picture on it is a small
-  // logo at the top right (a sponsor's mark), never a headshot (Kate, Sep 30).
+  // Every event draws like the ERC card (Kate, Sep 30: the maroon date
+  // column "too big"): the date tile, the title, the place, the words. A
+  // picture on a non-ERC event is a sponsor's logo in a box at the right.
   const dateV = (url, slot) => `
-    <div class="hc__v hc-date${url || slot ? " hc-date--logo" : ""}${slot ? " hc__v--slot" : ""}"><div class="hc__panel" aria-hidden="true"><div class="hc__when"><span class="hc__k">Upcoming</span>
-      <span class="hc__m">${esc(hcFmt(date, { month: "short" }))}</span><span class="hc__d">${date.getUTCDate()}</span></div></div>
-      <div class="hc__col">${head}<p class="hc__meta">${hcLine([src, (it.location || "").trim() || "Online"])}<br>${hcLine([when, hcMode(it.location) || "Online"])}</p>${
-        blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""
-      }</div>${url || slot ? pic(url, "hc__img--logo", "Logo 2:1") : ""}</div>`;
+    <div class="hc__v hc-erc hc-erc--logo${slot ? " hc__v--slot" : ""}${url || slot ? "" : " hc-erc--wide"}"><div class="hc__col">${fact}${head}
+      <p class="hc__meta">${hcLine([src, (it.location || "").trim()])}<span class="sr-only">. ${hcLine([
+        date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
+        (it.time || "").trim(),
+      ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${
+        url || slot ? `<div class="hc__side">${pic(url, "hc__img--logo", "Logo 2:1")}</div>` : ""
+      }</div>`;
   const typeV = () => `
     <div class="hc__v hc-type"><div class="hc__dots" aria-hidden="true"></div>${head}<p class="hc__meta">${meta}</p></div>`;
   // Research keeps the strip under the text; anything else that takes this
@@ -812,10 +815,12 @@ function heroCardHTML(entry) {
   const plainRV = () => `
     <div class="hc__v hc-plainr">${head}${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}<p class="hc__foot">${srcLine}</p></div>`;
   // 2a: the picture beside the text, 440 x 300 with a thin outline.
+  // The title across the top, then the 16:9 picture and the words side by
+  // side (Kate, Sep 30, for opportunities: "title over the photo and text").
   const besideV = (url) => `
-    <div class="hc__v hc-beside${url ? "" : " hc__v--slot"}"><div class="hc__col">${head}<p class="hc__meta">${meta}</p>${
+    <div class="hc__v hc-beside${url ? "" : " hc__v--slot"}">${head}<div class="hc__row">${pic(url, "hc__img--shot", "Picture 16:9")}<div class="hc__col"><p class="hc__meta">${meta}</p>${
       kind !== "research" && blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""
-    }</div>${pic(url, "hc__img--shot", "Picture 16:9")}</div>`;
+    }</div></div></div>`;
   const photoV = (url) => `
     <div class="hc__v hc-photo${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--full", "Photo 1200 x 500")}
       <div class="hc__blk">${head}<p class="hc__meta">${meta}</p></div></div>`;

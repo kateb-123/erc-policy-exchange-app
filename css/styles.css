@@ -1128,6 +1128,39 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   grid-template-columns: minmax(0, 1fr) calc(360 * var(--u));
   background: var(--g100);
 }
+#wn-feat .hc .hc-erc--wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+#wn-feat .hc .hc-erc--wide .hc__col {
+  max-width: calc(1040 * var(--u));
+}
+#wn-feat .hc .hc-erc--logo:not(.hc-erc--wide) {
+  grid-template-columns: minmax(0, 1fr) calc(360 * var(--u));
+}
+#wn-feat .hc .hc__side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 calc(48 * var(--u)) 0 0;
+}
+#wn-feat .hc .hc__side .hc__img--logo {
+  width: calc(300 * var(--u));
+  height: calc(150 * var(--u));
+  background: #fff;
+  box-shadow: 0 0 0 calc(2 * var(--u)) var(--g400);
+}
+#wn-feat .hc .hc__side .hc__img--logo img {
+  object-fit: contain;
+  padding: calc(10 * var(--u));
+  box-sizing: border-box;
+}
+#wn-feat .hc .hc__side .hc__slot {
+  font-size: calc(16 * var(--u));
+  outline-offset: calc(-8 * var(--u));
+  color: var(--g600);
+  outline-color: var(--g400);
+  background: var(--g200);
+}
 /* A 4:5 headshot fits the 360 x 452 under the band whole, so no head is cut. */
 #wn-feat .hc .hc-erc .hc__img--pt img {
   object-position: 50% 0;
@@ -1494,45 +1527,55 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
   color: var(--cream);
   background: #5c1010;
 }
-/* 2a Research with the picture beside: the text at the left, a 440 x 300
-   picture at the right with a thin outline. */
+/* Opportunity with a picture: the title across the top, then the 16:9
+   picture and the words side by side (Kate, Sep 30). */
 #wn-feat .hc .hc-beside {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) calc(440 * var(--u));
-  gap: calc(56 * var(--u));
-  align-items: center;
-  padding: 0 calc(72 * var(--u)) 0 calc(72 * var(--u));
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: calc(22 * var(--u));
+  padding: calc(32 * var(--u)) calc(64 * var(--u)) calc(32 * var(--u));
   background: var(--g100);
+}
+#wn-feat .hc .hc-beside .hc__ttl {
+  font-size: calc(44 * var(--u));
+  -webkit-line-clamp: 2;
+}
+#wn-feat .hc[data-len="long"] .hc-beside .hc__ttl {
+  font-size: calc(36 * var(--u));
+  -webkit-line-clamp: 3;
+}
+#wn-feat .hc .hc__row {
+  display: grid;
+  grid-template-columns: calc(400 * var(--u)) minmax(0, 1fr);
+  gap: calc(40 * var(--u));
+  align-items: center;
 }
 #wn-feat .hc .hc-beside .hc__col {
   display: flex;
   flex-direction: column;
-  gap: calc(16 * var(--u));
+  gap: calc(12 * var(--u));
   min-width: 0;
-  padding: calc(28 * var(--u)) 0;
-}
-#wn-feat .hc .hc-beside .hc__ttl {
-  font-size: calc(40 * var(--u));
 }
 #wn-feat .hc .hc-beside .hc__meta {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  font-size: calc(21 * var(--u));
+  font-size: calc(22 * var(--u));
+}
+#wn-feat .hc .hc-beside .hc__blurb {
+  -webkit-line-clamp: 3;
+  font-size: calc(20 * var(--u));
 }
 #wn-feat .hc .hc-beside .hc__img--shot {
-  width: calc(440 * var(--u));
-  height: calc(248 * var(--u)); /* 16:9, the shape of her event graphics (Kate, Sep 30) */
+  width: calc(400 * var(--u));
+  height: calc(225 * var(--u));
   background: #fff;
   box-shadow: 0 0 0 calc(2 * var(--u)) var(--g400);
 }
-#wn-feat .hc .hc-beside .hc__blurb {
-  -webkit-line-clamp: 2;
-  font-size: calc(20 * var(--u));
-}
 html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
-  display: grid !important;
+  display: flex !important;
 }
 /* 5a Headline or one-off card with a photo: the photo full bleed, the
    maroon block bottom left, growing upward with the headline. */
