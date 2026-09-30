@@ -25,10 +25,6 @@
   "hidden": [],
   "heroes": [
     {
-      "key": "https://doi.org/10.3102/01623737261464169",
-      "hero": "type"
-    },
-    {
       "key": "https://edworkingpapers.com/ai26-1578",
       "hero": "poster"
     },
@@ -39,6 +35,10 @@
     {
       "key": "https://aefpweb.org/callforproposals",
       "hero": "band"
+    },
+    {
+      "key": "https://doi.org/10.3102/01623737261464169",
+      "hero": "poster"
     }
   ]
 }
