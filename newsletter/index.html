@@ -196,6 +196,15 @@ function renderTurnstile() {
     callback: t => { token = t; const w = waiting; waiting = []; w.forEach(fn => fn()); },
     'error-callback': () => { token = ''; },
     'expired-callback': () => { token = ''; },
+    // When the check needs a click, say so and put the focus on it; the
+    // status used to sit on "Checking" with the box unannounced (Sep 30 audit).
+    'before-interactive-callback': () => {
+      setStat('Tick the box below to show you are not a robot.', 'busy');
+      const cf = document.getElementById('cf');
+      cf.tabIndex = -1;
+      cf.focus();
+    },
+    'after-interactive-callback': () => setStat('Checking', 'busy'),
   });
 }
 window.onTurnstileLoad = renderTurnstile;
