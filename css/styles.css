@@ -3132,7 +3132,9 @@ main {
   align-items: center;
   gap: 8px 16px;
   padding: 8px 24px;
-  background: #0091ff; /* Kate's pick, Sep 24: the editor is only hers */
+  /* Kate's blue (Sep 24), one step darker so white 14px text reads 5.8:1 on
+     it rather than 3.2:1 (audit F44). The tiles' ring keeps #0091ff. */
+  background: #0067b8;
   color: #fff;
   font-family: var(--head);
   font-size: 14px;
@@ -3163,7 +3165,7 @@ main {
   padding: 7px 15px;
   border: 0;
   border-radius: 999px;
-  background: #0091ff;
+  background: #0067b8;
   box-shadow: 3px 3px 0 #00386b;
   color: #fff;
   font-family: var(--head);
