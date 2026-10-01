@@ -170,9 +170,10 @@ root.innerHTML = `
       <label for="e">Your email address</label>
       <input id="e" type="email" autocomplete="email" required>
       <p class="field__error" id="e-err" hidden></p>
+      <small>Your address is used only for this newsletter.</small>
     </div>
     <div class="btns field--full">
-      <button type="submit" class="btn" id="go">Subscribe »</button>
+      <button type="submit" class="btn" id="go">Subscribe <span aria-hidden="true">»</span></button>
     </div>
     <p class="status field--full" id="stat" aria-live="polite"></p>
     <div class="cf field--full" id="cf"></div>

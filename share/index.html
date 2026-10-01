@@ -222,10 +222,11 @@ root.innerHTML = `
       <label for="e">Your email address</label>
       <input id="e" type="email" autocomplete="email" required>
       <p class="field__error" id="e-err" hidden></p>
+      <small>Used only to reply about this item, and for the newsletter if you tick the box.</small>
     </div>
     <label class="check field--full"><input type="checkbox" id="optin"><span>Add me to the ERC newsletter.</span></label>
     <div class="btns field--full">
-      <button type="submit" class="btn" id="go">Submit »</button>
+      <button type="submit" class="btn" id="go">Submit <span aria-hidden="true">»</span></button>
     </div>
     <p class="status field--full" id="stat" aria-live="polite"></p>
     <div class="cf field--full" id="cf"></div>

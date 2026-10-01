@@ -332,6 +332,7 @@ function init(rows, modified, featured) {
   const gs = $("#global-search");
   const typedEarly = gs.value;
   gs.value = state.q;
+  let sayCount = 0;
   gs.addEventListener("input", (e) => {
     const q = e.target.value;
     const entering = !!q.trim() && state.view !== "search";
@@ -352,6 +353,15 @@ function init(rows, modified, featured) {
     }
     render();
     writeURL(entering);
+    // The count is drawn at once but spoken only once the typing stops
+    // (audit F71: "3 results for te", "12 results for tea", ...).
+    const count = $("#news-count");
+    count.setAttribute("aria-live", "off");
+    clearTimeout(sayCount);
+    sayCount = setTimeout(() => {
+      count.setAttribute("aria-live", "polite");
+      count.replaceChildren(...[...count.childNodes].map((n) => n.cloneNode(true)));
+    }, 500);
   });
   // F11: Enter or a phone's Search key closes the keyboard over the results;
   // the results are already on the page.
@@ -1261,7 +1271,7 @@ function setTitle() {
     title = `Search: ${state.q.trim()} · ${SITE_NAME}`;
   } else if (state.view === "brief") {
     const it = state.items.find((x) => briefId(x) === state.brief);
-    title = `${it ? plain(it.headline) : state.briefTitle || "ERC Research"} · ${SITE_NAME}`;
+    title = `${it ? plain(it.headline) : state.briefTitle || infographicTitle(state.brief) || "ERC Research"} · ${SITE_NAME}`;
   } else if (state.view === "section") {
     const tab = NEWS_TABS.find((x) => x.value === state.type);
     const archive = state.type === "research" && state.archive ? ": Archive" : "";
@@ -1457,6 +1467,12 @@ const driveId = (link) => {
   const m = (link || "").match(/drive\.google\.com\/file\/d\/([\w-]+)/);
   return m ? m[1] : null;
 };
+// The title for an infographic opened by its address alone: the row whose
+// infographic cell holds that file (audit F69: it fell back to "ERC Research").
+const infographicTitle = (id) => {
+  const row = (state.items || []).find((x) => x.infographic && driveId(x.infographic) === id);
+  return row ? `${plain(row.headline)} infographic` : "";
+};
 const briefId = (it) =>
   (it.subtype || "").trim().toLowerCase() === "erc research"
     ? driveId(it.link)
@@ -1516,11 +1532,11 @@ function renderToolbar() {
         `<button type="button" class="tsort${s === cur ? " is-active" : ""}" data-sort="${i}" aria-pressed="${s === cur}">${esc(s.label)}</button>`
     )
     .join(`<span class="tsort-sep" aria-hidden="true">·</span>`);
-  // No visible "Sort" label — the options are self-describing; the group's
-  // aria-label still announces it for assistive tech.
+  // A small "Sort" label before the pair, so the unchosen option reads as a
+  // choice and not a caption (audit F70).
   const sortGroup = `
     <div class="tgroup tgroup--sort" role="group" aria-label="Sort by">
-      ${sortHTML}
+      <span class="tgroup__label">Sort</span>${sortHTML}
     </div>`;
 
   // The category buttons render on every section, even with one sub-category,
@@ -1633,6 +1649,9 @@ function renderFeedCards(results, colorFor, total = results.length) {
         // time · location, so a reader can pick a webinar without opening rows.
         const when = [(it.time || "").trim(), (it.location || "").trim()].filter(Boolean).map(esc).join(SEP);
         if (when) metaHTML = `<div class="feed-item__meta">${when}</div>`;
+      } else if (isOpp && (it.location || "").trim()) {
+        // A conference's city, when the sheet has it (audit F67).
+        metaHTML = `<div class="feed-item__meta">${esc(it.location.trim())}</div>`;
       }
       // The summary: the blurb, the way out to the source (or a brief's in-app
       // viewer), and, on Research, an infographic when the sheet's
@@ -1756,7 +1775,7 @@ function renderSearch() {
     list.innerHTML = `
       <div class="state">
         <strong>No matches for “${esc(q)}”</strong>
-        Try a different word, or browse a section from the menu above.
+        Try a different word, or browse a section from the top of the page.
       </div>`;
     return;
   }
@@ -1851,7 +1870,7 @@ function renderBrief() {
   const it = state.items.find((x) => briefId(x) === state.brief);
   // Title: the matching brief row when there is one; otherwise whatever the
   // opener passed (an infographic isn't its own row) or a generic fallback.
-  const label = it ? plain(it.headline) : state.briefTitle || "ERC Research";
+  const label = it ? plain(it.headline) : state.briefTitle || infographicTitle(state.brief) || "ERC Research";
   const driveView = `https://drive.google.com/file/d/${esc(state.brief)}/view`;
   const head = $("#section-head");
   if (head) head.hidden = true;
@@ -1892,6 +1911,23 @@ function openBrief(id, title) {
   focusHeading();
 }
 
+// The section's title and one-line description. Drawn by render(), and once
+// before the data arrives, so a section opened by link is not a bare
+// "Loading…" line for half a second (audit F68).
+function drawSectionHead() {
+  const headTab = NEWS_TABS.find((t) => t.value === state.type);
+  const head = $("#section-head");
+  const archiveMode = state.type === "research" && state.archive;
+  if (!head) return;
+  head.hidden = !headTab;
+  if (headTab) {
+    head.innerHTML = `<h2 class="section-head__title" tabindex="-1" data-focus-target>${esc(headTab.label)}${
+      archiveMode ? ": Archive" : ""
+    }</h2><p class="section-head__desc">${esc(
+      archiveMode ? "Research posted more than 60 days ago." : headTab.desc
+    )}</p>`;
+  }
+}
 function render() {
   updateNavActive();
   setTitle();
@@ -1924,21 +1960,7 @@ function render() {
   }
 
   // Section head: the tab's full title + one-line description.
-  const headTab = NEWS_TABS.find((t) => t.value === state.type);
-  const head = $("#section-head");
-  const archiveMode = state.type === "research" && state.archive;
-  if (head) {
-    head.hidden = !headTab;
-    if (headTab) {
-      head.innerHTML = `<h2 class="section-head__title" tabindex="-1" data-focus-target>${esc(headTab.label)}${
-        archiveMode ? ": Archive" : ""
-      }</h2><p class="section-head__desc">${esc(
-        archiveMode
-          ? "Research posted more than 60 days ago."
-          : headTab.desc
-      )}</p>`;
-    }
-  }
+  drawSectionHead();
 
   const list = $("#news-list");
   const results = filter();
@@ -2028,6 +2050,8 @@ async function boot() {
   buildNav();
   wireMenu();
   $("#section").hidden = false;
+  // A section's title and line are known before the data is (audit F68).
+  if (state.view === "section") drawSectionHead();
   try {
     const [{ rows, modified }, featured] = await Promise.all([loadCSV(NEWS_CSV), loadFeatured()]);
     init(rows, modified, featured);
