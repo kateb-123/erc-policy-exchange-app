@@ -323,7 +323,7 @@ function noteSignIn(form) {
 // A failed call: the sign-in case gets its link, the rest their message.
 function fail(form, r) {
   if (r.status === 401) return noteSignIn(form);
-  return fail(form, r);
+  return note(form, r.error, 'error');
 }
 // A running count under a box. The house rule (Kate, Sep 30, the desk's
 // rewrite prompt): titles 80 characters, summaries 180, so they fit every
