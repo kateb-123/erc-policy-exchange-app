@@ -780,8 +780,8 @@ function heroCardHTML(entry, loaded) {
       ? [(it.authors || "").trim() && esc(it.authors.trim()), src && `<em>${esc(src)}</em>`, date && esc(hcFmt(date, { month: "long", year: "numeric" }))]
           .filter(Boolean)
           .join("<br>")
-      : kind === "opportunity" // the deadline on its own line (Kate, Sep 24)
-        ? [src && esc(src), deadline && esc(deadline === "Rolling" ? "Rolling deadline" : `Apply by ${deadline}`)].filter(Boolean).join("<br>")
+      : kind === "opportunity" // the deadline on its own line (Kate, Sep 24), styled like the journal on the research card (Kate, Oct 1, pick A)
+        ? [src && esc(src), deadline && `<span class="hc__due">${esc(deadline === "Rolling" ? "Rolling deadline" : `Apply by ${deadline}`)}</span>`].filter(Boolean).join("")
         : kind === "headline" || kind === "event"
           ? hcLine([src, date && formatDate(it.date)])
           : mark(cleanBlurb(it.blurb).slice(0, 140));

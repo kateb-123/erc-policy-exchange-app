@@ -1576,16 +1576,33 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
   gap: calc(12 * var(--u));
   min-width: 0;
 }
+/* The words beside the picture carry the research card's hierarchy (Kate,
+   Oct 1, pick A of three): the source at the authors' size, the deadline on
+   its own line in italic maroon like the journal, the summary a step bigger. */
 #wn-feat .hc .hc-beside .hc__meta {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   overflow: hidden;
-  font-size: calc(22 * var(--u));
+  font-size: calc(26 * var(--u));
+  line-height: 1.35;
+  color: var(--g900);
+}
+#wn-feat .hc .hc__due {
+  display: block;
+}
+#wn-feat .hc .hc-beside .hc__due {
+  margin-top: calc(6 * var(--u));
+  font-style: italic;
+  color: var(--maroon-muted);
 }
 #wn-feat .hc .hc-beside .hc__blurb {
   -webkit-line-clamp: 4;
-  font-size: calc(20 * var(--u));
+  margin-top: calc(14 * var(--u));
+  font-size: calc(22 * var(--u));
+}
+#wn-feat .hc--dark .hc-beside .hc__due {
+  color: var(--cream);
 }
 #wn-feat .hc .hc-beside .hc__img--shot {
   width: calc(400 * var(--u));
