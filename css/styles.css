@@ -61,7 +61,7 @@ html {
 body {
   margin: 0;
   font-family: var(--sans);
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.5;
   color: var(--g900);
   background: #fff;
@@ -146,7 +146,7 @@ a:hover {
   flex-shrink: 0;
   margin: 0;
   font-family: var(--head);
-  font-size: 22px;
+  font-size: 1.375rem;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.005em;
@@ -187,7 +187,7 @@ a:hover {
   padding: 24px 0 21px;
   font-family: var(--head);
   font-weight: 600;
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -246,7 +246,7 @@ a:hover {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 16px;
+  font-size: 1rem;
   pointer-events: none;
 }
 .topnav__search input {
@@ -259,7 +259,7 @@ a:hover {
   border-radius: 0;
   background: transparent;
   font-family: var(--sans);
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--g900);
 }
 .topnav__search input::placeholder {
@@ -330,7 +330,7 @@ a:hover {
   background: #fff;
   box-shadow: inset 0 0 0 2px var(--maroon);
   font-family: var(--head);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.02em;
@@ -340,7 +340,7 @@ a:hover {
 }
 .slab-btn small {
   font-family: var(--sans);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 400;
   line-height: 1;
   letter-spacing: 0;
@@ -368,7 +368,7 @@ a:hover {
   background: var(--maroon);
   box-shadow: inset 0 0 0 2px var(--maroon);
   font-family: var(--head);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.02em;
@@ -404,7 +404,7 @@ a:hover {
   border-top: 1px solid var(--g400);
 }
 .slab-meta {
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.4;
   color: var(--g600);
   margin: 0;
@@ -423,7 +423,7 @@ a:hover {
 }
 .split__hd {
   font-family: var(--head);
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.2;
   color: var(--maroon);
@@ -483,7 +483,7 @@ a:hover {
 .feat__sec {
   flex-shrink: 0;
   font-family: var(--head);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.3;
   letter-spacing: 0.06em;
@@ -501,7 +501,7 @@ a:hover {
 }
 .feat h3 {
   font-family: var(--head);
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 600;
   line-height: 1.2;
   color: var(--maroon);
@@ -524,7 +524,7 @@ a:hover {
   text-decoration: underline;
 }
 .feat h3 a i {
-  font-size: 15px;
+  font-size: 0.9375rem;
   color: var(--g600);
 }
 /* Source and date, one line: a long source gives way, the date never does. */
@@ -533,7 +533,7 @@ a:hover {
   width: 100%;
   min-width: 0;
   font-family: var(--head);
-  font-size: 16px;
+  font-size: 1rem;
   font-style: italic;
   font-weight: 400;
   line-height: 1.4;
@@ -550,7 +550,7 @@ a:hover {
   flex-shrink: 0;
 }
 .feat__b {
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.5;
   color: var(--g900);
   margin: 0;
@@ -613,7 +613,7 @@ a:hover {
   border: 0;
   background: transparent;
   color: var(--maroon);
-  font-size: 15px;
+  font-size: 0.9375rem;
   cursor: pointer;
 }
 .rail__pause:hover {
@@ -688,7 +688,7 @@ a:hover {
 .rail__sec {
   display: block;
   font-family: var(--head);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 400;
   line-height: 1.3;
   letter-spacing: 0.06em;
@@ -702,7 +702,7 @@ a:hover {
   overflow: hidden;
   margin: 4px 0 0;
   font-family: var(--head);
-  font-size: 17px;
+  font-size: 1.0625rem;
   font-weight: 600;
   line-height: 1.35;
   color: var(--maroon);
@@ -710,7 +710,7 @@ a:hover {
 .rail__src {
   display: block;
   margin: 6px 0 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.5;
   color: var(--g600);
 }
@@ -740,7 +740,7 @@ a:hover {
   border: 0;
   background: transparent;
   color: var(--maroon);
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
 }
 .caro__btn:hover {
@@ -749,7 +749,7 @@ a:hover {
 .caro__count {
   min-width: 52px;
   text-align: center;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1;
   color: var(--g600);
   font-variant-numeric: tabular-nums;
@@ -804,7 +804,7 @@ a:hover {
     min-height: 284px;
   }
   .feat h3 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
   .feat h3 a {
     -webkit-line-clamp: 5;
@@ -816,7 +816,7 @@ a:hover {
   .button-group .slab-btn {
     padding-left: 12px;
     padding-right: 12px;
-    font-size: 13px;
+    font-size: 0.8125rem;
     letter-spacing: 0;
   }
 }
@@ -844,7 +844,7 @@ a:hover {
     margin-top: 48px;
   }
   .split__hd {
-    font-size: 22px;
+    font-size: 1.375rem;
   }
 }
 
@@ -888,7 +888,7 @@ a:hover {
     background: none;
   }
   .split__hd {
-    font-size: 26px;
+    font-size: 1.625rem;
   }
   #wn-split {
     display: contents;
@@ -958,7 +958,7 @@ a:hover {
   }
   .slab-cta .fa-arrow-right {
     display: inline-block;
-    font-size: 13px;
+    font-size: 0.8125rem;
     line-height: 1;
   }
   /* The update and credit lines under both columns, "Curated by" on its
@@ -968,7 +968,7 @@ a:hover {
     margin-top: 20px;
   }
   .slab-meta {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
 }
 /* The section list's icons (laptops only): the section's Aggie UX glyph in
@@ -1863,10 +1863,10 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
   -webkit-line-clamp: 6;
 }
 #wn-feat[data-len="mid"] h3 {
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 #wn-feat[data-len="long"] h3 {
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 #wn-feat[data-len="long"] .feat__b {
   display: none;
@@ -1875,10 +1875,10 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
    three lines and a one-line teaser; longer, five lines and no teaser. The
    tallest is 357px of the laptop card's 360. */
 #wn-feat.has-wide[data-len="short"] h3 {
-  font-size: 20px;
+  font-size: 1.25rem;
 }
 #wn-feat.has-wide[data-len="mid"] h3 {
-  font-size: 18px;
+  font-size: 1.125rem;
 }
 #wn-feat.has-wide h3 a,
 #wn-feat.has-wide .feat__plain {
@@ -1900,13 +1900,13 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
     -webkit-line-clamp: 5;
   }
   #wn-feat[data-len="short"] h3 {
-    font-size: 20px;
+    font-size: 1.25rem;
   }
   #wn-feat[data-len="mid"] h3 {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
   #wn-feat[data-len="long"] h3 {
-    font-size: 17px;
+    font-size: 1.0625rem;
   }
   #wn-feat[data-len="long"] h3 a,
   #wn-feat[data-len="long"] .feat__plain {
@@ -1915,14 +1915,14 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
   /* On a phone a picture card has an 18px title up to three lines and no
      teaser, the source a size smaller so "ERC • Sep 25, 2026" fits. */
   #wn-feat.has-wide[data-len] h3 {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
   #wn-feat.has-wide[data-len] h3 a,
   #wn-feat.has-wide[data-len] .feat__plain {
     -webkit-line-clamp: 3;
   }
   #wn-feat.has-wide .feat__src {
-    font-size: 14px;
+    font-size: 0.875rem;
   }
   #wn-feat.has-wide .feat__b {
     display: none;
@@ -1953,7 +1953,7 @@ main {
 }
 .section-head__title {
   font-family: var(--head);
-  font-size: 36px;
+  font-size: 2.25rem;
   font-weight: 700;
   line-height: 1.2;
   color: var(--maroon);
@@ -1962,7 +1962,7 @@ main {
 }
 .section-head__desc,
 .section-head .results__count {
-  font-size: 20px;
+  font-size: 1.25rem;
   line-height: 1.5;
   color: var(--g900);
   margin: 16px 0 0;
@@ -1996,7 +1996,7 @@ main {
 }
 .tgroup__label {
   font-family: var(--head);
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 700;
   line-height: 1;
   text-transform: uppercase;
@@ -2015,7 +2015,7 @@ main {
   box-shadow: inset 0 0 0 2px var(--maroon);
   color: var(--maroon);
   font-family: var(--head);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -2045,7 +2045,7 @@ main {
   box-shadow: none;
   color: var(--g700);
   font-family: var(--sans);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
@@ -2068,7 +2068,7 @@ main {
   border: 0;
   background: none;
   font-family: var(--sans);
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--g700);
   padding: 4px 2px;
   cursor: pointer;
@@ -2091,7 +2091,7 @@ main {
   margin-left: auto;
   gap: 24px;
   padding: 8px 0 16px;
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--g600);
 }
 .results__count {
@@ -2109,7 +2109,7 @@ main {
   border: 0;
   background: none;
   font-family: var(--head);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--g700);
   padding: 12px 0;
@@ -2167,7 +2167,7 @@ main {
 }
 .feed-item__title {
   font-family: var(--head);
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.2;
   color: var(--maroon);
@@ -2186,12 +2186,12 @@ main {
 }
 /* The outbound marker after a title that leaves the site. */
 .feed-ext {
-  font-size: 14px;
+  font-size: 0.875rem;
   margin-left: 6px;
   color: var(--g600);
 }
 .feed-item__source {
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--g600);
   margin-top: 4px;
 }
@@ -2201,11 +2201,11 @@ main {
 /* Search: why a row matched when the words are not in its title (audit F51). */
 .feed-item__hit {
   margin-top: 4px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--g600);
 }
 .feed-item__meta {
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.5;
   color: var(--g600);
   margin-top: 2px;
@@ -2252,7 +2252,7 @@ main {
   display: grid;
   place-items: center;
   color: var(--maroon);
-  font-size: 18px;
+  font-size: 1.125rem;
   cursor: pointer;
 }
 .chevron {
@@ -2264,7 +2264,7 @@ main {
 /* Search results: the row opens the source, marked with a small arrow. */
 .feed-goto {
   color: var(--maroon);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 /* The opened row: a solid maroon rule along its foot, the way Aggie UX's
    slim Details marks an open item (Kate, Sep 23; the left edge is gone). The
@@ -2286,7 +2286,7 @@ main {
 /* The way out of a summary: a maroon text action. */
 .feed-link {
   font-family: var(--head);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--maroon);
   text-decoration: none;
@@ -2303,7 +2303,7 @@ main {
   border-top: 1px solid var(--g400);
 }
 .feed-more__count {
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--g600);
 }
 
@@ -2315,7 +2315,7 @@ main {
   display: inline-flex;
   align-items: center;
   font-family: var(--head);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.04em;
@@ -2352,7 +2352,7 @@ main {
 }
 .ncard__title {
   font-family: var(--head);
-  font-size: 20px;
+  font-size: 1.25rem;
   font-weight: 600;
   line-height: 1.2;
   color: var(--maroon);
@@ -2367,7 +2367,7 @@ main {
   text-decoration: underline;
 }
 .ncard__title i {
-  font-size: 13px;
+  font-size: 0.8125rem;
   margin-left: 6px;
   color: var(--g600);
 }
@@ -2376,7 +2376,7 @@ main {
   font-family: var(--head);
   font-style: italic;
   font-weight: 400;
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.5;
   color: var(--g800);
 }
@@ -2403,7 +2403,7 @@ main {
   background: none;
   cursor: pointer;
   font-family: var(--head);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--maroon);
   padding: 0;
@@ -2445,7 +2445,7 @@ main {
   display: block;
   margin-bottom: 6px;
   font-family: var(--head);
-  font-size: 18px;
+  font-size: 1.125rem;
   color: var(--g900);
 }
 .state--loading {
@@ -2473,7 +2473,7 @@ main {
 .state__hint {
   display: block;
   margin-top: 10px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--g600);
 }
 /* Headings receive focus after navigation so screen readers announce the new
@@ -2532,7 +2532,7 @@ main {
   border-radius: 2px;
   color: var(--maroon);
   font-family: var(--head);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.2;
   text-decoration: none;
@@ -2607,7 +2607,7 @@ main {
 .field > legend,
 .field__label {
   font-family: var(--head);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.2;
   color: var(--g900);
@@ -2615,7 +2615,7 @@ main {
 }
 .field small {
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
   color: var(--g600);
 }
@@ -2629,7 +2629,7 @@ main {
   box-shadow: inset 0 0 0 1px var(--g600);
   background: #fff;
   font-family: var(--sans);
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--g900);
 }
 .field textarea {
@@ -2647,7 +2647,7 @@ main {
 }
 .field__error {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.4;
   color: var(--error);
 }
@@ -2664,7 +2664,7 @@ main {
   align-items: center;
   gap: 12px;
   font-family: var(--sans);
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--g900);
   cursor: pointer;
 }
@@ -2687,7 +2687,7 @@ main {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--g600);
 }
 .upload__status--error {
@@ -2706,7 +2706,7 @@ main {
   background: var(--maroon);
   color: #fff;
   font-family: var(--head);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 1;
   text-transform: uppercase;
@@ -2725,7 +2725,7 @@ main {
   border: 0;
   background: none;
   font-family: var(--head);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--maroon);
   padding: 16px 0;
@@ -2736,7 +2736,7 @@ main {
 }
 .btn-text--quiet {
   font-family: var(--sans);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 400;
   color: var(--g600);
   padding: 0;
@@ -2793,7 +2793,7 @@ main {
 }
 .done h2 {
   font-family: var(--head);
-  font-size: 24px;
+  font-size: 1.5rem;
   font-weight: 600;
   color: var(--maroon);
   margin: 0 0 12px;
@@ -2844,7 +2844,7 @@ main {
   align-items: center;
   gap: 10px;
   color: var(--maroon);
-  font-size: 16px;
+  font-size: 1rem;
   text-decoration: none;
 }
 .site-footer__link:hover span:not(.sr-only):not([aria-hidden]) {
@@ -2886,7 +2886,7 @@ main {
 }
 /* The outbound mark on a link that opens a new tab, as the feed has. */
 .ext-mark {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--g600);
 }
 
@@ -2903,7 +2903,7 @@ main {
   .topnav__title {
     flex: 1 1 auto;
     min-width: 0;
-    font-size: 18px;
+    font-size: 1.125rem;
     padding: 0;
   }
   .topnav__brand {
@@ -2924,7 +2924,7 @@ main {
     cursor: pointer;
     font-family: var(--head);
     font-weight: 600;
-    font-size: 16px;
+    font-size: 1rem;
     color: #fff;
     min-height: 44px;
     padding: 8px 0;
@@ -3001,7 +3001,7 @@ main {
     box-shadow: inset 0 0 0 1px var(--g400);
     color: var(--g900);
     font-family: var(--head);
-    font-size: 15px;
+    font-size: 0.9375rem;
     font-weight: 600;
     white-space: nowrap;
     cursor: pointer;
@@ -3025,7 +3025,7 @@ main {
     padding: 32px 0 16px;
   }
   .section-head__title {
-    font-size: 30px;
+    font-size: 1.875rem;
   }
   .tgroup--sort {
     margin-left: 0;
@@ -3071,7 +3071,7 @@ main {
   .feed-item__title {
     grid-area: title;
     margin-top: 10px;
-    font-size: 18px;
+    font-size: 1.125rem;
   }
   .feed-item__row:not(:has(.feed-item__cat)) .feed-item__title {
     margin-top: 0;
@@ -3080,14 +3080,14 @@ main {
     grid-area: src;
     min-width: 0;
     margin-top: 6px;
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   .feed-date {
     grid-area: date;
     justify-self: end;
     align-self: start;
     margin-top: 7px;
-    font-size: 14px;
+    font-size: 0.875rem;
     white-space: nowrap;
   }
   .feed-expand,
@@ -3100,7 +3100,7 @@ main {
   }
   .feed-item__meta {
     grid-area: meta;
-    font-size: 15px;
+    font-size: 0.9375rem;
   }
   .feed-more {
     padding: 16px 0;
@@ -3123,7 +3123,7 @@ main {
     border-top: 1px solid var(--g400);
   }
   .ncard__title {
-    font-size: 18px;
+    font-size: 1.125rem;
   }
   .brief {
     padding: 32px 0;
@@ -3174,7 +3174,7 @@ main {
   background: #0067b8;
   color: #fff;
   font-family: var(--head);
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .admin-bar__on {
   font-weight: 700;
@@ -3206,7 +3206,7 @@ main {
   box-shadow: 3px 3px 0 #00386b;
   color: #fff;
   font-family: var(--head);
-  font-size: 13px;
+  font-size: 0.8125rem;
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -3263,7 +3263,7 @@ main {
 }
 .admin-form h2 {
   margin: 0 0 16px;
-  font-size: 24px;
+  font-size: 1.5rem;
   color: var(--maroon);
 }
 .admin-grid {
@@ -3283,7 +3283,7 @@ main {
 .admin-field label,
 .admin-pin legend {
   font-family: var(--head);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--g900);
 }
@@ -3296,7 +3296,7 @@ main {
   box-shadow: inset 0 0 0 1px var(--g600);
   background: #fff;
   font-family: var(--sans);
-  font-size: 16px;
+  font-size: 1rem;
   color: var(--g900);
 }
 .admin-field textarea {
@@ -3309,13 +3309,13 @@ main {
 }
 .admin-field__error {
   margin: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
   line-height: 1.4;
   color: var(--error);
 }
 .admin-hint {
   margin: 0;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--g600);
 }
 /* A picture from her computer: the file box is hidden, its label is the
@@ -3398,14 +3398,14 @@ main {
 .admin-tiles legend {
   margin-bottom: 6px;
   font-family: var(--head);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--g900);
 }
 .admin-tiles__h {
   display: block;
   margin-bottom: 6px;
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--g600);
 }
 .admin-tiles__grid {
@@ -3422,7 +3422,7 @@ main {
   float: none;
   width: auto;
   padding: 0;
-  font-size: 14px;
+  font-size: 0.875rem;
 }
 .admin-tile {
   position: relative;
@@ -3459,12 +3459,12 @@ main {
 }
 .admin-tile__name {
   font-family: var(--head);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 700;
   color: var(--g900);
 }
 .admin-tile small {
-  font-size: 12px;
+  font-size: 0.75rem;
   line-height: 1.3;
   color: var(--g600);
 }
@@ -3488,7 +3488,7 @@ main {
   align-items: center;
   gap: 10px;
   min-height: 44px;
-  font-size: 16px;
+  font-size: 1rem;
   cursor: pointer;
 }
 .admin-check input {
@@ -3532,7 +3532,7 @@ main {
 }
 .admin-list h3 {
   margin: 24px 0 8px;
-  font-size: 16px;
+  font-size: 1rem;
 }
 .admin-list ul,
 ul.admin-list {
@@ -3559,7 +3559,7 @@ ul.admin-list {
   padding: 12px 20px;
   background: var(--g900);
   color: #fff;
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 /* A toast with a link stays until dismissed (audit F35). */
 .admin-toast a {
@@ -3571,7 +3571,7 @@ ul.admin-list {
   border: 0;
   background: none;
   color: #fff;
-  font-size: 20px;
+  font-size: 1.25rem;
   line-height: 1;
   cursor: pointer;
 }
@@ -3606,7 +3606,7 @@ ul.admin-list {
   }
   .topnav__title {
     flex: 1 1 0; /* the space left beside Menu, not the name's full width */
-    font-size: 16px;
+    font-size: 1rem;
     line-height: 1.15;
   }
 }
