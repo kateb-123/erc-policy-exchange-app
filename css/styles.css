@@ -1503,7 +1503,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
 }
 #wn-feat .hc[data-len="mid"] .hc-edit--wide .hc__ttl {
   font-size: calc(46 * var(--u));
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3; /* a 76 to 82 character title needs three (Kate, Oct 1: "I hate a ...") */
 }
 #wn-feat .hc[data-len="long"] .hc-edit .hc__ttl {
   font-size: calc(32 * var(--u));
