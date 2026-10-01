@@ -61,7 +61,7 @@
   <main id="main">
     <div class="section-head">
       <h1 class="section-head__title" tabindex="-1">Join the ERC newsletter</h1>
-      <p class="section-head__desc">Stay connected with what’s happening at the Texas A&amp;M Education Research Center. Each month we send the newest research, upcoming events, and key updates in education policy.</p>
+      <p class="section-head__desc">Once a month: new research, upcoming events, and education policy news.</p>
     </div>
     <div id="root"></div>
   </main>
@@ -173,7 +173,7 @@ root.innerHTML = `
       <small>Your address is used only for this newsletter.</small>
     </div>
     <div class="btns field--full">
-      <button type="submit" class="btn" id="go">Subscribe <span aria-hidden="true">»</span></button>
+      <button type="submit" class="btn" id="go">Join <span aria-hidden="true">»</span></button>
     </div>
     <p class="status field--full" id="stat" aria-live="polite"></p>
     <div class="cf field--full" id="cf"></div>
@@ -234,7 +234,7 @@ function takeToken() {
     const timer = setTimeout(() => {
       waiting = waiting.filter(fn => fn !== onToken);
       turnstile.reset(widgetId);
-      reject(new UserError("The spam check didn't finish. Nothing you typed is lost; press Subscribe to try again."));
+      reject(new UserError("The spam check didn't finish. Nothing you typed is lost; try again."));
     }, 60000);
     waiting.push(onToken);
   });
@@ -301,7 +301,7 @@ form.addEventListener('submit', async event => {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, turnstile_token: tok }),
     });
-    if (resp.status === 403) throw new UserError("The spam check didn't pass. Nothing you typed is lost; press Subscribe to try again.");
+    if (resp.status === 403) throw new UserError("The spam check didn't pass. Nothing you typed is lost; try again.");
     const data = await readReply(resp);
     if (!data.ok) throw new UserError((data.errors ?? ['Something went wrong. Try again.']).join(' '));
     form.reset();

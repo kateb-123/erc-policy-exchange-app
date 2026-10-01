@@ -64,7 +64,7 @@
   <main id="main">
     <div class="section-head">
       <h1 class="section-head__title" tabindex="-1">Share an item</h1>
-      <p class="section-head__desc">Send the ERC an event, a paper, an opportunity or a headline for the newsletter and the <a href="../">Policy Exchange</a>. We review everything before it goes out.</p>
+      <p class="section-head__desc">Send the ERC an event, research, an opportunity or a headline for the newsletter and the <a href="../">Exchange</a>. We review everything before it goes out.</p>
     </div>
     <div id="root"></div>
   </main>
@@ -132,8 +132,8 @@ const DESK = 'https://erc-content-desk.vercel.app';
 
 // The types the desk knows. "Other" goes with no type, and staff sort it.
 const TYPES = [
-  ['research', 'New Ed Policy Research'],
-  ['event', 'Event / Webinar'],
+  ['research', 'Research'],
+  ['event', 'Event'],
   ['opportunity', 'Opportunity'],
   ['headline', 'Headline'],
   ['other', 'Other'],
@@ -204,10 +204,10 @@ root.innerHTML = `
       <p class="field__error" id="d-err" hidden></p>
     </div>
     <div class="field field--full">
-      <span class="field__label" id="mlabel">Media <small>(optional: a flyer, PDF, or picture)</small></span>
+      <span class="field__label" id="mlabel">Media <small>(optional)</small></span>
       <div class="upload">
-        <button type="button" class="btn-outline" id="pick" aria-describedby="mlabel mhint mstat">Upload media</button>
-        <button type="button" class="btn-text btn-text--quiet" id="rm" hidden>Remove media</button>
+        <button type="button" class="btn-outline" id="pick" aria-describedby="mlabel mhint mstat">Upload a file</button>
+        <button type="button" class="btn-text btn-text--quiet" id="rm" hidden>Remove the file</button>
         <span class="upload__hint" id="mhint">PNG, JPG, GIF, WebP, or PDF (its first page only)</span>
         <span class="upload__status" id="mstat" role="status"></span>
         <input type="file" id="file" accept=".png,.jpg,.jpeg,.gif,.webp,.pdf" hidden>
@@ -224,9 +224,9 @@ root.innerHTML = `
       <p class="field__error" id="e-err" hidden></p>
       <small>Used only to reply about this item, and for the newsletter if you tick the box.</small>
     </div>
-    <label class="check field--full"><input type="checkbox" id="optin"><span>Add me to the ERC newsletter.</span></label>
+    <label class="check field--full"><input type="checkbox" id="optin"><span>Join the ERC newsletter.</span></label>
     <div class="btns field--full">
-      <button type="submit" class="btn" id="go">Submit <span aria-hidden="true">»</span></button>
+      <button type="submit" class="btn" id="go">Send <span aria-hidden="true">»</span></button>
     </div>
     <p class="status field--full" id="stat" aria-live="polite"></p>
     <div class="cf field--full" id="cf"></div>
@@ -327,7 +327,7 @@ const setMedia = (msg, kind) => {
 };
 const clearMedia = () => {
   mediaUrl = ''; uploadFailed = false; sendWithout = false;
-  setMedia(''); pick.textContent = 'Upload media'; rm.hidden = true;
+  setMedia(''); pick.textContent = 'Upload a file'; rm.hidden = true;
 };
 
 // Each problem shows under its own field, and the field is marked for screen
@@ -446,7 +446,7 @@ fileIn.addEventListener('change', () => {
       mediaUrl = data.url;
       // Says what went up, and that a PDF went as its first page (Sep 30 audit).
       setMedia(isPdf ? `Added the first page of ${file.name}.` : `Added ${file.name}.`);
-      pick.textContent = 'Replace media';
+      pick.textContent = 'Replace the file';
       rm.hidden = false;
     } catch (err) {
       if (gen !== uploadGen) return;
@@ -533,7 +533,7 @@ form.addEventListener('submit', async event => {
     }
     if (uploadFailed && !sendWithout) {
       sendWithout = true;
-      setStat("The media didn't upload. Press Submit again to send without it, or try the upload again.", 'error');
+      setStat("The file didn't upload. Press Send again to send without it, or try the upload again.", 'error');
       return;
     }
     await ensureCheck();
@@ -555,7 +555,7 @@ form.addEventListener('submit', async event => {
         turnstile_token: tok,
       }),
     });
-    if (resp.status === 403) throw new UserError("The spam check didn't pass. Nothing you typed is lost; press Submit to try again.");
+    if (resp.status === 403) throw new UserError("The spam check didn't pass. Nothing you typed is lost; try again.");
     const data = await readReply(resp);
     if (!data.ok) throw new UserError((data.errors ?? ["Couldn't save that. Try again in a moment."]).join(' '));
 
@@ -572,16 +572,15 @@ form.addEventListener('submit', async event => {
     const heading = el('h2', '', 'Received.');
     heading.tabIndex = -1;
     doneBox.replaceChildren(heading);
-    doneBox.append(el('p', '', 'We review every submission before it goes out.'));
-    if (joined === true) doneBox.append(el('p', '', "You're on the ERC newsletter list too."));
+        if (joined === true) doneBox.append(el('p', '', "You're on the ERC newsletter list too."));
     if (joined === false) {
       const p = el('p', '', "The newsletter sign-up didn't go through. ");
-      const a = el('a', '', 'Join the newsletter here');
+      const a = el('a', '', 'Join the newsletter');
       a.href = '../newsletter/';
       p.append(a, '.');
       doneBox.append(p);
     }
-    const again = el('button', 'btn-outline', 'Submit another');
+    const again = el('button', 'btn-outline', 'Send another');
     again.type = 'button';
     again.addEventListener('click', () => {
       doneBox.hidden = true; form.hidden = false;
