@@ -44,6 +44,8 @@ const COLUMNS = [
 ];
 const TYPES = ['research', 'event', 'opportunity', 'headline'];
 const MAX_FIELD = 6000;
+// The editor's words for the sheet's columns, for the messages she reads.
+const FIELD_WORDS = { headline: 'title', blurb: 'summary', infographic: 'picture link', subtype: 'category', type: 'section' };
 const MIN_PASSWORD = 20;
 
 class BadRequest extends Error {}
@@ -202,7 +204,7 @@ function findRow(text, original) {
     const row = rowOf(header, rec.cells);
     if (header.every((h) => row[h] === String((original || {})[h] ?? '').trim())) return { header, rec, row };
   }
-  throw new Conflict('This item changed since the page loaded, so this save was refused. Copy what you typed somewhere first, then reload the page and make the change again.');
+  throw new Conflict('This item changed since the page loaded. Copy what you typed, then reload the page and make the change again.');
 }
 
 // A picture is a web address, or one saved from her computer into the
@@ -214,7 +216,7 @@ function cleanFields(fields) {
   for (const k of COLUMNS) {
     if (!(k in (fields || {}))) continue;
     const v = String(fields[k] ?? '').replace(/\r\n?/g, '\n').trim();
-    if (v.length > MAX_FIELD) throw new BadRequest(`The ${k} is too long.`);
+    if (v.length > MAX_FIELD) throw new BadRequest(`The ${FIELD_WORDS[k] || k} is too long.`);
     out[k] = v;
   }
   if ('headline' in out && !out.headline) throw new BadRequest('An item needs a title.');
@@ -224,7 +226,7 @@ function cleanFields(fields) {
     throw new BadRequest('The picture link needs to start with http:// or https://, or be a picture saved from your computer.');
   }
   if (out.date && !/^\d{4}(-\d{2}(-\d{2})?)?$/.test(out.date)) {
-    throw new BadRequest('Write the date as 2026-10-01.');
+    throw new BadRequest('Write the date as 2026-10-01, 2026-10 or 2026.');
   }
   return out;
 }
@@ -267,7 +269,7 @@ function readFeatured(text) {
   } catch {
     // A hand edit or a merge left it broken: stop rather than save over it,
     // which would bring every hidden item back and drop every pin.
-    throw new Conflict('The pins file (data/featured.json) is damaged, so nothing was saved over it. Fix it on GitHub first.');
+    throw new Conflict('The pins file (data/featured.json) is damaged. Fix it on GitHub first.');
   }
   return {
     pins: Array.isArray(j.pins) ? j.pins : [],
@@ -337,7 +339,7 @@ function applyFeatured(f, op, body) {
     if (!ISO_DAY.test(card.until)) throw new BadRequest('Pick the last day to show the card.');
     const replace = String(body.replace || '');
     const at = replace ? f.cards.findIndex((c) => c.id === replace) : -1;
-    if (replace && at < 0) throw new Conflict('That card is gone already. Copy what you typed first, then reload the page.');
+    if (replace && at < 0) throw new Conflict('That card is gone. Copy what you typed, then reload the page.');
     if (at >= 0) {
       f.cards[at] = { ...card, id: replace };
       return `Admin: change the card "${card.headline}"`;
@@ -443,7 +445,7 @@ async function savePicture(gh, body) {
   // 3 MB of file is 4,194,304 characters of base64, the same line the form
   // draws (audit F39: the two limits used to differ).
   if (data.length > 4_194_304) throw new BadRequest('That picture is over 3 MB. Make it smaller first.');
-  if (!/^[A-Za-z0-9+/]+=*$/.test(data)) throw new BadRequest('That picture did not come through whole.');
+  if (!/^[A-Za-z0-9+/]+=*$/.test(data)) throw new BadRequest("That picture didn't come through whole.");
   const base = String(body.name || 'picture').replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'picture';
   const hash = crypto.createHash('sha1').update(data).digest('hex').slice(0, 8);
   const path = `assets/pictures/${base}-${hash}.${ext}`;
@@ -575,7 +577,7 @@ async function handleSave(req, res, { env = process.env, gh = github(env) } = {}
     if (err instanceof BadRequest) return send(res, 400, { ok: false, error: err.message });
     if (err instanceof Conflict) return send(res, 409, { ok: false, error: err.message });
     console.error('admin save failed', err);
-    return send(res, 502, { ok: false, error: "Couldn't save to GitHub just now. Try again in a minute." });
+    return send(res, 502, { ok: false, error: "Couldn't save to GitHub. Try again in a minute." });
   }
 }
 

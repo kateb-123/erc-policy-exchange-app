@@ -154,7 +154,7 @@ function toast(msg, { link, linkText } = {}) {
   clearTimeout(toastTimer);
   if (link) {
     t.append(' ', el('a', { href: link, target: '_blank', rel: 'noopener' }, linkText));
-    const x = el('button', { type: 'button', class: 'admin-toast__x', 'aria-label': 'Dismiss' }, '×');
+    const x = el('button', { type: 'button', class: 'admin-toast__x', 'aria-label': 'Close' }, '×');
     x.addEventListener('click', () => (t.hidden = true));
     t.append(' ', x);
     return;
@@ -167,13 +167,13 @@ function toast(msg, { link, linkText } = {}) {
 /* ---------- The strip at the top ---------- */
 
 function buildBar() {
-  const bar = el('div', { class: 'admin-bar', role: 'region', 'aria-label': 'Admin' });
+  const bar = el('div', { class: 'admin-bar', role: 'region', 'aria-label': 'Editing' });
   bar.append(
     el('span', { class: 'admin-bar__on' }, 'Editing is on'),
     el('button', { type: 'button', 'data-admin': 'card' }, 'Add to New & Upcoming'),
     el('button', { type: 'button', 'data-admin': 'hidden' }, 'Hidden items'),
     el('button', { type: 'button', 'data-admin': 'out' }, 'Sign out'),
-    el('span', { class: 'admin-bar__warn', role: 'status', hidden: true }, 'Editing turns off in 1 minute. Click anywhere to stay.')
+    el('span', { class: 'admin-bar__warn', role: 'status', hidden: true }, 'Editing turns off in 1 minute. Click anywhere to keep editing.')
   );
   bar.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-admin]');
@@ -198,8 +198,8 @@ function decorate() {
     if ($(':scope > .admin-edit', node)) return;
     const key = node.dataset.key;
     if (key.startsWith('fixed:')) return; // the Share card has nothing to edit
-    const title = key.startsWith('card:') ? 'this card' : (findItem(key) || {}).headline || 'this item';
-    const b = el('button', { type: 'button', class: 'admin-edit', 'aria-label': `Edit: ${title}` }, 'Edit');
+    const title = key.startsWith('card:') ? 'card' : (findItem(key) || {}).headline || 'item';
+    const b = el('button', { type: 'button', class: 'admin-edit', 'aria-label': `Edit ${title}` }, 'Edit');
     b.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -227,7 +227,7 @@ const FIELDS = [
   ['headline', 'Title', 'text'],
   ['link', 'Link', 'url'],
   ['type', 'Section', 'type'],
-  ['subtype', 'Category', 'text', 'The tag on the item, for example Working Paper or Texas.'],
+  ['subtype', 'Category', 'text', 'For example Working Paper or Texas.'],
   ['source', 'Source', 'text'],
   ['date', 'Date', 'day', 'For an event, the day it happens.'],
   ['deadline', 'Deadline', 'text', '2026-10-01, or "rolling".'],
@@ -237,7 +237,7 @@ const FIELDS = [
   ['medium', 'Medium', 'text', 'Radio, TV, newspaper, magazine.'],
   ['topic', 'Topic', 'text'],
   ['blurb', 'Summary', 'area'],
-  ['infographic', 'Picture or infographic link', 'url', 'A direct link to a picture (ending .jpg or .png), or a Google Drive file. Headlines need one. Sizes: a headshot 400 x 500, a wide strip 1200 x 240, a 16:9 picture 960 x 540, the whole card 1200 x 500.'],
+  ['infographic', 'Picture link', 'url', 'A direct link to a picture (ending .jpg, .png or .webp), or a Google Drive file.'],
 ];
 // Which fields belong to which section; the rest stay out of the way
 // (Kate, Sep 30: "why do we have authors for things that don't have authors?").
@@ -292,7 +292,7 @@ function closeGuard(d, form, extraButtons = []) {
   const box = el('div', { class: 'admin-confirm', 'data-guard': true, hidden: true });
   const go = el('button', { type: 'button', class: 'btn admin-danger-btn' }, 'Close without saving');
   const stay = el('button', { type: 'button', class: 'btn-text' }, 'Keep editing');
-  box.append(el('p', {}, 'Close without saving? What you changed here will be lost.'), go, stay);
+  box.append(el('p', {}, 'What you changed here will be lost.'), go, stay);
   go.addEventListener('click', () => d.close());
   stay.addEventListener('click', () => {
     box.hidden = true;
@@ -318,7 +318,7 @@ function note(form, msg, kind, link) {
 // offers the door in a new tab; once signed in there, Save works here again
 // (audit F35).
 function noteSignIn(form) {
-  note(form, 'Your sign-in ran out. Nothing here is lost:', 'error', { href: DOOR, text: 'sign in again in a new tab, then Save.' });
+  note(form, 'Your sign-in ran out.', 'error', { href: DOOR, text: 'Sign in again in a new tab, then Save.' });
 }
 // A failed call: the sign-in case gets its link, the rest their message.
 function fail(form, r) {
@@ -336,7 +336,7 @@ function titleCount(input, text) {
     const n = input.value.trim().length;
     hint.textContent = text
       ? text(n)
-      : `${n} characters. Aim for ${TITLE_MAX} or fewer: past 100 the New & Upcoming card sets the title smaller and drops the summary.`;
+      : `${n} characters. Aim for ${TITLE_MAX} or fewer.`;
   };
   input.addEventListener('input', say);
   say();
@@ -352,7 +352,7 @@ const RULES = {
     v && !(/^https?:\/\/\S+$/i.test(v) || /^assets\/pictures\/[a-z0-9-]+\.(jpe?g|png|webp)$/.test(v))
       ? 'The picture link needs to start with http:// or https://, or be a picture saved from your computer.'
       : '',
-  date: (v) => (v && !/^\d{4}(-\d{2}(-\d{2})?)?$/.test(v) ? 'Write the date as 2026-10-01.' : ''),
+  date: (v) => (v && !/^\d{4}(-\d{2}(-\d{2})?)?$/.test(v) ? 'Write the date as 2026-10-01, 2026-10 or 2026.' : ''),
 };
 // pairs: [input, rule]. Returns a function that checks them all, focuses the
 // first one that fails, and says whether the form may be sent.
@@ -435,7 +435,7 @@ function pictureUpload(linkInput) {
     if (!r.ok) return tell(r.status === 401 ? 'Your sign-in ran out. Sign in again in a new tab, then pick the picture again.' : r.error, true);
     linkInput.value = r.path;
     linkInput.dispatchEvent(new Event('input', { bubbles: true }));
-    tell('Picture saved. Now save this form to use it; the live site shows it after the next publish.');
+    tell('Picture saved. Save this form to use it.');
   });
   wrap.append(input, label, say);
   return wrap;
@@ -472,7 +472,6 @@ function openItem(key) {
   // Inert: the card's title is a real link, and it must not take the Tab
   // key or an Enter mid-edit (audit F37).
   const preview = el('div', { class: 'admin-preview', inert: true });
-  preview.append(el('p', { class: 'admin-tiles__h' }, 'The card, as it will draw'));
   const previewCard = el('div', { id: 'wn-feat', class: 'feat no-art admin-preview__card' });
   preview.append(previewCard);
   form.append(preview);
@@ -496,7 +495,7 @@ function openItem(key) {
     const row = fieldRow(id, label, control, kind === 'day' && control.type === 'text' ? `Written 2026-10-01, or a year or month on its own. ${hint}` : hint);
     if (name === 'blurb' || name === 'headline' || name === 'infographic') row.classList.add('admin-field--wide');
     if (name === 'headline') row.append(titleCount(control));
-    if (name === 'blurb') row.append(titleCount(control, (n) => `${n} characters. Aim for ${SUMMARY_MAX} or fewer, so the summary fits every card whole.`));
+    if (name === 'blurb') row.append(titleCount(control, (n) => `${n} characters. Aim for ${SUMMARY_MAX} or fewer.`));
     // The stars hint once, under Summary; it holds for the title too (audit F55).
     if (name === 'blurb') row.append(el('p', { class: 'admin-hint' }, 'Stars round a book or journal name, *like this*, show it in italics, in the title too.'));
     if (name === 'infographic') row.append(pictureUpload(control));
@@ -525,7 +524,7 @@ function openItem(key) {
   const pinUntil = el('input', { type: 'date', id: 'a-until', min: X.TODAY });
   pinUntil.value = pin ? pin.until : addDays(14);
   const onLabel = el('label', { class: 'admin-check', for: 'a-pin' });
-  onLabel.append(pinOn, document.createTextNode(' Pin it to the front'));
+  onLabel.append(pinOn, document.createTextNode(' Pin it'));
   pinBox.append(onLabel, fieldRow('a-until', 'Until', pinUntil));
   // The date only matters while the pin is on (audit F55).
   pinUntil.disabled = !pinOn.checked;
@@ -543,7 +542,7 @@ function openItem(key) {
   const darkOn = el('input', { type: 'checkbox', id: 'a-dark' });
   darkOn.checked = darkWas;
   const picLabel = el('label', { class: 'admin-check', for: 'a-pic' });
-  picLabel.append(picOn, document.createTextNode(' Show the picture on the card'));
+  picLabel.append(picOn, document.createTextNode(' Show the picture'));
   const darkLabel = el('label', { class: 'admin-check', for: 'a-dark' });
   darkLabel.append(darkOn, document.createTextNode(' Dark card'));
   // With the picture on, where it goes and the size to make it (Kate, Sep 30).
@@ -591,7 +590,7 @@ function openItem(key) {
   const yes = el('button', { type: 'button', class: 'btn admin-danger-btn' }, 'Delete it');
   const no = el('button', { type: 'button', class: 'btn-text' }, 'Keep it');
   confirmBox.append(
-    el('p', {}, 'Delete this item from the site? It stays in GitHub’s history, where it can be brought back.'),
+    el('p', {}, 'Delete this item from the site?'),
     yes,
     no
   );
@@ -631,7 +630,7 @@ function openItem(key) {
     X.state.featured = r.featured;
     X.refresh();
     d.close();
-    toast('Hidden. It leaves the live site in about a minute; "Hidden items" brings it back.');
+    toast('Hidden. It leaves the live site in about a minute.');
   });
 
   form.addEventListener('submit', async (e) => {
@@ -648,7 +647,7 @@ function openItem(key) {
       form.elements.headline.focus();
       return note(form, 'An item needs a title.', 'error');
     }
-    if (!checkAll()) return note(form, 'Fix the field marked in red first.', 'error');
+    if (!checkAll()) return note(form, 'Fix the marked field first.', 'error');
     busy(true);
     note(form, 'Saving…', 'busy');
     let newKey = key;
@@ -739,7 +738,7 @@ const ONEOFF_CARDS = []; // the Quote card is built but off the menu for now (Ka
 // its own, in FIELDS). Audit F33: the constant went missing in the Sep 30
 // dialog rewrite and the card dialog died before it opened.
 const PICTURE_HINTS = {
-  auto: 'A direct link to a picture (ending .jpg or .png), a Google Drive file, or one from your computer. The whole card is 1200 x 500.',
+  auto: 'A direct link to a picture (ending .jpg, .png or .webp), a Google Drive file, or one from your computer. The whole card is 1200 x 500.',
   quote: 'A headshot, 400 x 500.',
 };
 const isPic = (url) => /\.(jpe?g|png|webp|gif|avif)$/i.test((url || '').trim());
@@ -800,7 +799,7 @@ function picturePlaces(kind, current) {
   // A fieldset, so a screen reader hears the group's name with each choice
   // (audit F55).
   const box = el('fieldset', { class: 'admin-tiles admin-tiles--item' });
-  box.append(el('legend', { class: 'admin-tiles__h' }, 'Where the picture goes, and the size to make it'));
+  box.append(el('legend', { class: 'admin-tiles__h' }, 'Where the picture goes'));
   const grid = el('div', { class: 'admin-tiles__grid' });
   const known = opts.some(([v]) => v === current) ? current : '';
   opts.forEach(([v, name, size, art]) => {
@@ -886,7 +885,7 @@ function openCard(id) {
   const form = el('form', { class: 'admin-form', novalidate: true });
   form.append(el('h2', { id: 'admin-dlg-h' }, existing ? 'Edit card' : 'Add to New & Upcoming'));
   form.append(
-    el('p', { class: 'admin-hint' }, 'A card that shows only in New & Upcoming, first in line, until the day you pick. To put an item that is already on the site there, open it with Edit and pin it.')
+    el('p', { class: 'admin-hint' }, 'For an item already on the site, open it with Edit and pin it.')
   );
   const grid = el('div', { class: 'admin-grid' });
   const inputs = {
@@ -912,16 +911,16 @@ function openCard(id) {
   inputs.role.value = existing ? existing.role || '' : '';
   const isQuote = () => inputs.hero.value === 'quote';
   const heroRow = el('div', { class: 'admin-field' });
-  heroRow.append(inputs.hero, el('p', { class: 'admin-hint' }, 'How the card is drawn in New & Upcoming on laptops.'));
+  heroRow.append(inputs.hero);
   // One tile is no choice: the chooser waits until more cards are on the
   // menu (audit F55).
   heroRow.hidden = !ONEOFF_CARDS.length;
   const rows = [
     heroRow,
     fieldRow('c-headline', 'Title', inputs.headline),
-    fieldRow('c-link', 'Link', inputs.link, 'Optional. Where the card goes when clicked.'),
+    fieldRow('c-link', 'Link', inputs.link, 'Where the card goes when clicked.'),
     fieldRow('c-label', 'Label', inputs.label, 'The small word over the title, for example ERC or Announcement.'),
-    fieldRow('c-until', 'Show until', inputs.until),
+    fieldRow('c-until', 'Until', inputs.until),
     fieldRow('c-blurb', 'Summary', inputs.blurb),
     fieldRow('c-image', 'Picture link', inputs.image, PICTURE_HINTS.auto),
     fieldRow('c-who', 'Who said it', inputs.who),
@@ -934,10 +933,10 @@ function openCard(id) {
     titleCount(inputs.headline, (n) =>
       isQuote()
         ? `${n} characters. Aim for 120 or fewer: longer quotes show smaller in New & Upcoming.`
-        : `${n} characters. Aim for ${TITLE_MAX} or fewer: past 100 the card sets the title smaller and drops the summary.`
+        : `${n} characters. Aim for ${TITLE_MAX} or fewer.`
     )
   );
-  rows[5].append(titleCount(inputs.blurb, (n) => `${n} characters. Aim for ${SUMMARY_MAX} or fewer, so the summary fits the card whole.`));
+  rows[5].append(titleCount(inputs.blurb, (n) => `${n} characters. Aim for ${SUMMARY_MAX} or fewer.`));
   rows[5].classList.add('admin-field--wide');
   rows[6].classList.add('admin-field--wide');
   rows[6].append(pictureUpload(inputs.image));
@@ -1027,7 +1026,7 @@ function openCard(id) {
       inputs.until.focus();
       return note(form, 'Pick the last day to show the card.', 'error');
     }
-    if (!checkAll()) return note(form, 'Fix the field marked in red first.', 'error');
+    if (!checkAll()) return note(form, 'Fix the marked field first.', 'error');
     save.disabled = true;
     note(form, 'Saving…', 'busy');
     // A changed card replaces the old one in one checked save.
@@ -1054,7 +1053,7 @@ function openHidden() {
   box.append(el('h2', { id: 'admin-dlg-h' }, 'Hidden items'));
   const hidden = X.state.featured.hidden;
   if (!hidden.length) {
-    box.append(el('p', {}, 'Nothing is hidden. "Hide from the site" in an item’s editor puts it here.'));
+    box.append(el('p', {}, 'Nothing is hidden.'));
   } else {
     box.append(el('p', { class: 'admin-hint' }, 'These are off the site’s pages but still in its data file, which anyone can download. Use Delete for anything that must not be public.'));
     const ul = el('ul', { class: 'admin-list' });
