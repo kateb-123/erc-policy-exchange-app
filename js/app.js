@@ -1984,6 +1984,8 @@ function render() {
   if (results.length === 0) {
     // Filters are built from what is there, so an empty list is an empty
     // section; say that, and where a reader can help.
+    const headTab = NEWS_TABS.find((t) => t.value === state.type);
+    const archiveMode = state.type === "research" && state.archive;
     const what = archiveMode
       ? "Nothing in the Archive yet."
       : state.subtype !== "all"
