@@ -3032,6 +3032,15 @@ main {
     box-shadow: none;
     color: #fff;
   }
+  /* Clear is quiet until a category is picked, like the laptop Clear. */
+  .chip--clear {
+    background: #fff;
+    color: var(--g700);
+  }
+  .chip--clear:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
   .chip:focus-visible {
     outline-offset: 2px;
   }

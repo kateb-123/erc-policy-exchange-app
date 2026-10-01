@@ -31,28 +31,28 @@ const NEWS_TABS = [
     label: "New Education Policy Research",
     nav: "Research",
     icon: "aggie/book-open.svg",
-    desc: "New working papers, peer-reviewed studies, and reports.",
+    desc: "Working papers, peer-reviewed studies, and reports.",
   },
   {
     value: "event",
     label: "Upcoming Events",
     nav: "Events",
     icon: "aggie/calendar.svg",
-    desc: "Webinars, forums, and conferences on education policy from organizations across the country.",
+    desc: "Webinars, forums, and conferences on education policy.",
   },
   {
     value: "opportunity",
     label: "Opportunities",
     nav: "Opportunities",
     icon: "aggie/hand-holding-dollar.svg",
-    desc: "Fellowships, grants, and calls for proposals relevant to education researchers.",
+    desc: "Fellowships, grants, and calls for proposals.",
   },
   {
     value: "headline",
     label: "Education Headlines",
     nav: "Headlines",
     icon: "aggie/newspaper.svg",
-    desc: "News about Texas and national education policy from outlets across the state and country.",
+    desc: "Texas and national education policy news.",
   },
 ];
 
@@ -738,7 +738,7 @@ function wnFeatHTML({ it, tab }, shape) {
    that photo layout with an empty slot, shown only to a signed-in editor
    (html.admin-on), so she sees where a picture would go; visitors never see
    an empty slot. */
-const HC_SUPER = { research: "New research", event: "Upcoming event", opportunity: "Opportunity", headline: "Headlines" };
+const HC_SUPER = { research: "New research", event: "Upcoming event", opportunity: "Opportunity", headline: "Headline" };
 const hcDate = (iso) => {
   const [y, m, d] = (iso || "").split("-").map(Number);
   return y && m && d ? new Date(Date.UTC(y, m - 1, d)) : null;
@@ -781,7 +781,7 @@ function heroCardHTML(entry, loaded) {
           .filter(Boolean)
           .join("<br>")
       : kind === "opportunity" // the deadline on its own line (Kate, Sep 24), styled like the journal on the research card (Kate, Oct 1, pick A)
-        ? [src && esc(src), deadline && `<span class="hc__due">${esc(deadline === "Rolling" ? "Rolling deadline" : `Apply by ${deadline}`)}</span>`].filter(Boolean).join("")
+        ? [src && esc(src), deadline && `<span class="hc__due">${esc(deadline === "Rolling" ? "Rolling deadline" : `Due ${deadline}`)}</span>`].filter(Boolean).join("")
         : kind === "headline" || kind === "event"
           ? hcLine([src, date && formatDate(it.date)])
           : mark(cleanBlurb(it.blurb).slice(0, 140));
@@ -912,7 +912,6 @@ function heroCardHTML(entry, loaded) {
 function shareCardHTML() {
   return `<div class="hc" data-len="short"><div class="hc__in"><p class="hc__band">Contribute</p><div class="hc__v hc-share">
       <h3 class="hc__ttl"><span class="feat__plain">${esc(SHARE_CARD.it.headline)}</span></h3>
-      <p class="hc__meta">Send it to the ERC and we'll add it to the exchange.</p>
       <a class="hc__btn" href="share/">Share an item <span aria-hidden="true">&raquo;</span></a>
     </div></div></div>`;
 }
@@ -1425,7 +1424,7 @@ const TOOLBAR_SORTS = {
 const DETAIL_LINK_LABEL = {
   opportunity: "Open at the source",
   event: "Register at the source",
-  research: "Open at the source",
+  research: "Read at the source",
   headline: "Read at the source",
 };
 
@@ -1492,7 +1491,7 @@ const itemTitleLink = (it, ext = false) => {
 const itemDetailLink = (it) => {
   const id = briefId(it);
   if (id)
-    return `<a class="feed-link" href="?brief=${id}" data-brief="${id}">Read the full brief »</a>`;
+    return `<a class="feed-link" href="?brief=${id}" data-brief="${id}">Read the brief »</a>`;
   const link = (it.link || "").trim();
   return link
     ? `<a class="feed-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${DETAIL_LINK_LABEL[state.type] || "Read more"} »${NEW_TAB}</a>`
@@ -1535,7 +1534,7 @@ function renderToolbar() {
   // A small "Sort" label before the pair, so the unchosen option reads as a
   // choice and not a caption (audit F70).
   const sortGroup = `
-    <div class="tgroup tgroup--sort" role="group" aria-label="Sort by">
+    <div class="tgroup tgroup--sort" role="group" aria-label="Sort">
       <span class="tgroup__label">Sort</span>${sortHTML}
     </div>`;
 
@@ -1564,15 +1563,15 @@ function renderToolbar() {
   // view and not as a category (audit F47); the row looks the same.
   const catGroup = `
     <div class="tgroup tgroup--show">
-      <span class="tgroup__set" role="group" aria-label="Quick search by category"><span class="tgroup__label">Quick search</span>${catBtns}${clearBtn}</span>${
+      <span class="tgroup__set" role="group" aria-label="Quick search"><span class="tgroup__label">Quick search</span>${catBtns}${clearBtn}</span>${
         archiveBtn ? `<span class="tgroup__set" role="group" aria-label="View">${archiveBtn}</span>` : ""
       }
     </div>`;
   // Phones get the same choices as one row of filter chips that slides
-  // sideways, "All" first and Archive last (Kate, Sep 23). CSS shows this row
+  // sideways, Clear first (Kate, Oct 1: one word on every width) and Archive last (Kate, Sep 23). CSS shows this row
   // or the buttons above by width; both answer to the same click handler.
   const chips = [
-    `<button type="button" class="chip" data-subtype="all" aria-pressed="${state.subtype === "all" && !state.archive}">All</button>`,
+    `<button type="button" class="chip chip--clear" data-subtype="all"${state.subtype === "all" ? " disabled" : ""}>Clear</button>`,
     ...subs.map(
       (v) =>
         `<button type="button" class="chip" data-subtype="${esc(v)}" aria-pressed="${state.subtype === v}">${esc(v)}</button>`
@@ -1581,7 +1580,7 @@ function renderToolbar() {
       ? `<button type="button" class="chip chip--archive" data-archive aria-pressed="${state.archive}">${faIcon("box-archive")} Archive</button>`
       : "",
   ].join("");
-  const chipRow = `<div class="chips" role="group" aria-label="Quick search by category">${chips}</div>`;
+  const chipRow = `<div class="chips" role="group" aria-label="Quick search">${chips}</div>`;
 
   // The count node is persistent (it is the live region screen readers track),
   // so detach it before the rebuild and seat it at the head of the sort row.
@@ -1630,7 +1629,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
       const dateHTML = rv.label
         ? `<span class="feed-date">${esc(rv.label)}${
             soonText
-              ? `<span class="feed-date__soon"> · ${esc(soonText)}</span>${isOpp ? `<span class="sr-only"> closing soon</span>` : ""}`
+              ? `<span class="feed-date__soon"> · ${esc(soonText)}</span>`
               : ""
           }</span>`
         : "";
@@ -1766,17 +1765,14 @@ function renderSearch() {
     .sort((a, b) => b.title - a.title || a.far - b.far || (b.it.date || "").localeCompare(a.it.date || ""))
     .map((r) => r.it);
 
-  $("#news-count").innerHTML = `<strong>${results.length}</strong> ${
-    results.length === 1 ? "result" : "results"
-  } for “${esc(q)}”`;
+  // At zero the count line is the message, so the page says it once.
+  $("#news-count").innerHTML = results.length
+    ? `<strong>${results.length}</strong> ${results.length === 1 ? "result" : "results"} for “${esc(q)}”`
+    : `No results for “${esc(q)}”`;
 
   const list = $("#news-list");
   if (results.length === 0) {
-    list.innerHTML = `
-      <div class="state">
-        <strong>No matches for “${esc(q)}”</strong>
-        Try a different word, or browse a section from the top of the page.
-      </div>`;
+    list.innerHTML = `<div class="state">Try another word.</div>`;
     return;
   }
 
@@ -1856,7 +1852,7 @@ function briefBackLabel() {
   const from = state.briefFrom;
   if (!from) return "Back to Research";
   if (from.view === "search") return "Back to search results";
-  if (from.view === "home") return "Back to the home page";
+  if (from.view === "home") return "Back to the Exchange";
   if (from.type === "research" && from.archive) return "Back to the Archive";
   const tab = NEWS_TABS.find((t) => t.value === from.type);
   return `Back to ${tab ? tab.nav : "Research"}`;
@@ -2071,7 +2067,7 @@ async function boot() {
         ${
           local
             ? "This page needs to be served over http, not opened from the file system. From the project folder run <code>python3 -m http.server 8000</code>, then visit <code>http://localhost:8000</code>."
-            : 'Refresh the page to try again. If it keeps happening, email <a href="mailto:erc@tamu.edu">erc@tamu.edu</a>.'
+            : 'If it keeps happening, email <a href="mailto:erc@tamu.edu">erc@tamu.edu</a>.'
         }
         <div class="feed-actions state__actions"><button type="button" class="feed-link state__retry">Try again</button></div>
         ${local ? `<span class="state__hint">(${esc(err.message)})</span>` : ""}
