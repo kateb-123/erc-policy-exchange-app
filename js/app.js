@@ -758,17 +758,19 @@ const hcFmt = (date, opts) => date.toLocaleDateString("en-US", { timeZone: "UTC"
 const hcLine = (parts) => parts.filter(Boolean).map(esc).join(" · ");
 // In person, online, or both, read from the Location field (Kate, Sep 30):
 // "Online" or "Zoom" alone is online; a room plus "and online" is both. A
-// Zoom option says so by name (Kate, Oct 6: "can we note if things have a
-// zoom option?"): "Rudder 401 and Zoom" reads "In person and on Zoom".
+// room plus "and Zoom" stays "In person" here, and the card adds its own
+// "Zoom available" line under the time (Kate, Oct 6, her pick A: she hated
+// "In person and on Zoom").
+const hcZoomOption = (loc) => /zoom/i.test(loc || "") && /\b(and|or|plus)\b|[+/]/i.test(loc || "");
 const hcMode = (loc) => {
   const l = (loc || "").trim();
   if (!l) return "";
-  const zoom = /zoom/i.test(l);
-  const online = zoom || /online|virtual|webinar|teams|hybrid/i.test(l);
+  if (hcZoomOption(l)) return "In person";
+  const online = /online|zoom|virtual|webinar|teams|hybrid/i.test(l);
   const both = /hybrid|\b(and|or|plus)\b|[+/]/i.test(l);
   if (!online) return "In person";
-  if (both) return zoom ? "In person and on Zoom" : "In person and online";
-  return zoom ? "On Zoom" : "Online";
+  if (both) return "In person and online";
+  return /zoom/i.test(l) ? "On Zoom" : "Online";
 };
 // The room alone, without the "and Zoom" the mode line already says.
 const hcPlace = (loc) =>
@@ -837,13 +839,17 @@ function heroCardHTML(entry, loaded) {
     : "";
   const blurb = cleanBlurb(it.blurb);
 
+  // "Zoom available" with a camera, on its own line (Kate, Oct 6, pick A).
+  const zoomLine = (tag, cls = "hc__zoom") =>
+    hcZoomOption(it.location) ? `<${tag} class="${cls}">${faIcon("video")}Zoom available</${tag}>` : "";
+  const zoomSaid = hcZoomOption(it.location) ? "Zoom available" : "";
   // The ERC card: a small maroon tile with the month over the day, the
   // weekday and time beside it (Kate's pick C, Sep 24), then the title, the
   // place, and the event's own words.
   const fact = date
     ? `<div class="hc__fact" aria-hidden="true"><span class="hc__tile"><small>${esc(hcFmt(date, { month: "short" }))}</small><b>${date.getUTCDate()}</b></span><span class="hc__fline">${esc(
         hcFmt(date, { weekday: "long" })
-      )}<small>${hcLine([(it.time || "").trim(), hcMode(it.location)])}</small></span></div>`
+      )}<small>${hcLine([(it.time || "").trim(), hcMode(it.location)])}</small>${zoomLine("small")}</span></div>`
     : "";
   const ercV = (url) => `
     <div class="hc__v hc-erc${url ? "" : " hc__v--slot"}"><div class="hc__col">${fact}${head}
@@ -851,6 +857,7 @@ function heroCardHTML(entry, loaded) {
         date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
         (it.time || "").trim(),
         hcMode(it.location), // spoken too (audit F64)
+        zoomSaid,
       ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
   // With a picture the panel splits: the date on top, the headshot under
   // it, and the event's own words under the date line (Kate, Sep 24).
@@ -863,6 +870,7 @@ function heroCardHTML(entry, loaded) {
         date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
         (it.time || "").trim(),
         hcMode(it.location),
+        zoomSaid,
       ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${
         url || slot ? `<div class="hc__side">${pic(url, "hc__img--logo", "Logo 2:1")}</div>` : ""
       }</div>`;
@@ -871,8 +879,9 @@ function heroCardHTML(entry, loaded) {
   // title, both one size (Kate: "more ="), SemiBold, light maroon over
   // maroon; any speaker the summary does not already name, and the
   // moderator; then the summary, upright and black, the speakers' names in
-  // bold. At the right, a maroon stub: the day, the time, the room, in
-  // person or on Zoom, and RSVP (no "ERC Event" over the day, Kate, Oct 6). An event with Show the picture
+  // bold. At the right, a maroon stub: the day, the time, the room, "Zoom
+  // available" or "Online" when so, and RSVP (no "ERC Event" over the day,
+  // Kate, Oct 6). An event with Show the picture
   // off draws this way.
   const ticketV = () => {
     const sp = speakersOf(it.authors);
@@ -898,7 +907,8 @@ function heroCardHTML(entry, loaded) {
         hcFmt(date, { month: "short", day: "numeric" })
       )}</span>${it.time ? `<span class="tk__line">${esc(it.time.trim())}</span>` : ""}${
         hcPlace(it.location) ? `<span class="tk__line">${esc(hcPlace(it.location))}</span>` : ""
-      }${hcMode(it.location) ? `<span class="tk__line">${esc(hcMode(it.location))}</span>` : ""
+      }${zoomLine("span", "tk__line hc__zoom")}${
+        !hcZoomOption(it.location) && hcMode(it.location) && hcMode(it.location) !== "In person" ? `<span class="tk__line">${esc(hcMode(it.location))}</span>` : ""
       }</span><span class="tk__btn" aria-hidden="true">${rsvp} &raquo;</span></div></div>`;
   };
   const typeV = () => `

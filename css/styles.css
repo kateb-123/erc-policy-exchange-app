@@ -1424,6 +1424,25 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
   font: 400 max(13px, calc(21 * var(--u))) / 1.35 var(--head);
   color: var(--cream3);
 }
+/* "Zoom available" under the time (Kate, Oct 6, her pick A): the camera
+   and the words in the line's own size and colour. */
+#wn-feat .hc .hc__fline small.hc__zoom,
+#wn-feat .hc .tk__line.hc__zoom {
+  display: flex;
+  align-items: center;
+  gap: calc(8 * var(--u));
+  margin-top: calc(4 * var(--u));
+}
+#wn-feat .hc .hc__zoom i {
+  font-size: 0.95em;
+}
+#wn-feat .hc .tk__line.hc__zoom {
+  margin-top: calc(6 * var(--u));
+  color: #fff;
+}
+#wn-feat .hc--dark .tk__line.hc__zoom {
+  color: var(--maroon);
+}
 #wn-feat .hc .tk__btn {
   margin-top: calc(24 * var(--u));
   display: inline-flex;
