@@ -768,7 +768,9 @@ function heroCardHTML(entry, loaded) {
   const src = (it.source || "").trim();
   const date = hcDate(it.date);
   const erc = kind === "event" && (/^erc\b/i.test(it.subtype || "") || src === "ERC" || /^ERC\b/.test(it.headline || ""));
-  const sup = esc(kind ? (erc ? "Upcoming ERC event" : HC_SUPER[kind]) : tab.nav || "ERC");
+  // The ERC's own research says so on the band, as its events do (Kate, Oct 6).
+  const ercResearch = kind === "research" && /^erc\b/i.test(it.subtype || "");
+  const sup = esc(kind ? (erc ? "Upcoming ERC event" : ercResearch ? "New ERC research" : HC_SUPER[kind]) : tab.nav || "ERC");
   const head = `<h3 class="hc__ttl">${wnTitleLink(entry)}</h3>`;
   const pic = (url, cls, label) =>
     url
