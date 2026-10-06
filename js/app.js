@@ -466,7 +466,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=27").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=28").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -757,14 +757,22 @@ const hcDate = (iso) => {
 const hcFmt = (date, opts) => date.toLocaleDateString("en-US", { timeZone: "UTC", ...opts });
 const hcLine = (parts) => parts.filter(Boolean).map(esc).join(" · ");
 // In person, online, or both, read from the Location field (Kate, Sep 30):
-// "Online" or "Zoom" alone is online; a room plus "and online" is both.
+// "Online" or "Zoom" alone is online; a room plus "and online" is both. A
+// Zoom option says so by name (Kate, Oct 6: "can we note if things have a
+// zoom option?"): "Rudder 401 and Zoom" reads "In person and on Zoom".
 const hcMode = (loc) => {
   const l = (loc || "").trim();
   if (!l) return "";
-  const online = /online|zoom|virtual|webinar|teams|hybrid/i.test(l);
+  const zoom = /zoom/i.test(l);
+  const online = zoom || /online|virtual|webinar|teams|hybrid/i.test(l);
   const both = /hybrid|\b(and|or|plus)\b|[+/]/i.test(l);
-  return online ? (both ? "In person and online" : "Online") : "In person";
+  if (!online) return "In person";
+  if (both) return zoom ? "In person and on Zoom" : "In person and online";
+  return zoom ? "On Zoom" : "Online";
 };
+// The room alone, without the "and Zoom" the mode line already says.
+const hcPlace = (loc) =>
+  (loc || "").trim().replace(/,?\s*(?:\b(?:and|or|plus)\b|[+/])\s*(?:on\s+)?(?:zoom|online|virtual|teams)\b.*$/i, "").trim();
 // An event's Speakers (the authors column), read into people and
 // moderators (Kate, Oct 6, the Colloquium): "Ann Lee (UVA), Bo Kim (Rice);
 // moderated by Cy Wu". Commas and "and" inside brackets stay put.
@@ -839,7 +847,7 @@ function heroCardHTML(entry, loaded) {
     : "";
   const ercV = (url) => `
     <div class="hc__v hc-erc${url ? "" : " hc__v--slot"}"><div class="hc__col">${fact}${head}
-      <p class="hc__meta">${hcLine([src === "ERC" ? "Education Research Center" : src, (it.location || "").trim()])}<span class="sr-only">. ${hcLine([
+      <p class="hc__meta">${hcLine([src === "ERC" ? "Education Research Center" : src, hcPlace(it.location)])}<span class="sr-only">. ${hcLine([
         date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
         (it.time || "").trim(),
         hcMode(it.location), // spoken too (audit F64)
@@ -851,7 +859,7 @@ function heroCardHTML(entry, loaded) {
   // picture on a non-ERC event is a sponsor's logo in a box at the right.
   const dateV = (url, slot) => `
     <div class="hc__v hc-erc hc-erc--logo${slot ? " hc__v--slot" : ""}${url || slot ? "" : " hc-erc--wide"}"><div class="hc__col">${fact}${head}
-      <p class="hc__meta">${hcLine([src, (it.location || "").trim()])}<span class="sr-only">. ${hcLine([
+      <p class="hc__meta">${hcLine([src, hcPlace(it.location)])}<span class="sr-only">. ${hcLine([
         date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
         (it.time || "").trim(),
         hcMode(it.location),
@@ -863,8 +871,8 @@ function heroCardHTML(entry, loaded) {
   // title, both one size (Kate: "more ="), SemiBold, light maroon over
   // maroon; any speaker the summary does not already name, and the
   // moderator; then the summary, upright and black, the speakers' names in
-  // bold. At the right, a maroon stub: "ERC Event", the day, the time, the
-  // room, and RSVP. An event with Show the picture
+  // bold. At the right, a maroon stub: the day, the time, the room, in
+  // person or on Zoom, and RSVP (no "ERC Event" over the day, Kate, Oct 6). An event with Show the picture
   // off draws this way.
   const ticketV = () => {
     const sp = speakersOf(it.authors);
@@ -885,11 +893,12 @@ function heroCardHTML(entry, loaded) {
     return `
     <div class="hc__v hc-ticket"><div class="tk__main">${title}${who ? `<p class="tk__who">${who}</p>` : ""}${
       blurb ? `<p class="tk__desc">${words}</p>` : ""
-    }</div><div class="tk__stub"><span class="tk__label">${erc ? "ERC Event" : "Event"}</span>
+    }</div><div class="tk__stub">
       <span class="tk__when"><span class="tk__dow">${esc(hcFmt(date, { weekday: "long" }))}</span><span class="tk__date">${esc(
         hcFmt(date, { month: "short", day: "numeric" })
       )}</span>${it.time ? `<span class="tk__line">${esc(it.time.trim())}</span>` : ""}${
-        it.location ? `<span class="tk__line">${esc(it.location.trim())}</span>` : ""
+        hcPlace(it.location) ? `<span class="tk__line">${esc(hcPlace(it.location))}</span>` : ""
+      }${hcMode(it.location) ? `<span class="tk__line">${esc(hcMode(it.location))}</span>` : ""
       }</span><span class="tk__btn" aria-hidden="true">${rsvp} &raquo;</span></div></div>`;
   };
   const typeV = () => `
