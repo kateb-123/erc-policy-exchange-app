@@ -241,7 +241,7 @@ const FIELDS = [
 ];
 // Which fields belong to which section; the rest stay out of the way
 // (Kate, Sep 30: "why do we have authors for things that don't have authors?").
-const ONLY_FOR = { deadline: ['opportunity'], time: ['event'], location: ['event'], authors: ['research'], medium: ['headline'] };
+const ONLY_FOR = { deadline: ['opportunity'], time: ['event'], location: ['event'], authors: ['research', 'event'], medium: ['headline'] };
 const SECTIONS = [
   ['research', 'Research'],
   ['event', 'Events'],
@@ -508,10 +508,21 @@ function openItem(key) {
     [form.elements.infographic, RULES.picture],
     [form.elements.date, RULES.date],
   ]);
+  // An event's authors are its speakers, shown on the date panel card as
+  // "With ..." (Kate, Oct 6).
+  const authors = form.elements.authors;
+  const authorsLabel = authors.closest('.admin-field').querySelector('label');
+  const authorsHint = el('p', { class: 'admin-hint', id: 'a-authors-hint' });
+  authors.closest('.admin-field').append(authorsHint);
   // The fields for this section only.
   const showFields = () => {
     const t = form.elements.type.value;
     grid.querySelectorAll('[data-only-for]').forEach((row) => (row.hidden = !row.dataset.onlyFor.split(' ').includes(t)));
+    const speakers = t === 'event';
+    authorsLabel.textContent = speakers ? 'Speakers' : 'Authors';
+    authorsHint.textContent = speakers ? 'For example: Bob Pianta (UVA), Jinfa Cai (Texas A&M); moderated by Lori Taylor.' : '';
+    authorsHint.hidden = !speakers;
+    speakers ? authors.setAttribute('aria-describedby', authorsHint.id) : authors.removeAttribute('aria-describedby');
   };
   form.elements.type.addEventListener('change', showFields);
   showFields();
