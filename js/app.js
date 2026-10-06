@@ -754,36 +754,30 @@ const hcMode = (loc) => {
   const both = /hybrid|\b(and|or|plus)\b|[+/]/i.test(l);
   return online ? (both ? "In person and online" : "Online") : "In person";
 };
-// Who is on an event, from its Speakers (the authors column), names in bold
-// (Kate, Oct 6, the Colloquium): "Ann Lee (UVA), Bo Kim (Rice); moderated by
-// Cy Wu" reads "With Ann Lee (UVA) and Bo Kim (Rice). Moderated by Cy Wu."
-// Commas and "and" inside brackets stay where they are.
-function withLine(text) {
-  const people = (s) => {
-    const one = (p) => {
-      const m = p.match(/^([^()]+?)\s*(\(.*\))?$/);
-      return m ? `<b>${esc(m[1])}</b>${m[2] ? ` ${esc(m[2])}` : ""}` : esc(p);
-    };
-    const list = s
+// An event's Speakers (the authors column), read into people and
+// moderators (Kate, Oct 6, the Colloquium): "Ann Lee (UVA), Bo Kim (Rice);
+// moderated by Cy Wu". Commas and "and" inside brackets stay put.
+function speakersOf(text) {
+  const out = { people: [], moderators: [] };
+  const names = (s) =>
+    s
       .replace(/\.\s*$/, "")
       .split(/,(?![^()]*\))|\s+and\s+(?![^()]*\))/)
-      .map((p) => p.trim())
+      .map((p) => p.trim().match(/^([^()]+?)\s*(?:\(.*\))?$/))
       .filter(Boolean)
-      .map(one);
-    return list.length > 1 ? `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}` : list[0] || "";
-  };
-  return (text || "")
+      .map((m) => m[1].trim());
+  (text || "")
     .split(";")
     .map((c) => c.trim())
     .filter(Boolean)
-    .map((c, i) => {
+    .forEach((c) => {
       const mod = c.match(/^moderated by\s+(.*)$/i);
-      if (mod) return `Moderated by ${people(mod[1])}.`;
-      const lead = c.match(/^with\s+(.*)$/i);
-      return `${i === 0 ? "With " : ""}${people(lead ? lead[1] : c)}.`;
-    })
-    .join(" ");
+      if (mod) out.moderators.push(...names(mod[1]));
+      else out.people.push(...names(c.replace(/^with\s+/i, "")));
+    });
+  return out;
 }
+const andList = (a) => (a.length > 1 ? `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}` : a[0] || "");
 
 // loaded: the rotation passes whether the item's picture loaded ("wide") or
 // not (""); a picture that will not load is left out and the words-only
@@ -851,22 +845,39 @@ function heroCardHTML(entry, loaded) {
       ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${
         url || slot ? `<div class="hc__side">${pic(url, "hc__img--logo", "Logo 2:1")}</div>` : ""
       }</div>`;
-  // The date panel card (Kate, Oct 6, for the ERC Colloquium: her pick C on
-  // the Sep 24 date panel, made narrower): the date in a maroon column, then
-  // the title, the place and time, who is on it, and the summary in maroon
-  // italics. An event with Show the picture off draws this way.
-  const panelV = () => {
-    const who = withLine(it.authors);
+  // The ticket card (Kate, Oct 6, for the ERC Colloquium: her pick B).
+  // At the left, on grey: a series name before a colon over the rest of the
+  // title, both one size (Kate: "more ="), SemiBold, light maroon over
+  // maroon; any speaker the summary does not already name, and the
+  // moderator; then the summary, upright and black, the speakers' names in
+  // bold. At the right, a maroon stub: the ERC's web icon and "ERC Event",
+  // the day, the time, the room, and RSVP. An event with Show the picture
+  // off draws this way.
+  const ticketV = () => {
+    const sp = speakersOf(it.authors);
+    const said = blurb.toLowerCase();
+    const bold = (list) => list.map((n) => `<b>${esc(n)}</b>`);
+    const unnamed = sp.people.filter((n) => !said.includes(n.toLowerCase()));
+    const who = [unnamed.length && `With ${andList(bold(unnamed))}`, sp.moderators.length && `Moderated by ${andList(bold(sp.moderators))}`]
+      .filter(Boolean)
+      .join(". ");
+    let words = mark(blurb);
+    [...sp.people, ...sp.moderators].forEach((n) => {
+      const e = esc(n).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      words = words.replace(new RegExp(`\\b${e}\\b`, "g"), (m) => `<b>${m}</b>`);
+    });
+    const split = (it.headline || "").match(/^([^:]{3,40}):\s+(.+)$/);
+    const title = split ? `<p class="tk__kick">${mark(split[1])}</p><h3 class="hc__ttl tk__ttl">${wnTitleLink({ ...entry, it: { ...it, headline: split[2] } })}</h3>` : head;
+    const rsvp = /forms|rsvp/i.test(it.link || "") ? "RSVP" : "Register";
     return `
-    <div class="hc__v hc-date hc-date--panel"><div class="hc__panel" aria-hidden="true"><div class="hc__when"><span class="hc__k">${esc(
-      hcFmt(date, { weekday: "long" })
-    )}</span><span class="hc__m">${esc(hcFmt(date, { month: "short" }))}</span><span class="hc__d">${date.getUTCDate()}</span></div></div>
-      <div class="hc__col">${head}<p class="hc__meta"><span class="sr-only">${esc(hcFmt(date, { weekday: "long", month: "long", day: "numeric" }))}. </span>${hcLine([
-        erc ? "" : src,
-        (it.location || "").trim(),
-      ])}<br>${hcLine([(it.time || "").trim(), hcMode(it.location)])}</p>${who ? `<p class="hc__with">${who}</p>` : ""}${
-        blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""
-      }</div></div>`;
+    <div class="hc__v hc-ticket"><div class="tk__main">${title}${who ? `<p class="tk__who">${who}</p>` : ""}${
+      blurb ? `<p class="tk__desc">${words}</p>` : ""
+    }</div><div class="tk__stub"><span class="tk__label">${erc ? '<span class="tk__icon" aria-hidden="true"></span>ERC Event' : "Event"}</span>
+      <span class="tk__when"><span class="tk__dow">${esc(hcFmt(date, { weekday: "long" }))}</span><span class="tk__date">${esc(
+        hcFmt(date, { month: "short", day: "numeric" })
+      )}</span>${it.time ? `<span class="tk__line">${esc(it.time.trim())}</span>` : ""}${
+        it.location ? `<span class="tk__line">${esc(it.location.trim())}</span>` : ""
+      }</span><span class="tk__btn" aria-hidden="true">${rsvp} &raquo;</span></div></div>`;
   };
   const typeV = () => `
     <div class="hc__v hc-type"><div class="hc__dots" aria-hidden="true"></div>${head}<p class="hc__meta">${meta}</p></div>`;
@@ -931,7 +942,7 @@ function heroCardHTML(entry, loaded) {
     // The category's card with no picture at all, whatever is on the item.
     main =
       kind === "research" ? researchV("", dark, false)
-      : kind === "event" && date ? panelV()
+      : kind === "event" && date ? ticketV()
       : typeV();
   } else if (want === "edit" || want === "poster" || want === "plainr") {
     // Without a portrait the words fill the card; an editor sees the slot.

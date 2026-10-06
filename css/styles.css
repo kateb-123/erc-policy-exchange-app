@@ -1333,57 +1333,114 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
 #wn-feat .hc .hc-date--pic .hc__m {
   font-size: calc(22 * var(--u));
 }
-/* The date panel card (Kate, Oct 6, for the ERC Colloquium; her pick C on a
-   panel a quarter narrower than Sep 24's): the title, the place and time,
-   who is on it in maroon, and the summary in maroon italics, two lines. */
-#wn-feat .hc .hc-date--panel {
-  grid-template-columns: calc(250 * var(--u)) 1fr;
+/* The ticket card (Kate, Oct 6, for the ERC Colloquium, her pick B): the
+   words on grey at the left, a maroon stub at the right behind a dashed
+   tear line. */
+#wn-feat .hc .hc-ticket {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) calc(330 * var(--u));
+  background: var(--g100);
 }
-#wn-feat .hc .hc-date--panel .hc__m {
-  font-size: calc(34 * var(--u));
+#wn-feat .hc .tk__main {
+  display: flex;
+  flex-direction: column;
+  gap: calc(10 * var(--u));
+  min-width: 0;
+  padding: calc(34 * var(--u)) calc(48 * var(--u)) calc(30 * var(--u)) calc(56 * var(--u));
 }
-#wn-feat .hc .hc-date--panel .hc__d {
-  font-size: calc(120 * var(--u));
+/* The series and the title, one size, one weight (Kate: "more ="; the
+   SemiBold of every other card's title), light maroon over maroon. */
+#wn-feat .hc .tk__kick {
+  margin: 0 0 calc(-8 * var(--u));
+  font: 600 calc(46 * var(--u)) / 1.1 var(--head);
+  color: var(--maroon-muted);
 }
-#wn-feat .hc .hc-date--panel .hc__col {
-  justify-content: center;
-  gap: calc(12 * var(--u));
-  padding: calc(32 * var(--u)) calc(56 * var(--u)) calc(28 * var(--u));
-}
-#wn-feat .hc .hc-date--panel .hc__ttl {
-  font-size: calc(42 * var(--u));
+#wn-feat .hc .tk__ttl {
+  font-size: calc(46 * var(--u));
+  line-height: 1.1;
   -webkit-line-clamp: 2;
 }
-#wn-feat .hc[data-len="mid"] .hc-date--panel .hc__ttl {
-  font-size: calc(36 * var(--u));
-  -webkit-line-clamp: 3;
+#wn-feat .hc .tk__who {
+  margin: calc(4 * var(--u)) 0 0;
+  font: 400 max(14px, calc(23 * var(--u))) / 1.35 var(--head);
+  color: var(--g800);
 }
-#wn-feat .hc[data-len="long"] .hc-date--panel .hc__ttl {
-  font-size: calc(32 * var(--u));
-  -webkit-line-clamp: 3;
-}
-#wn-feat .hc .hc-date--panel .hc__meta {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-}
-#wn-feat .hc .hc__with {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-  margin: 0;
-  font: 500 max(14px, calc(24 * var(--u))) / 1.35 var(--head);
+#wn-feat .hc .tk__who b {
+  font-weight: 600;
   color: var(--maroon);
 }
-#wn-feat .hc .hc__with b {
-  font-weight: 700;
+#wn-feat .hc .tk__desc {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+  overflow: hidden;
+  margin: calc(2 * var(--u)) 0 0;
+  font: 400 max(14px, calc(20 * var(--u))) / 1.45 var(--head);
+  color: var(--g900);
 }
-#wn-feat .hc .hc-date--panel .hc__blurb {
-  -webkit-line-clamp: 2;
-  font: italic 400 max(14px, calc(23 * var(--u))) / 1.35 var(--head);
-  color: var(--maroon-muted);
+#wn-feat .hc .tk__desc b {
+  font-weight: 600;
+}
+#wn-feat .hc .tk__stub {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-width: 0;
+  padding: calc(32 * var(--u)) calc(36 * var(--u)) calc(36 * var(--u));
+  background: var(--maroon);
+  color: #fff;
+  border-left: calc(4 * var(--u)) dashed var(--g100);
+}
+#wn-feat .hc .tk__label {
+  display: flex;
+  align-items: center;
+  gap: calc(12 * var(--u));
+  font: 700 max(11px, calc(18 * var(--u))) / 1 var(--head);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+/* The ERC's web icon (the favicon), drawn in the stub's white. */
+#wn-feat .hc .tk__icon {
+  flex: none;
+  width: calc(40 * var(--u));
+  height: calc(40 * var(--u));
+  background: #fff;
+  -webkit-mask: url("../assets/logo/favicon.svg") center / contain no-repeat;
+  mask: url("../assets/logo/favicon.svg") center / contain no-repeat;
+}
+#wn-feat .hc .tk__when {
+  display: flex;
+  flex-direction: column;
+  gap: calc(6 * var(--u));
+}
+#wn-feat .hc .tk__dow {
+  font: 400 max(11px, calc(18 * var(--u))) / 1 var(--head);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--cream3);
+}
+#wn-feat .hc .tk__date {
+  font: 600 calc(64 * var(--u)) / 1.05 var(--head);
+}
+#wn-feat .hc .tk__line {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font: 400 max(13px, calc(21 * var(--u))) / 1.35 var(--head);
+  color: var(--cream3);
+}
+#wn-feat .hc .tk__btn {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  height: calc(52 * var(--u));
+  padding: 0 calc(24 * var(--u));
+  background: #fff;
+  color: var(--maroon);
+  font: 700 max(11px, calc(18 * var(--u))) / 1 var(--head);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 #wn-feat .hc .hc-date--pic .hc__d {
   font-size: calc(64 * var(--u));
@@ -1890,21 +1947,33 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
 #wn-feat .hc--dark .hc__img--shot {
   background: #fff;
 }
-/* The date panel card dark: the panel flips to cream, as the date tile does. */
-#wn-feat .hc--dark .hc-date--panel .hc__panel {
-  background: var(--cream);
-  color: var(--maroon);
+/* The ticket dark: maroon words, the stub flips to cream. */
+#wn-feat .hc--dark .hc-ticket {
+  background: var(--maroon);
 }
-#wn-feat .hc--dark .hc-date--panel .hc__k {
-  color: var(--maroon-muted);
+#wn-feat .hc--dark .tk__kick,
+#wn-feat .hc--dark .tk__who {
+  color: var(--cream3);
 }
-#wn-feat .hc--dark .hc-date--panel .hc__ttl,
-#wn-feat .hc--dark .hc__with {
+#wn-feat .hc--dark .tk__desc,
+#wn-feat .hc--dark .tk__who b {
   color: #fff;
 }
-#wn-feat .hc--dark .hc-date--panel .hc__meta,
-#wn-feat .hc--dark .hc-date--panel .hc__blurb {
-  color: var(--cream);
+#wn-feat .hc--dark .tk__stub {
+  background: var(--cream3);
+  color: var(--maroon);
+  border-left-color: var(--maroon);
+}
+#wn-feat .hc--dark .tk__icon {
+  background: var(--maroon);
+}
+#wn-feat .hc--dark .tk__dow,
+#wn-feat .hc--dark .tk__line {
+  color: var(--maroon-muted);
+}
+#wn-feat .hc--dark .tk__btn {
+  background: var(--maroon);
+  color: #fff;
 }
 @media (min-width: 1201px) {
   #wn-feat .hc {
