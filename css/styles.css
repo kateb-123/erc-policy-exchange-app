@@ -1333,6 +1333,58 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
 #wn-feat .hc .hc-date--pic .hc__m {
   font-size: calc(22 * var(--u));
 }
+/* The date panel card (Kate, Oct 6, for the ERC Colloquium; her pick C on a
+   panel a quarter narrower than Sep 24's): the title, the place and time,
+   who is on it in maroon, and the summary in maroon italics, two lines. */
+#wn-feat .hc .hc-date--panel {
+  grid-template-columns: calc(250 * var(--u)) 1fr;
+}
+#wn-feat .hc .hc-date--panel .hc__m {
+  font-size: calc(34 * var(--u));
+}
+#wn-feat .hc .hc-date--panel .hc__d {
+  font-size: calc(120 * var(--u));
+}
+#wn-feat .hc .hc-date--panel .hc__col {
+  justify-content: center;
+  gap: calc(12 * var(--u));
+  padding: calc(32 * var(--u)) calc(56 * var(--u)) calc(28 * var(--u));
+}
+#wn-feat .hc .hc-date--panel .hc__ttl {
+  font-size: calc(42 * var(--u));
+  -webkit-line-clamp: 2;
+}
+#wn-feat .hc[data-len="mid"] .hc-date--panel .hc__ttl {
+  font-size: calc(36 * var(--u));
+  -webkit-line-clamp: 3;
+}
+#wn-feat .hc[data-len="long"] .hc-date--panel .hc__ttl {
+  font-size: calc(32 * var(--u));
+  -webkit-line-clamp: 3;
+}
+#wn-feat .hc .hc-date--panel .hc__meta {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+#wn-feat .hc .hc__with {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  margin: 0;
+  font: 500 max(14px, calc(24 * var(--u))) / 1.35 var(--head);
+  color: var(--maroon);
+}
+#wn-feat .hc .hc__with b {
+  font-weight: 700;
+}
+#wn-feat .hc .hc-date--panel .hc__blurb {
+  -webkit-line-clamp: 2;
+  font: italic 400 max(14px, calc(23 * var(--u))) / 1.35 var(--head);
+  color: var(--maroon-muted);
+}
 #wn-feat .hc .hc-date--pic .hc__d {
   font-size: calc(64 * var(--u));
 }
@@ -1837,6 +1889,22 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
 #wn-feat .hc--dark .hc__img--logo,
 #wn-feat .hc--dark .hc__img--shot {
   background: #fff;
+}
+/* The date panel card dark: the panel flips to cream, as the date tile does. */
+#wn-feat .hc--dark .hc-date--panel .hc__panel {
+  background: var(--cream);
+  color: var(--maroon);
+}
+#wn-feat .hc--dark .hc-date--panel .hc__k {
+  color: var(--maroon-muted);
+}
+#wn-feat .hc--dark .hc-date--panel .hc__ttl,
+#wn-feat .hc--dark .hc__with {
+  color: #fff;
+}
+#wn-feat .hc--dark .hc-date--panel .hc__meta,
+#wn-feat .hc--dark .hc-date--panel .hc__blurb {
+  color: var(--cream);
 }
 @media (min-width: 1201px) {
   #wn-feat .hc {

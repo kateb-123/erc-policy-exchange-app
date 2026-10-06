@@ -754,6 +754,36 @@ const hcMode = (loc) => {
   const both = /hybrid|\b(and|or|plus)\b|[+/]/i.test(l);
   return online ? (both ? "In person and online" : "Online") : "In person";
 };
+// Who is on an event, from its Speakers (the authors column), names in bold
+// (Kate, Oct 6, the Colloquium): "Ann Lee (UVA), Bo Kim (Rice); moderated by
+// Cy Wu" reads "With Ann Lee (UVA) and Bo Kim (Rice). Moderated by Cy Wu."
+// Commas and "and" inside brackets stay where they are.
+function withLine(text) {
+  const people = (s) => {
+    const one = (p) => {
+      const m = p.match(/^([^()]+?)\s*(\(.*\))?$/);
+      return m ? `<b>${esc(m[1])}</b>${m[2] ? ` ${esc(m[2])}` : ""}` : esc(p);
+    };
+    const list = s
+      .replace(/\.\s*$/, "")
+      .split(/,(?![^()]*\))|\s+and\s+(?![^()]*\))/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+      .map(one);
+    return list.length > 1 ? `${list.slice(0, -1).join(", ")} and ${list[list.length - 1]}` : list[0] || "";
+  };
+  return (text || "")
+    .split(";")
+    .map((c) => c.trim())
+    .filter(Boolean)
+    .map((c, i) => {
+      const mod = c.match(/^moderated by\s+(.*)$/i);
+      if (mod) return `Moderated by ${people(mod[1])}.`;
+      const lead = c.match(/^with\s+(.*)$/i);
+      return `${i === 0 ? "With " : ""}${people(lead ? lead[1] : c)}.`;
+    })
+    .join(" ");
+}
 
 // loaded: the rotation passes whether the item's picture loaded ("wide") or
 // not (""); a picture that will not load is left out and the words-only
@@ -821,6 +851,23 @@ function heroCardHTML(entry, loaded) {
       ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${
         url || slot ? `<div class="hc__side">${pic(url, "hc__img--logo", "Logo 2:1")}</div>` : ""
       }</div>`;
+  // The date panel card (Kate, Oct 6, for the ERC Colloquium: her pick C on
+  // the Sep 24 date panel, made narrower): the date in a maroon column, then
+  // the title, the place and time, who is on it, and the summary in maroon
+  // italics. An event with Show the picture off draws this way.
+  const panelV = () => {
+    const who = withLine(it.authors);
+    return `
+    <div class="hc__v hc-date hc-date--panel"><div class="hc__panel" aria-hidden="true"><div class="hc__when"><span class="hc__k">${esc(
+      hcFmt(date, { weekday: "long" })
+    )}</span><span class="hc__m">${esc(hcFmt(date, { month: "short" }))}</span><span class="hc__d">${date.getUTCDate()}</span></div></div>
+      <div class="hc__col">${head}<p class="hc__meta"><span class="sr-only">${esc(hcFmt(date, { weekday: "long", month: "long", day: "numeric" }))}. </span>${hcLine([
+        erc ? "" : src,
+        (it.location || "").trim(),
+      ])}<br>${hcLine([(it.time || "").trim(), hcMode(it.location)])}</p>${who ? `<p class="hc__with">${who}</p>` : ""}${
+        blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""
+      }</div></div>`;
+  };
   const typeV = () => `
     <div class="hc__v hc-type"><div class="hc__dots" aria-hidden="true"></div>${head}<p class="hc__meta">${meta}</p></div>`;
   // Research keeps the strip under the text; anything else that takes this
@@ -884,7 +931,7 @@ function heroCardHTML(entry, loaded) {
     // The category's card with no picture at all, whatever is on the item.
     main =
       kind === "research" ? researchV("", dark, false)
-      : kind === "event" && date ? dateV("", false)
+      : kind === "event" && date ? panelV()
       : typeV();
   } else if (want === "edit" || want === "poster" || want === "plainr") {
     // Without a portrait the words fill the card; an editor sees the slot.
