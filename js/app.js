@@ -756,20 +756,21 @@ const hcDate = (iso) => {
 };
 const hcFmt = (date, opts) => date.toLocaleDateString("en-US", { timeZone: "UTC", ...opts });
 const hcLine = (parts) => parts.filter(Boolean).map(esc).join(" · ");
-// In person, online, or both, read from the Location field (Kate, Sep 30):
-// "Online" or "Zoom" alone is online; a room plus "and online" is both. A
-// room plus "and Zoom" stays "In person" here, and the card adds its own
-// "Zoom available" line under the time (Kate, Oct 6, her pick A: she hated
-// "In person and on Zoom").
-const hcZoomOption = (loc) => /zoom/i.test(loc || "") && /\b(and|or|plus)\b|[+/]/i.test(loc || "");
+// Read from the Location field (Kate, Sep 30): "Online" or "Zoom" alone is
+// online; a room plus "and Zoom" or "and online" is both. A room alone says
+// nothing, since the time and place already tell a reader to come (Kate,
+// Oct 6: no "In person"). Both gets its own line under the time, "Zoom
+// available" or "Online available" with a camera (Kate, Oct 6, her pick A).
+const hcOnline = (l) => /online|zoom|virtual|webinar|teams|hybrid/i.test(l);
+const hcBoth = (l) => /hybrid|\b(and|or|plus)\b|[+/]/i.test(l);
+const hcRemote = (loc) => {
+  const l = (loc || "").trim();
+  if (!hcOnline(l) || !hcBoth(l)) return "";
+  return /zoom/i.test(l) ? "Zoom available" : "Online available";
+};
 const hcMode = (loc) => {
   const l = (loc || "").trim();
-  if (!l) return "";
-  if (hcZoomOption(l)) return "In person";
-  const online = /online|zoom|virtual|webinar|teams|hybrid/i.test(l);
-  const both = /hybrid|\b(and|or|plus)\b|[+/]/i.test(l);
-  if (!online) return "In person";
-  if (both) return "In person and online";
+  if (!l || !hcOnline(l) || hcBoth(l)) return "";
   return /zoom/i.test(l) ? "On Zoom" : "Online";
 };
 // The room alone, without the "and Zoom" the mode line already says.
@@ -840,9 +841,8 @@ function heroCardHTML(entry, loaded) {
   const blurb = cleanBlurb(it.blurb);
 
   // "Zoom available" with a camera, on its own line (Kate, Oct 6, pick A).
-  const zoomLine = (tag, cls = "hc__zoom") =>
-    hcZoomOption(it.location) ? `<${tag} class="${cls}">${faIcon("video")}Zoom available</${tag}>` : "";
-  const zoomSaid = hcZoomOption(it.location) ? "Zoom available" : "";
+  const zoomSaid = hcRemote(it.location);
+  const zoomLine = (tag, cls = "hc__zoom") => (zoomSaid ? `<${tag} class="${cls}">${faIcon("video")}${esc(zoomSaid)}</${tag}>` : "");
   // The ERC card: a small maroon tile with the month over the day, the
   // weekday and time beside it (Kate's pick C, Sep 24), then the title, the
   // place, and the event's own words.
@@ -908,7 +908,7 @@ function heroCardHTML(entry, loaded) {
       )}</span>${it.time ? `<span class="tk__line">${esc(it.time.trim())}</span>` : ""}${
         hcPlace(it.location) ? `<span class="tk__line">${esc(hcPlace(it.location))}</span>` : ""
       }${zoomLine("span", "tk__line hc__zoom")}${
-        !hcZoomOption(it.location) && hcMode(it.location) && hcMode(it.location) !== "In person" ? `<span class="tk__line">${esc(hcMode(it.location))}</span>` : ""
+        hcMode(it.location) ? `<span class="tk__line">${esc(hcMode(it.location))}</span>` : ""
       }</span><span class="tk__btn" aria-hidden="true">${rsvp} &raquo;</span></div></div>`;
   };
   const typeV = () => `
