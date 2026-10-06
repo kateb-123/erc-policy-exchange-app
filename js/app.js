@@ -756,26 +756,36 @@ const hcDate = (iso) => {
 };
 const hcFmt = (date, opts) => date.toLocaleDateString("en-US", { timeZone: "UTC", ...opts });
 const hcLine = (parts) => parts.filter(Boolean).map(esc).join(" · ");
-// Read from the Location field (Kate, Sep 30): "Online" or "Zoom" alone is
-// online; a room plus "and Zoom" or "and online" is both. A room alone says
-// nothing, since the time and place already tell a reader to come (Kate,
-// Oct 6: no "In person"). Both gets its own line under the time, "Zoom
-// available" or "Online available" with a camera (Kate, Oct 6, her pick A).
-const hcOnline = (l) => /online|zoom|virtual|webinar|teams|hybrid/i.test(l);
-const hcBoth = (l) => /hybrid|\b(and|or|plus)\b|[+/]/i.test(l);
-const hcRemote = (loc) => {
+// Where an event is, read from the Location field (Kate, Sep 30 and Oct 6):
+// the room, the time line's word for an online-only event, and the line
+// under the time for a room with an online option.
+//   "Rudder 401"                  room "Rudder 401"
+//   "Rudder 401 and Zoom"         room "Rudder 401", "Zoom available" (also
+//                                 "& Zoom", ", Zoom", "with Zoom", "(also
+//                                 on Zoom)", "or Zoom", "/ Zoom")
+//   "Rudder 401 and online"       room "Rudder 401", "Online available"
+//   "Hybrid", "In person and on Zoom"   no room, the "available" line
+//   "Online", "Virtual", "Webinar", a Zoom link, "Online/Zoom"
+//                                 no room, the time line says "Online" or
+//                                 "On Zoom"
+// A room alone adds no word, since the time and place already tell a reader
+// to come (Kate, Oct 6: no "In person"); a room with an online option gets
+// "Zoom available" or "Online available" with a camera under the time (her
+// pick A).
+const hcOnline = (l) => /online|zoom|virtual|webinar|teams|hybrid|livestream/i.test(l);
+function hcWhere(loc) {
   const l = (loc || "").trim();
-  if (!hcOnline(l) || !hcBoth(l)) return "";
-  return /zoom/i.test(l) ? "Zoom available" : "Online available";
-};
-const hcMode = (loc) => {
-  const l = (loc || "").trim();
-  if (!l || !hcOnline(l) || hcBoth(l)) return "";
-  return /zoom/i.test(l) ? "On Zoom" : "Online";
-};
-// The room alone, without the "and Zoom" the mode line already says.
-const hcPlace = (loc) =>
-  (loc || "").trim().replace(/,?\s*(?:\b(?:and|or|plus)\b|[+/])\s*(?:on\s+)?(?:zoom|online|virtual|teams)\b.*$/i, "").trim();
+  if (!hcOnline(l)) return { room: l, mode: "", remote: "" };
+  const zoom = /zoom/i.test(l);
+  const split = l.match(/^(.*?)\s*(?:,|&|\+|\/|\(|\b(?:and|or|plus|with)\b)\s*(?:also\s+)?(?:(?:on|via)\s+)?(?:zoom|online|virtual|teams|livestream)\b/i);
+  const said = /^(?:hybrid|in[- ]person)\b/i.test(l);
+  let room = (split ? split[1] : "").replace(/^(?:hybrid|in[- ]person)\b\s*[:(\-\u2013]?\s*/i, "").trim();
+  if (room.includes("(") && !room.includes(")")) room = room.replace("(", "").trim();
+  if ((split && room && !hcOnline(room)) || said) {
+    return { room: hcOnline(room) ? "" : room, mode: "", remote: zoom ? "Zoom available" : "Online available" };
+  }
+  return { room: "", mode: zoom ? "On Zoom" : "Online", remote: "" };
+}
 // An event's Speakers (the authors column), read into people and
 // moderators (Kate, Oct 6, the Colloquium): "Ann Lee (UVA), Bo Kim (Rice);
 // moderated by Cy Wu". Commas and "and" inside brackets stay put.
@@ -841,7 +851,8 @@ function heroCardHTML(entry, loaded) {
   const blurb = cleanBlurb(it.blurb);
 
   // "Zoom available" with a camera, on its own line (Kate, Oct 6, pick A).
-  const zoomSaid = hcRemote(it.location);
+  const where = hcWhere(it.location);
+  const zoomSaid = where.remote;
   const zoomLine = (tag, cls = "hc__zoom") => (zoomSaid ? `<${tag} class="${cls}">${faIcon("video")}${esc(zoomSaid)}</${tag}>` : "");
   // The ERC card: a small maroon tile with the month over the day, the
   // weekday and time beside it (Kate's pick C, Sep 24), then the title, the
@@ -849,14 +860,14 @@ function heroCardHTML(entry, loaded) {
   const fact = date
     ? `<div class="hc__fact" aria-hidden="true"><span class="hc__tile"><small>${esc(hcFmt(date, { month: "short" }))}</small><b>${date.getUTCDate()}</b></span><span class="hc__fline">${esc(
         hcFmt(date, { weekday: "long" })
-      )}<small>${hcLine([(it.time || "").trim(), hcMode(it.location)])}</small>${zoomLine("small")}</span></div>`
+      )}<small>${hcLine([(it.time || "").trim(), where.mode])}</small>${zoomLine("small")}</span></div>`
     : "";
   const ercV = (url) => `
     <div class="hc__v hc-erc${url ? "" : " hc__v--slot"}"><div class="hc__col">${fact}${head}
-      <p class="hc__meta">${hcLine([src === "ERC" ? "Education Research Center" : src, hcPlace(it.location)])}<span class="sr-only">. ${hcLine([
+      <p class="hc__meta">${hcLine([src === "ERC" ? "Education Research Center" : src, where.room])}<span class="sr-only">. ${hcLine([
         date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
         (it.time || "").trim(),
-        hcMode(it.location), // spoken too (audit F64)
+        where.mode, // spoken too (audit F64)
         zoomSaid,
       ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${pic(url, "hc__img--pt", "Portrait 4:5")}</div>`;
   // With a picture the panel splits: the date on top, the headshot under
@@ -866,10 +877,10 @@ function heroCardHTML(entry, loaded) {
   // picture on a non-ERC event is a sponsor's logo in a box at the right.
   const dateV = (url, slot) => `
     <div class="hc__v hc-erc hc-erc--logo${slot ? " hc__v--slot" : ""}${url || slot ? "" : " hc-erc--wide"}"><div class="hc__col">${fact}${head}
-      <p class="hc__meta">${hcLine([src, hcPlace(it.location)])}<span class="sr-only">. ${hcLine([
+      <p class="hc__meta">${hcLine([src, where.room])}<span class="sr-only">. ${hcLine([
         date && hcFmt(date, { weekday: "long", month: "long", day: "numeric" }),
         (it.time || "").trim(),
-        hcMode(it.location),
+        where.mode,
         zoomSaid,
       ])}</span></p>${blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : ""}</div>${
         url || slot ? `<div class="hc__side">${pic(url, "hc__img--logo", "Logo 2:1")}</div>` : ""
@@ -906,9 +917,9 @@ function heroCardHTML(entry, loaded) {
       <span class="tk__when"><span class="tk__dow">${esc(hcFmt(date, { weekday: "long" }))}</span><span class="tk__date">${esc(
         hcFmt(date, { month: "short", day: "numeric" })
       )}</span>${it.time ? `<span class="tk__line">${esc(it.time.trim())}</span>` : ""}${
-        hcPlace(it.location) ? `<span class="tk__line">${esc(hcPlace(it.location))}</span>` : ""
+        where.room ? `<span class="tk__line">${esc(where.room)}</span>` : ""
       }${zoomLine("span", "tk__line hc__zoom")}${
-        hcMode(it.location) ? `<span class="tk__line">${esc(hcMode(it.location))}</span>` : ""
+        where.mode ? `<span class="tk__line">${esc(where.mode)}</span>` : ""
       }</span><span class="tk__btn" aria-hidden="true">${rsvp} &raquo;</span></div></div>`;
   };
   const typeV = () => `
