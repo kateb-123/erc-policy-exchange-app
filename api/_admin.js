@@ -293,8 +293,21 @@ function applyFeatured(f, op, body) {
     if (!HERO_ITEMS.includes(hero)) throw new BadRequest('Pick a hero card from the list.');
     const dark = body.dark === true; // the dark look, a switch beside the card (Kate, Sep 30)
     // The card's own words, which only the highlight card shows (Kate, Oct 6:
-    // the iteach card's description, with the abstract kept for the Research page).
-    const summary = short(body.summary, 600, 'card summary').replace(/\s+/g, ' ');
+    // the iteach card's description, with the abstract kept for the Research
+    // page). One line; the length counts the collapsed text. A request with
+    // no summary (an older page) keeps the stored one; one sent with the
+    // summary its page loaded is refused when that has changed since.
+    const oneLine = (v) => {
+      const s = String(v ?? '').replace(/\s+/g, ' ').trim();
+      if (s.length > 600) throw new BadRequest('The card summary is too long.');
+      return s;
+    };
+    const stored = (f.heroes.find((h) => h.key === key) || {}).summary || '';
+    const sent = Object.prototype.hasOwnProperty.call(body, 'summary');
+    if (sent && Object.prototype.hasOwnProperty.call(body, 'summary_was') && oneLine(body.summary_was) !== stored) {
+      throw new Conflict('The card summary changed since the page loaded. Copy what you typed, then reload the page.');
+    }
+    const summary = sent ? oneLine(body.summary) : stored;
     f.heroes = f.heroes.filter((h) => h.key !== key);
     if (hero || dark || summary) f.heroes.push({ key, hero, ...(dark ? { dark: true } : {}), ...(summary ? { summary } : {}) });
     return hero || dark || summary
@@ -303,8 +316,11 @@ function applyFeatured(f, op, body) {
   }
   if (op === 'pin') {
     if (!ISO_DAY.test(String(body.until || ''))) throw new BadRequest('Pick the last day to keep it pinned.');
-    f.pins = f.pins.filter((p) => p.key !== key);
-    f.pins.unshift({ key, until: body.until });
+    // A new date keeps the pin in its place and keeps what the desk wrote on
+    // it (title, summary, image); a new pin goes first (review, Oct 6).
+    const at = f.pins.findIndex((p) => p.key === key);
+    if (at >= 0) f.pins[at] = { ...f.pins[at], key, until: body.until };
+    else f.pins.unshift({ key, until: body.until });
     return `Admin: pin an item until ${body.until}`;
   }
   if (op === 'unpin') {
@@ -362,6 +378,16 @@ function applyFeatured(f, op, body) {
 
 // An edit that changes an item's link (its key) carries its pin and its
 // hiding along with it.
+// A deleted item's pin, card choice (with its summary) and hidden mark go
+// with it, so nothing it said stays in the public file (review, Oct 6).
+function dropFeatured(f, key) {
+  const n = f.pins.length + f.heroes.length + f.hidden.length;
+  f.pins = f.pins.filter((p) => p.key !== key);
+  f.heroes = f.heroes.filter((h) => h.key !== key);
+  f.hidden = f.hidden.filter((k) => k !== key);
+  return f.pins.length + f.heroes.length + f.hidden.length !== n;
+}
+
 function rekeyFeatured(f, from, to) {
   let changed = false;
   f.pins.forEach((p) => {
@@ -562,6 +588,14 @@ async function handleSave(req, res, { env = process.env, gh = github(env) } = {}
         return op === 'edit' ? editRow(text, body.original, body.fields) : deleteRow(text, body.original);
       });
       let featured = null;
+      if (op === 'delete' && out.before) {
+        const dropped = await withFile(gh, FEATURED_PATH, (text) => {
+          const f = readFeatured(text);
+          if (!dropFeatured(f, keyOf(out.before))) return { featured: f, same: true };
+          return { text: `${JSON.stringify(f, null, 2)}\n`, message: 'Admin: drop a deleted item from the home cards', featured: f };
+        }).catch(() => null);
+        featured = dropped ? dropped.featured : null;
+      }
       if (out.after && keyOf(out.before) !== keyOf(out.after)) {
         const moved = await withFile(gh, FEATURED_PATH, (text) => {
           const f = readFeatured(text);
@@ -610,6 +644,7 @@ module.exports = {
   readFeatured,
   applyFeatured,
   rekeyFeatured,
+  dropFeatured,
   github,
   withFile,
   handleLogin,

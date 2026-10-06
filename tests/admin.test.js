@@ -85,6 +85,14 @@ ok('featured changes', () => {
   A.applyFeatured(f, 'pin', { key: 'https://a', until: '2026-10-10' });
   A.applyFeatured(f, 'pin', { key: 'https://a', until: '2026-10-12' });
   assert.deepStrictEqual(f.pins, [{ key: 'https://a', until: '2026-10-12' }]);
+  // A new date keeps the pin where it is and keeps the words the desk wrote
+  // on it (review, Oct 6); a new pin goes first.
+  f.pins.push({ key: 'https://d', until: '2026-10-09', title: 'Desk title', summary: 'Desk words.' });
+  A.applyFeatured(f, 'pin', { key: 'https://d', until: '2026-10-20' });
+  assert.deepStrictEqual(f.pins[1], { key: 'https://d', until: '2026-10-20', title: 'Desk title', summary: 'Desk words.' });
+  A.applyFeatured(f, 'pin', { key: 'https://e', until: '2026-10-20' });
+  assert.strictEqual(f.pins[0].key, 'https://e');
+  A.applyFeatured(f, 'unpin', { key: 'https://d' }); A.applyFeatured(f, 'unpin', { key: 'https://e' });
   A.applyFeatured(f, 'hide', { key: 'https://b' }); A.applyFeatured(f, 'hide', { key: 'https://b' });
   assert.deepStrictEqual(f.hidden, ['https://b']);
   A.applyFeatured(f, 'card', { card: { headline: 'Hi', until: '2026-10-01', link: 'https://c' } });
@@ -123,6 +131,24 @@ ok('featured changes', () => {
   assert.throws(() => A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo', summary: 'x'.repeat(601) }), A.BadRequest);
   A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo', dark: false });
   assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: 'photo' }]);
+  // A request without a summary (an older page) keeps the stored one; a
+  // summary sent over a changed one is a conflict; the length counts the
+  // collapsed text (review, Oct 6).
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo', summary: 'Kept words.' });
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'words', dark: true });
+  assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: 'words', dark: true, summary: 'Kept words.' }]);
+  assert.throws(() => A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'words', summary: 'New', summary_was: 'Old words.' }), A.Conflict);
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'words', summary: 'New', summary_was: 'Kept   words.' });
+  assert.strictEqual(f.heroes[0].summary, 'New');
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'words', summary: ('word ' + ' '.repeat(5)).repeat(60) });
+  assert.ok(f.heroes[0].summary.length <= 600);
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo', summary: '' });
+  assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: 'photo' }]);
+  // Deleting an item takes its pin, card choice and hidden mark with it.
+  const g = A.readFeatured(JSON.stringify({ pins: [{ key: 'https://z', until: '2026-10-20' }], heroes: [{ key: 'https://z', hero: 'words', summary: 'Gone.' }], hidden: ['https://z'], cards: [] }));
+  assert.ok(A.dropFeatured(g, 'https://z'));
+  assert.deepStrictEqual([g.pins, g.heroes, g.hidden], [[], [], []]);
+  assert.ok(!A.dropFeatured(g, 'https://z'));
   assert.throws(() => A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'banner' }), A.BadRequest);
   assert.throws(() => A.applyFeatured(f, 'hero', { key: '', hero: 'type' }), A.BadRequest);
   assert.ok(A.rekeyFeatured(f, 'https://a', 'https://a2')); assert.strictEqual(f.pins[0].key, 'https://a2');
