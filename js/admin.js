@@ -562,10 +562,15 @@ function openItem(key) {
   picOn.addEventListener('change', () => (places.hidden = !picOn.checked));
   // The card's own words (Kate, Oct 6): a summary only this card shows.
   const summaryWas = heroRow.summary || '';
-  const cardSum = el('textarea', { id: 'a-cardsum', rows: '3' });
+  const cardSum = el('textarea', { id: 'a-cardsum', rows: '3', maxlength: '600' });
   cardSum.value = summaryWas;
   const cardSumRow = fieldRow('a-cardsum', 'Card summary', cardSum, 'Only the New & Upcoming card shows it, in place of the Summary.');
   cardSumRow.classList.add('admin-field--wide');
+  cardSumRow.append(titleCount(cardSum, (n) => `${n} characters. Aim for 280 or fewer.`));
+  // A headline's card shows no summary, so the box is not offered there.
+  const sumFor = () => (cardSumRow.hidden = form.elements.type.value === 'headline');
+  form.elements.type.addEventListener('change', sumFor);
+  sumFor();
   pinBox.append(picLabel, darkLabel, places, cardSumRow);
   // A new section has its own places; the box is drawn again (audit F54).
   form.elements.type.addEventListener('change', () => {
@@ -667,8 +672,12 @@ function openItem(key) {
     if (!checkAll()) return note(form, 'Fix the marked field first.', 'error');
     busy(true);
     note(form, 'Saving…', 'busy');
-    let newKey = key;
-    if (Object.keys(fields).length) {
+    // The item's key as it is now: after a save that changed the link, a
+    // second try goes to the new one (review, Oct 6).
+    let newKey = X.itemKey(item);
+    const edited = Object.keys(fields).length > 0;
+    const saved = (what) => (edited ? `The item saved, but ${what}` : `${what[0].toUpperCase()}${what.slice(1)}`);
+    if (edited) {
       const r = await api('save', { op: 'edit', original: { ...item }, fields });
       if (!r.ok) {
         busy(false);
@@ -687,7 +696,7 @@ function openItem(key) {
       if (!r.ok) {
         busy(false);
         X.refresh();
-        return note(form, `The item saved, but the pin didn't: ${r.error}`, 'error');
+        return note(form, `${saved("the pin didn't save")}: ${r.error}`, 'error');
       }
       X.state.featured = r.featured;
     } else if (!want && had) {
@@ -695,17 +704,18 @@ function openItem(key) {
       if (!r.ok) {
         busy(false);
         X.refresh();
-        return note(form, `The item saved, but the pin didn't come off: ${r.error}`, 'error');
+        return note(form, `${saved("the pin didn't come off")}: ${r.error}`, 'error');
       }
       X.state.featured = r.featured;
     }
     // The hero card, if she changed it.
-    if (tiles.value !== heroWas || tiles.dark !== darkWas || cardSum.value.trim() !== summaryWas) {
-      const r = await api('save', { op: 'hero', key: newKey, hero: tiles.value, dark: tiles.dark, summary: cardSum.value.trim() });
+    const sumNow = cardSumRow.hidden ? summaryWas : cardSum.value.replace(/\s+/g, ' ').trim();
+    if (tiles.value !== heroWas || tiles.dark !== darkWas || sumNow !== summaryWas) {
+      const r = await api('save', { op: 'hero', key: newKey, hero: tiles.value, dark: tiles.dark, summary: sumNow, summary_was: summaryWas });
       if (!r.ok) {
         busy(false);
         X.refresh();
-        return note(form, `The item saved, but the card choice didn't: ${r.error}`, 'error');
+        return note(form, `${saved("the card choice didn't save")}: ${r.error}`, 'error');
       }
       X.state.featured = r.featured;
     }

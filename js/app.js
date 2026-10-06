@@ -466,7 +466,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=29").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=30").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -847,7 +847,7 @@ function heroCardHTML(entry, loaded) {
         ? [src && esc(src), deadline && `<span class="hc__due">${esc(deadline === "Rolling" ? "Rolling deadline" : `Due ${deadline}`)}</span>`].filter(Boolean).join("")
         : kind === "headline" || kind === "event"
           ? hcLine([src, date && formatDate(it.date)])
-          : mark(cleanBlurb(it.blurb).slice(0, 140));
+          : mark(cleanBlurb(entry.summary || it.blurb).slice(0, 140));
   const when = date
     ? hcLine([hcFmt(date, { weekday: "long", month: "long", day: "numeric" }), (it.time || "").trim()])
     : "";
@@ -933,7 +933,7 @@ function heroCardHTML(entry, loaded) {
   // card gets the strip first, under the band (Kate, Sep 24, for the AEFP
   // call: "above the title and text").
   const stripText = `<div class="hc__col">${head}<p class="hc__meta">${meta}</p>${
-    kind !== "research" && blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : "" // (Kate, Sep 30: the call needs a description)
+    (kind !== "research" || entry.summary) && blurb ? `<p class="hc__blurb">${mark(blurb)}</p>` : "" // (Kate, Sep 30: the call needs a description; research only with a card summary)
   }</div>`;
   const bandV = (url) => `<div class="hc__v hc-band${url ? "" : " hc__v--slot"}">${stripText}${pic(url, "hc__img--band", "Landscape photo")}</div>`;
   const bandTopV = (url) => `<div class="hc__v hc-band hc-band--top${url ? "" : " hc__v--slot"}">${pic(url, "hc__img--band", "Landscape photo")}${stripText}</div>`;

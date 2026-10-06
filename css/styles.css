@@ -1611,6 +1611,12 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
 #wn-feat .hc .hc-edit .hc__blurb.hc__sum {
   margin-top: calc(22 * var(--u));
   -webkit-line-clamp: 5;
+  font-size: max(14px, calc(20 * var(--u))); /* the audit F62 floor */
+}
+/* A long title leaves room for four lines (review, Oct 6: five ran to the
+   card's edge beside a picture). */
+#wn-feat .hc[data-len="long"] .hc-edit .hc__blurb.hc__sum {
+  -webkit-line-clamp: 4;
 }
 #wn-feat .hc .hc-edit .hc__ttl {
   margin-bottom: calc(20 * var(--u));
@@ -3596,6 +3602,10 @@ main {
 .admin-pin .admin-tiles {
   width: 100%;
   margin-top: 4px;
+}
+/* The Card summary takes the box's whole width (review, Oct 6). */
+.admin-pin > .admin-field--wide {
+  flex: 1 1 100%;
 }
 .admin-pin .admin-tiles legend {
   float: none;
