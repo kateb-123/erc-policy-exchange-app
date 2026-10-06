@@ -51,11 +51,6 @@
     {
       "key": "https://docs.google.com/forms/d/e/1FAIpQLSelRTc2Rrl3mLhvKf_LxWnQHKE4GX1pp6LdPzyPpDzAicL8JQ/viewform",
       "hero": "date"
-    },
-    {
-      "key": "https://drive.google.com/file/d/1kmMObIRgSpBK1suK3cv3dTG-1p0wCbM4/view?usp=drive_link",
-      "hero": "",
-      "dark": true
     }
   ]
 }
