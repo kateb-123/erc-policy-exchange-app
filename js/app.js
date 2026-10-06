@@ -899,6 +899,12 @@ function heroCardHTML(entry, loaded) {
   // available" or "Online" when so, and RSVP (no "ERC Event" over the day,
   // Kate, Oct 6). An event with Show the picture
   // off draws this way.
+  // The stub puts a closing "City, ST" on its own line (Kate, Oct 6: "a line
+  // break after Ross Room so College Station, TX are on its own line").
+  const stubPlace = (room) => {
+    const m = room.match(/^(.*?),\s*([^,]+,\s*[A-Z]{2})$/);
+    return m ? `${esc(m[1])}<br>${esc(m[2])}` : esc(room);
+  };
   const ticketV = () => {
     const sp = speakersOf(it.authors);
     const said = blurb.toLowerCase();
@@ -922,7 +928,7 @@ function heroCardHTML(entry, loaded) {
       <span class="tk__when"><span class="tk__dow">${esc(hcFmt(date, { weekday: "long" }))}</span><span class="tk__date">${esc(
         hcFmt(date, { month: "short", day: "numeric" })
       )}</span>${it.time ? `<span class="tk__line">${esc(it.time.trim())}</span>` : ""}${
-        where.room ? `<span class="tk__line">${esc(where.room)}</span>` : ""
+        where.room ? `<span class="tk__line">${stubPlace(where.room)}</span>` : ""
       }${zoomLine("span", "tk__line hc__zoom")}${
         where.mode ? `<span class="tk__line">${esc(where.mode)}</span>` : ""
       }</span><span class="tk__btn" aria-hidden="true">${rsvp} &raquo;</span></div></div>`;
