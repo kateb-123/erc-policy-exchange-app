@@ -466,7 +466,7 @@ function init(rows, modified, featured) {
   // only then is the editor loaded; it asks the server before it shows
   // anything (Kate, Sep 23).
   window.Exchange = { state, itemKey, refresh, NEWS_TABS, TODAY, whatsNewFeed, heroCardHTML };
-  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=28").catch(() => {});
+  if (/(?:^|;\s*)exa_admin_on=1/.test(document.cookie)) import("./admin.js?v=29").catch(() => {});
   if (typedEarly.trim() && typedEarly !== state.q) {
     gs.value = typedEarly;
     gs.dispatchEvent(new Event("input"));
@@ -619,6 +619,7 @@ function whatsNewFeed(per = WN_PER) {
       const h = heroOf(itemKey(e.it));
       e.hero = h.hero || "";
       e.dark = !!h.dark;
+      e.summary = h.summary || ""; // the card's own words (Kate, Oct 6)
     }
   });
   // The Share card closes the rotation where the hero cards show (Kate,
@@ -704,7 +705,8 @@ function wnTitleLink({ it, tab }) {
         : `<span class="feat__plain">${title}</span>`;
 }
 
-function wnFeatHTML({ it, tab }, shape) {
+function wnFeatHTML(entry, shape) {
+  const { it, tab } = entry;
   const a = wnTitleLink({ it, tab });
   // Source and date share one line: a long source gives way, the date (or
   // an opportunity's deadline) never does.
@@ -713,7 +715,8 @@ function wnFeatHTML({ it, tab }, shape) {
   const sub =
     (from ? `<span class="feat__from">${esc(from)}</span>` : "") +
     (when ? `<span class="feat__when">${from ? "&nbsp;• " : ""}${esc(when)}</span>` : "");
-  const blurb = cleanBlurb(it.blurb);
+  // A card summary, when the editor wrote one, stands in for the Summary.
+  const blurb = cleanBlurb(entry.summary || it.blurb);
   const sec = `<p class="feat__sec">${esc(tab.nav)}</p>`;
   const txt = `
     <div class="feat__txt">
@@ -848,7 +851,9 @@ function heroCardHTML(entry, loaded) {
   const when = date
     ? hcLine([hcFmt(date, { weekday: "long", month: "long", day: "numeric" }), (it.time || "").trim()])
     : "";
-  const blurb = cleanBlurb(it.blurb);
+  // A card summary, when the editor wrote one, stands in for the Summary on
+  // every card (Kate, Oct 6).
+  const blurb = cleanBlurb(entry.summary || it.blurb);
 
   // "Zoom available" with a camera, on its own line (Kate, Oct 6, pick A).
   const where = hcWhere(it.location);
@@ -945,7 +950,9 @@ function heroCardHTML(entry, loaded) {
   // else the words take the card.
   const researchV = (url, dark, slot) => `
     <div class="hc__v hc-edit${dark ? " hc-edit--dark" : ""}${url || slot ? "" : " hc-edit--wide"}${slot ? " hc__v--slot" : ""}"><div class="hc__col">${head}
-      ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}</div>${
+      ${byline ? `<p class="hc__by">${esc(byline)}</p>` : ""}${srcLine ? `<p class="hc__src">${srcLine}</p>` : ""}${
+        entry.summary ? `<p class="hc__blurb hc__sum">${mark(cleanBlurb(entry.summary))}</p>` : "" // research shows words only when written for the card (Kate, Oct 6)
+      }</div>${
         url || slot ? pic(url, "hc__img--pt", "Portrait 4:5") : "" // no summary on research (Kate, Sep 30)
       }</div>`;
   const editV = (url) => researchV(url, false, !url);

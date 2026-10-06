@@ -1606,6 +1606,12 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
   max-width: calc(1040 * var(--u));
   padding-right: calc(56 * var(--u));
 }
+/* A research card's own summary, under the month (Kate, Oct 6: the iteach
+   card's description). */
+#wn-feat .hc .hc-edit .hc__blurb.hc__sum {
+  margin-top: calc(22 * var(--u));
+  -webkit-line-clamp: 5;
+}
 #wn-feat .hc .hc-edit .hc__ttl {
   margin-bottom: calc(20 * var(--u));
   font-size: calc(46 * var(--u));
