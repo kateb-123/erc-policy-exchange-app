@@ -112,6 +112,17 @@ ok('featured changes', () => {
   assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: '', dark: true }]);
   A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo', dark: false });
   assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: 'photo' }]);
+  // The card's own summary (Kate, Oct 6): kept with the card choice, in one
+  // line, Auto allowed; dropped when emptied; a guard on its length.
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'words', summary: '  A short\n card   summary. ' });
+  assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: 'words', summary: 'A short card summary.' }]);
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: '', summary: 'Only words.' });
+  assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: '', summary: 'Only words.' }]);
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo', dark: true, summary: '' });
+  assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: 'photo', dark: true }]);
+  assert.throws(() => A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo', summary: 'x'.repeat(601) }), A.BadRequest);
+  A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'photo', dark: false });
+  assert.deepStrictEqual(f.heroes, [{ key: 'https://a', hero: 'photo' }]);
   assert.throws(() => A.applyFeatured(f, 'hero', { key: 'https://a', hero: 'banner' }), A.BadRequest);
   assert.throws(() => A.applyFeatured(f, 'hero', { key: '', hero: 'type' }), A.BadRequest);
   assert.ok(A.rekeyFeatured(f, 'https://a', 'https://a2')); assert.strictEqual(f.pins[0].key, 'https://a2');

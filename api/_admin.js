@@ -292,9 +292,14 @@ function applyFeatured(f, op, body) {
     const hero = short(body.hero, 20, 'hero card');
     if (!HERO_ITEMS.includes(hero)) throw new BadRequest('Pick a hero card from the list.');
     const dark = body.dark === true; // the dark look, a switch beside the card (Kate, Sep 30)
+    // The card's own words, which only the highlight card shows (Kate, Oct 6:
+    // the iteach card's description, with the abstract kept for the Research page).
+    const summary = short(body.summary, 600, 'card summary').replace(/\s+/g, ' ');
     f.heroes = f.heroes.filter((h) => h.key !== key);
-    if (hero || dark) f.heroes.push(dark ? { key, hero, dark: true } : { key, hero });
-    return hero || dark ? `Admin: choose the ${hero || 'auto'}${dark ? ', dark' : ''} card for an item` : 'Admin: let an item pick its card again';
+    if (hero || dark || summary) f.heroes.push({ key, hero, ...(dark ? { dark: true } : {}), ...(summary ? { summary } : {}) });
+    return hero || dark || summary
+      ? `Admin: choose the ${hero || 'auto'}${dark ? ', dark' : ''} card${summary ? ' and its summary' : ''} for an item`
+      : 'Admin: let an item pick its card again';
   }
   if (op === 'pin') {
     if (!ISO_DAY.test(String(body.until || ''))) throw new BadRequest('Pick the last day to keep it pinned.');

@@ -560,7 +560,13 @@ function openItem(key) {
   let places = picturePlaces((item.type || '').toLowerCase(), heroWas);
   places.hidden = !picOn.checked;
   picOn.addEventListener('change', () => (places.hidden = !picOn.checked));
-  pinBox.append(picLabel, darkLabel, places);
+  // The card's own words (Kate, Oct 6): a summary only this card shows.
+  const summaryWas = heroRow.summary || '';
+  const cardSum = el('textarea', { id: 'a-cardsum', rows: '3' });
+  cardSum.value = summaryWas;
+  const cardSumRow = fieldRow('a-cardsum', 'Card summary', cardSum, 'Only the New & Upcoming card shows it, in place of the Summary.');
+  cardSumRow.classList.add('admin-field--wide');
+  pinBox.append(picLabel, darkLabel, places, cardSumRow);
   // A new section has its own places; the box is drawn again (audit F54).
   form.elements.type.addEventListener('change', () => {
     const fresh = picturePlaces(form.elements.type.value, places.value);
@@ -581,7 +587,7 @@ function openItem(key) {
     const it = { ...item };
     for (const [name] of FIELDS) it[name] = form.elements[name].value;
     const tab = X.NEWS_TABS.find((t) => t.value === (it.type || '').toLowerCase()) || { value: '', nav: 'ERC' };
-    previewCard.innerHTML = X.heroCardHTML({ it, tab, hero: tiles.value, dark: tiles.dark });
+    previewCard.innerHTML = X.heroCardHTML({ it, tab, hero: tiles.value, dark: tiles.dark, summary: cardSum.value.trim() });
     previewCard.dataset.len = previewCard.querySelector('.hc')?.dataset.len || '';
   };
   form.addEventListener('input', paint);
@@ -694,8 +700,8 @@ function openItem(key) {
       X.state.featured = r.featured;
     }
     // The hero card, if she changed it.
-    if (tiles.value !== heroWas || tiles.dark !== darkWas) {
-      const r = await api('save', { op: 'hero', key: newKey, hero: tiles.value, dark: tiles.dark });
+    if (tiles.value !== heroWas || tiles.dark !== darkWas || cardSum.value.trim() !== summaryWas) {
+      const r = await api('save', { op: 'hero', key: newKey, hero: tiles.value, dark: tiles.dark, summary: cardSum.value.trim() });
       if (!r.ok) {
         busy(false);
         X.refresh();
