@@ -1096,6 +1096,18 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 #wn-feat .hc .hc__band {
   pointer-events: none;
 }
+/* The Aggie UX fancy star before an ERC-hosted item's band (Kate, Oct 6),
+   in the band's own colour. */
+#wn-feat .hc .hc__star {
+  display: inline-block;
+  width: calc(26 * var(--u));
+  height: calc(26 * var(--u));
+  margin-right: calc(12 * var(--u));
+  vertical-align: calc(-4 * var(--u));
+  background: currentColor;
+  -webkit-mask: url("../assets/aggie/fancy-star.svg") center / contain no-repeat;
+  mask: url("../assets/aggie/fancy-star.svg") center / contain no-repeat;
+}
 #wn-feat .hc:hover .hc__ttl a {
   text-decoration: underline;
   text-decoration-thickness: calc(3 * var(--u));
@@ -1334,8 +1346,8 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
   font-size: calc(22 * var(--u));
 }
 /* The ticket card (Kate, Oct 6, for the ERC Colloquium, her pick B): the
-   words on grey at the left, a maroon stub at the right behind a dashed
-   tear line. */
+   words on grey at the left, a maroon stub at the right, no tear line
+   between them (Kate, Oct 6). */
 #wn-feat .hc .hc-ticket {
   display: grid;
   grid-template-columns: minmax(0, 1fr) calc(330 * var(--u));
@@ -1389,7 +1401,6 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
   padding: calc(32 * var(--u)) calc(36 * var(--u)) calc(36 * var(--u));
   background: var(--maroon);
   color: #fff;
-  border-left: calc(4 * var(--u)) dashed var(--g100);
 }
 #wn-feat .hc .tk__label {
   display: flex;
@@ -1398,15 +1409,6 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
   font: 700 max(11px, calc(18 * var(--u))) / 1 var(--head);
   letter-spacing: 0.16em;
   text-transform: uppercase;
-}
-/* The ERC's web icon (the favicon), drawn in the stub's white. */
-#wn-feat .hc .tk__icon {
-  flex: none;
-  width: calc(40 * var(--u));
-  height: calc(40 * var(--u));
-  background: #fff;
-  -webkit-mask: url("../assets/logo/favicon.svg") center / contain no-repeat;
-  mask: url("../assets/logo/favicon.svg") center / contain no-repeat;
 }
 #wn-feat .hc .tk__when {
   display: flex;
@@ -1962,10 +1964,6 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-beside {
 #wn-feat .hc--dark .tk__stub {
   background: var(--cream3);
   color: var(--maroon);
-  border-left-color: var(--maroon);
-}
-#wn-feat .hc--dark .tk__icon {
-  background: var(--maroon);
 }
 #wn-feat .hc--dark .tk__dow,
 #wn-feat .hc--dark .tk__line {

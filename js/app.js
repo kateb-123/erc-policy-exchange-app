@@ -739,6 +739,17 @@ function wnFeatHTML({ it, tab }, shape) {
    (html.admin-on), so she sees where a picture would go; visitors never see
    an empty slot. */
 const HC_SUPER = { research: "New research", event: "Upcoming event", opportunity: "Opportunity", headline: "Headline" };
+const HC_SUPER_ERC = { research: "New ERC research", event: "Upcoming ERC event", opportunity: "ERC opportunity", headline: "ERC headline" };
+// What the ERC hosts: an ERC category, the ERC as the source, a link on the
+// ERC's own site, or (anything but a news story about it) a title that
+// starts with ERC. The anchors keep MERC and other states' Education
+// Research Centers out. Today this flags the ERC Research and ERC Events
+// rows and nothing else (checked over all 267 rows, Oct 6).
+const isErcHosted = (it) =>
+  /^erc\b/i.test((it.subtype || "").trim()) ||
+  /^(erc|education research center)\b/i.test((it.source || "").trim()) ||
+  /\/\/erc\.cehd\.tamu\.edu\b/i.test(it.link || "") ||
+  ((it.type || "").toLowerCase() !== "headline" && /^ERC\b/.test(it.headline || ""));
 const hcDate = (iso) => {
   const [y, m, d] = (iso || "").split("-").map(Number);
   return y && m && d ? new Date(Date.UTC(y, m - 1, d)) : null;
@@ -791,10 +802,12 @@ function heroCardHTML(entry, loaded) {
   const img = loaded === "" ? "" : wnImage(it);
   const src = (it.source || "").trim();
   const date = hcDate(it.date);
-  const erc = kind === "event" && (/^erc\b/i.test(it.subtype || "") || src === "ERC" || /^ERC\b/.test(it.headline || ""));
-  // The ERC's own research says so on the band, as its events do (Kate, Oct 6).
-  const ercResearch = kind === "research" && /^erc\b/i.test(it.subtype || "");
-  const sup = esc(kind ? (erc ? "Upcoming ERC event" : ercResearch ? "New ERC research" : HC_SUPER[kind]) : tab.nav || "ERC");
+  const erc = !!kind && isErcHosted(it);
+  // What the ERC hosts says so on the highlight card's band, behind the
+  // Aggie UX fancy star (Kate, Oct 6: "anything erc hosted ... needs to have
+  // erc in front of it", "only on the highlight cards").
+  const supText = kind ? (erc ? HC_SUPER_ERC[kind] : HC_SUPER[kind]) : tab.nav || "ERC";
+  const sup = `${erc ? '<span class="hc__star" aria-hidden="true"></span>' : ""}${esc(supText)}`;
   const head = `<h3 class="hc__ttl">${wnTitleLink(entry)}</h3>`;
   const pic = (url, cls, label) =>
     url
@@ -850,8 +863,8 @@ function heroCardHTML(entry, loaded) {
   // title, both one size (Kate: "more ="), SemiBold, light maroon over
   // maroon; any speaker the summary does not already name, and the
   // moderator; then the summary, upright and black, the speakers' names in
-  // bold. At the right, a maroon stub: the ERC's web icon and "ERC Event",
-  // the day, the time, the room, and RSVP. An event with Show the picture
+  // bold. At the right, a maroon stub: "ERC Event", the day, the time, the
+  // room, and RSVP. An event with Show the picture
   // off draws this way.
   const ticketV = () => {
     const sp = speakersOf(it.authors);
@@ -872,7 +885,7 @@ function heroCardHTML(entry, loaded) {
     return `
     <div class="hc__v hc-ticket"><div class="tk__main">${title}${who ? `<p class="tk__who">${who}</p>` : ""}${
       blurb ? `<p class="tk__desc">${words}</p>` : ""
-    }</div><div class="tk__stub"><span class="tk__label">${erc ? '<span class="tk__icon" aria-hidden="true"></span>ERC Event' : "Event"}</span>
+    }</div><div class="tk__stub"><span class="tk__label">${erc ? "ERC Event" : "Event"}</span>
       <span class="tk__when"><span class="tk__dow">${esc(hcFmt(date, { weekday: "long" }))}</span><span class="tk__date">${esc(
         hcFmt(date, { month: "short", day: "numeric" })
       )}</span>${it.time ? `<span class="tk__line">${esc(it.time.trim())}</span>` : ""}${
