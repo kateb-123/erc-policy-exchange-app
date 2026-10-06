@@ -1,10 +1,10 @@
 {
   "pins": [
     {
-      "key": "https://aefpweb.org/callforproposals",
-      "until": "2026-10-08",
-      "title": "AEFP Annual Conference - Call for Proposals",
-      "summary": "Proposals for the 2027 Association for Education Finance and Policy conference, themed Playing the Long Game: Cultivating Purpose for Durable Policy Impact, are invited across"
+      "key": "https://docs.google.com/forms/d/e/1FAIpQLSelRTc2Rrl3mLhvKf_LxWnQHKE4GX1pp6LdPzyPpDzAicL8JQ/viewform",
+      "until": "2026-10-20",
+      "title": "ERC Colloquium: Controversies in the Classroom",
+      "summary": "A panel of National Academy of Education members on artificial intelligence in K-12 and higher education, the politicization of curriculum, school choice, and student tracking."
     },
     {
       "key": "https://docs.google.com/forms/d/e/1FAIpQLSebL60FJQ65bAs41AgDwsxpeXwoAvhah51qqt6mLSCBFgYhSQ/viewform",
@@ -13,10 +13,10 @@
       "summary": "Dr. Mark Hlavacik on his new book, *Willing Warriors*, and how the culture wars have redefined the politics of US schooling from the 1970s to today. Lunch provided; RSVP requested."
     },
     {
-      "key": "https://docs.google.com/forms/d/e/1FAIpQLSelRTc2Rrl3mLhvKf_LxWnQHKE4GX1pp6LdPzyPpDzAicL8JQ/viewform",
-      "until": "2026-10-20",
-      "title": "ERC Colloquium: Controversies in the Classroom",
-      "summary": "A panel of National Academy of Education members on artificial intelligence in K-12 and higher education, the politicization of curriculum, school choice, and student tracking."
+      "key": "https://aefpweb.org/callforproposals",
+      "until": "2026-10-08",
+      "title": "AEFP Annual Conference - Call for Proposals",
+      "summary": "Proposals for the 2027 Association for Education Finance and Policy conference, themed Playing the Long Game: Cultivating Purpose for Durable Policy Impact, are invited across"
     },
     {
       "key": "https://www.nytimes.com/2026/09/28/upshot/ideas-fixing-schools-ranked.html?unlocked_article_code=1.ElE.E1sX.SS4jOA1yqfa5&smid=url-share",
