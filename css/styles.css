@@ -1191,6 +1191,8 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
 #wn-feat .hc .hc-erc .hc__img--pt img {
   object-position: 50% 0;
 }
+/* Every highlight card sets its words from the top, not the middle (Kate,
+   Oct 6: "lets not do that and put them all at the top"). */
 #wn-feat .hc .hc-erc .hc__col,
 #wn-feat .hc .hc-date .hc__col {
   display: flex;
@@ -1200,12 +1202,12 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-photo {
   padding: calc(56 * var(--u)) calc(64 * var(--u)) calc(48 * var(--u));
 }
 #wn-feat .hc .hc-erc .hc__col {
-  justify-content: center;
+  justify-content: flex-start;
   gap: calc(14 * var(--u));
   padding: calc(36 * var(--u)) calc(56 * var(--u)) calc(32 * var(--u)) calc(64 * var(--u));
 }
 #wn-feat .hc .hc-date .hc__col {
-  justify-content: center;
+  justify-content: flex-start;
 }
 #wn-feat .hc .hc__fact {
   display: flex;
@@ -1396,7 +1398,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
 #wn-feat .hc .tk__stub {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   min-width: 0;
   padding: calc(32 * var(--u)) calc(36 * var(--u)) calc(36 * var(--u));
   background: var(--maroon);
@@ -1495,7 +1497,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
   background: var(--g100);
 }
 #wn-feat .hc .hc-type {
-  justify-content: center; /* the words sit in the middle, not at the top (Kate, Sep 30) */
+  justify-content: flex-start; /* at the top (Kate, Oct 6: "lets not do that and put them all at the top") */
 }
 #wn-feat .hc .hc-type .hc__ttl {
   max-width: calc(900 * var(--u));
@@ -1560,7 +1562,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
 }
 #wn-feat .hc .hc-band--top .hc__col {
   flex: 1 1 auto;
-  justify-content: center;
+  justify-content: flex-start;
   padding: calc(20 * var(--u)) calc(72 * var(--u)) calc(18 * var(--u));
 }
 #wn-feat .hc .hc-band--top .hc__ttl {
@@ -1609,7 +1611,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
 #wn-feat .hc .hc-edit .hc__col {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   min-width: 0;
   padding: calc(36 * var(--u)) calc(48 * var(--u)) calc(36 * var(--u)) calc(56 * var(--u));
 }
@@ -1697,7 +1699,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
 #wn-feat .hc .hc-beside {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   gap: calc(22 * var(--u));
   padding: calc(32 * var(--u)) calc(64 * var(--u)) calc(32 * var(--u));
   background: var(--g100);
@@ -1714,7 +1716,7 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
   display: grid;
   grid-template-columns: calc(400 * var(--u)) minmax(0, 1fr);
   gap: calc(40 * var(--u));
-  align-items: center;
+  align-items: flex-start;
 }
 #wn-feat .hc .hc-beside .hc__col {
   display: flex;
