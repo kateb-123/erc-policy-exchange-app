@@ -630,6 +630,30 @@ a:hover {
     display: none;
   }
 }
+/* The Pause that comes before the card (audit F75): out of sight above the
+   card until a keyboard reaches it, then at its top left. Nothing turns on
+   phones, so they have none. */
+.wn-pause-first {
+  position: absolute;
+  z-index: 3;
+  left: 8px;
+  top: 8px;
+  padding: 8px 12px;
+  border: 0;
+  background: #fff;
+  color: var(--maroon);
+  font: 700 0.875rem/1 var(--head);
+  cursor: pointer;
+  transform: translateY(-200%);
+}
+.wn-pause-first:focus-visible {
+  transform: none;
+}
+@media (max-width: 820px) {
+  .wn-pause-first {
+    display: none;
+  }
+}
 .rail__vp {
   position: relative;
   flex: 1 1 0;
@@ -725,6 +749,13 @@ a:hover {
   align-items: center;
   justify-content: center;
   gap: 4px;
+}
+/* A thumb between the two arrows must not step the wrong way on a phone
+   (Oct 7 audit F96: they sat 4px apart). */
+@media (max-width: 820px) {
+  .caro {
+    column-gap: 12px;
+  }
 }
 /* The count sits under the arrows and the pause (Kate, Sep 30). */
 .caro__count {
@@ -915,7 +946,7 @@ a:hover {
     box-shadow: none;
     border-radius: 0;
   }
-  #wn-feat > :not(.hc):not(.admin-edit) {
+  #wn-feat > :not(.hc):not(.admin-edit):not(.wn-pause-first) {
     display: none;
   }
   /* The sections: the white boxes with the maroon outline, no icons (Kate,
@@ -3115,6 +3146,11 @@ main {
   .topnav__brand {
     padding: 12px 0;
   }
+  /* The bar's top and the search box clip a ring outside the title, so on
+     phones it is drawn inside (Oct 7 audit F97). */
+  .topnav__brand:focus-visible {
+    outline-offset: -4px;
+  }
   .topnav__mark {
     width: 28px;
     height: 28px;
@@ -3305,13 +3341,16 @@ main {
     font-size: 0.875rem;
     white-space: nowrap;
   }
+  /* The arrow's tap area reaches up into the row's empty top, leaving 8px
+     before the title link; the arrow itself stays put (Oct 7 audit F83). */
   .feed-expand,
   .feed-goto {
     grid-area: chev;
     justify-self: end;
     width: 40px;
     height: 40px;
-    margin: -8px -10px -8px 0;
+    margin: -14px -10px -2px 0;
+    padding-top: 12px;
   }
   .feed-item__meta {
     grid-area: meta;
@@ -3319,6 +3358,21 @@ main {
   }
   .feed-more {
     padding: 16px 0;
+  }
+  /* Fingertip-size taps on phones (Oct 7 audit F104, F88). */
+  .feed-more__btn,
+  .upload .btn-outline {
+    min-height: 44px;
+  }
+  .upload .btn-text--quiet {
+    padding: 12px 8px;
+    margin: -12px -8px;
+  }
+  .radios__list {
+    gap: 0;
+  }
+  .radios__list .radio {
+    padding: 6px 0;
   }
   /* Headlines' cards, the same: no frame, a rule between. */
   .ncol {
@@ -3361,7 +3415,12 @@ main {
   .site-footer__links {
     flex-direction: column;
     align-items: flex-start;
-    gap: 12px;
+    gap: 0;
+  }
+  .site-footer__links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 }
 

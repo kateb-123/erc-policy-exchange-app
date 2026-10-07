@@ -1124,6 +1124,13 @@ function initWhatsNew(list) {
   const feat = $("#wn-feat");
   const vp = $(".rail__vp", split);
   const btn = $(".rail__pause", split);
+  // A second Pause comes before the card in the reading order and shows only
+  // when a keyboard reaches it, like Skip to content, so a screen reader meets
+  // the stop before the moving card (Oct 7 audit F75). The card is redrawn
+  // every turn; this button is put back first each time.
+  const first = document.createElement("button");
+  first.type = "button";
+  first.className = "wn-pause-first";
   const count = $(".caro__count b", split);
   const countBox = $(".caro__count", split);
   const rows = $$(".rail__row", vp);
@@ -1161,7 +1168,10 @@ function initWhatsNew(list) {
       feat.className = `feat ${shape ? `has-${shape}` : "no-art"}`;
       feat.dataset.key = wnKey(list[at]);
       feat.dataset.len = wnLen(list[at].it);
+      const had = document.activeElement === first;
       feat.innerHTML = wnFeatHTML(list[at], shape) + heroCardHTML(list[at], shape);
+      feat.prepend(first);
+      if (had) first.focus();
     };
     if (!fade || calm) return paint();
     feat.classList.add("is-out");
@@ -1226,13 +1236,16 @@ function initWhatsNew(list) {
     const what = matchMedia(WIDE).matches ? "the cards" : "the list";
     btn.title = off ? `Resume ${what}` : `Pause ${what}`;
     btn.setAttribute("aria-label", btn.title);
+    first.textContent = btn.title;
     announce();
     schedule();
   }
-  btn.addEventListener("click", () => {
-    off = !off;
-    sync();
-  });
+  [btn, first].forEach((b) =>
+    b.addEventListener("click", () => {
+      off = !off;
+      sync();
+    })
+  );
 
   // Picking a row means "stay on this one".
   vp.addEventListener("click", (e) => {
@@ -1690,10 +1703,14 @@ function renderToolbar() {
     .join(`<span class="tsort-sep" aria-hidden="true">·</span>`);
   // A small "Sort" label before the pair, so the unchosen option reads as a
   // choice and not a caption (audit F70).
-  const sortGroup = `
+  // Where there is one order the label goes too (Oct 7 audit F98: the line
+  // read "14 items SORT"); the group still holds the count.
+  const sortGroup = sortHTML
+    ? `
     <div class="tgroup tgroup--sort" role="group" aria-label="Sort">
       <span class="tgroup__label">Sort</span>${sortHTML}
-    </div>`;
+    </div>`
+    : `<div class="tgroup tgroup--sort"></div>`;
 
   // The category buttons render on every section, even with one sub-category,
   // so the toolbar's shape is identical as you move between sections.
