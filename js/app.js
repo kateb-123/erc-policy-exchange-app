@@ -1477,7 +1477,23 @@ function activeSort() {
   return state.sort || TOOLBAR_SORTS[state.type][0];
 }
 
+// On Newest, the ERC's own research from the last three weeks comes first,
+// newest first, then everything by date (Kate, Oct 7: "if we do have
+// research, it should go on top until the next 2 week update"; her pick of
+// three weeks from the report's date, about until the next update). A
+// report dated by month or year only does not lead.
 function sortComparator(sort = activeSort()) {
+  const base = baseComparator(sort);
+  if (!sort.ercFresh) return base;
+  const lead = (it) =>
+    (it.subtype || "").trim().toLowerCase() === "erc research" &&
+    /^\d{4}-\d{2}-\d{2}$/.test(it.date || "") &&
+    -daysUntil(it.date) <= sort.ercFresh
+      ? 0
+      : 1;
+  return (a, b) => lead(a) - lead(b) || base(a, b);
+}
+function baseComparator(sort) {
   const { key, dir, first } = sort;
   const mult = dir === "asc" ? 1 : -1;
   // "ERC first" / "Texas first": that subtype on top, newest first within
@@ -1531,7 +1547,8 @@ const TOOLBAR_SORTS = {
     { label: "Texas first", key: "sub", dir: "desc", first: "texas" },
   ],
   research: [
-    { label: "Newest", key: "date", dir: "desc" },
+    // New ERC research leads for three weeks from its date (ercFresh).
+    { label: "Newest", key: "date", dir: "desc", ercFresh: 21 },
     { label: "ERC first", key: "sub", dir: "desc", first: "erc research" },
   ],
 };
