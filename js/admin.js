@@ -354,8 +354,10 @@ const RULES = {
       : '',
   date: (v) => (v && !/^\d{4}(-\d{2}(-\d{2})?)?$/.test(v) ? 'Write the date as 2026-10-01, 2026-10 or 2026.' : ''),
 };
-// pairs: [input, rule]. Returns a function that checks them all, focuses the
-// first one that fails, and says whether the form may be sent.
+// pairs: [input, rule, { onSave }]. Returns a function that checks them all,
+// focuses the first one that fails, and says whether the form may be sent.
+// An onSave rule (an empty title) is not checked when the box is left, only
+// on Save, so a new card's empty Title is not marked before it is typed in.
 function fieldChecks(pairs) {
   const check = (input, rule) => {
     const msg = rule(input.value.trim());
@@ -376,8 +378,8 @@ function fieldChecks(pairs) {
     input.setAttribute('aria-describedby', desc.join(' '));
     return !msg;
   };
-  pairs.forEach(([input, rule]) => {
-    input.addEventListener('blur', () => check(input, rule));
+  pairs.forEach(([input, rule, opt]) => {
+    if (!opt?.onSave) input.addEventListener('blur', () => check(input, rule));
     // Once marked, the mark goes as soon as the value is right.
     input.addEventListener('input', () => input.getAttribute('aria-invalid') && check(input, rule));
   });
@@ -483,9 +485,13 @@ function openItem(key) {
     fullBtn.textContent = on ? 'Back to the form' : 'See it full size';
   };
   fullBtn.addEventListener('click', () => showFull(!preview.classList.contains('is-full')));
-  // A click on the dimmed form, or Escape, goes back to the form, not out of it.
+  // A click on the dimmed form, Escape, or Tab out of the button goes back
+  // to the form, not out of it; focus never lands on a field under the card.
   preview.addEventListener('click', (e) => {
     if (e.target === preview) showFull(false);
+  });
+  preview.addEventListener('focusout', (e) => {
+    if (!preview.contains(e.relatedTarget)) showFull(false);
   });
   // The dialog is reused, so this listener leaves with the form.
   const backOnEscape = (e) => {
@@ -530,7 +536,7 @@ function openItem(key) {
   // An empty title is marked under its own box like the others (Oct 7
   // audit F114: it used to be reported by Save, a screen below).
   const checkAll = fieldChecks([
-    [form.elements.headline, (v) => (v ? '' : 'An item needs a title.')],
+    [form.elements.headline, (v) => (v ? '' : 'An item needs a title.'), { onSave: true }],
     [form.elements.link, RULES.link],
     [form.elements.infographic, RULES.picture],
     [form.elements.date, RULES.date],
@@ -992,7 +998,7 @@ function openCard(id) {
   rows[6].append(pictureUpload(inputs.image));
   grid.append(...rows);
   const checkAll = fieldChecks([
-    [inputs.headline, (v) => (v ? '' : isQuote() ? 'A card needs the quote.' : 'A card needs a title.')],
+    [inputs.headline, (v) => (v ? '' : isQuote() ? 'A card needs the quote.' : 'A card needs a title.'), { onSave: true }],
     [inputs.link, RULES.link],
     [inputs.image, RULES.picture],
   ]);

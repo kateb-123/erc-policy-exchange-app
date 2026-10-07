@@ -1087,6 +1087,7 @@ function buildWhatsNew() {
   }
   band.hidden = false;
   $("#wn-split").innerHTML = `
+    <button type="button" class="wn-pause-first"${list.length > 1 ? "" : " hidden"}></button>
     <article class="feat no-art" id="wn-feat" data-len="${wnLen(list[0].it)}" aria-live="off">${wnFeatHTML(list[0], "")}${heroCardHTML(list[0])}</article>
     <div class="caro" role="group" aria-label="Browse new and upcoming items"${list.length > 1 ? "" : " hidden"}>
       <button type="button" class="caro__btn" data-step="-1" aria-label="Previous item">${faIcon("chevron-left")}</button>
@@ -1126,11 +1127,19 @@ function initWhatsNew(list) {
   const btn = $(".rail__pause", split);
   // A second Pause comes before the card in the reading order and shows only
   // when a keyboard reaches it, like Skip to content, so a screen reader meets
-  // the stop before the moving card (Oct 7 audit F75). The card is redrawn
-  // every turn; this button is put back first each time.
-  const first = document.createElement("button");
-  first.type = "button";
-  first.className = "wn-pause-first";
+  // the stop before the moving card (Oct 7 audit F75). It sits outside the
+  // card, so the card's read-aloud never repeats it.
+  const first = $(".wn-pause-first", split);
+  // When a keyboard reaches it, it shows at the card's top left corner, in
+  // every layout (the card sits in a different grid cell at each width).
+  first.addEventListener("focus", () => {
+    const parent = first.offsetParent;
+    if (!parent) return;
+    const c = feat.getBoundingClientRect();
+    const p = parent.getBoundingClientRect();
+    first.style.left = `${c.left - p.left + 12}px`;
+    first.style.top = `${c.top - p.top + 12}px`;
+  });
   const count = $(".caro__count b", split);
   const countBox = $(".caro__count", split);
   const rows = $$(".rail__row", vp);
@@ -1168,10 +1177,7 @@ function initWhatsNew(list) {
       feat.className = `feat ${shape ? `has-${shape}` : "no-art"}`;
       feat.dataset.key = wnKey(list[at]);
       feat.dataset.len = wnLen(list[at].it);
-      const had = document.activeElement === first;
       feat.innerHTML = wnFeatHTML(list[at], shape) + heroCardHTML(list[at], shape);
-      feat.prepend(first);
-      if (had) first.focus();
     };
     if (!fade || calm) return paint();
     feat.classList.add("is-out");

@@ -190,7 +190,11 @@ let widgetId = null;
 let token = '';
 let waiting = [];
 let needsClick = false;
+let asked = false;
+// Only a send takes the cursor to the check; an upload waits for it quietly.
+const sendWaits = () => waiting.some((fn) => fn.send);
 function askForClick(focus) {
+  asked = true;
   setStat('Tick the box below to show you are not a robot.', 'busy');
   if (!focus) return;
   const cf = document.getElementById('cf');
@@ -207,15 +211,17 @@ function renderTurnstile() {
     'expired-callback': () => { token = ''; },
     // When the check needs a click, say so (the status used to sit on
     // "Checking" with the box unannounced, Sep 30 audit). The focus moves to
-    // it only when a send or an upload is waiting on it, never out of a box
-    // someone is still typing in (Oct 7 audit F85).
+    // it only when a send is waiting on it, never out of a box someone is
+    // still typing in (Oct 7 audit F85). Once ticked, the ask goes.
     'before-interactive-callback': () => {
       needsClick = true;
-      askForClick(waiting.length > 0);
+      askForClick(sendWaits());
     },
     'after-interactive-callback': () => {
       needsClick = false;
-      if (waiting.length) setStat('Checking', 'busy');
+      if (sendWaits()) setStat('Checking', 'busy');
+      else if (asked) setStat('');
+      asked = false;
     },
   });
 }
@@ -233,7 +239,7 @@ async function ensureCheck() {
     throw new UserError("The spam check didn't load on this network, so the form can't send. Email erc@tamu.edu to join instead.");
   }
 }
-function takeToken() {
+function takeToken(forSend = true) {
   return new Promise((resolve, reject) => {
     const take = () => {
       const t = token; token = '';
@@ -247,8 +253,9 @@ function takeToken() {
       turnstile.reset(widgetId);
       reject(new UserError("The spam check didn't finish. Nothing you typed is lost; try again."));
     }, 60000);
+    onToken.send = forSend;
     waiting.push(onToken);
-    if (needsClick) askForClick(true);
+    if (needsClick) askForClick(forSend);
   });
 }
 

@@ -252,7 +252,11 @@ let widgetId = null;
 let token = '';
 let waiting = [];
 let needsClick = false;
+let asked = false;
+// Only a send takes the cursor to the check; an upload waits for it quietly.
+const sendWaits = () => waiting.some((fn) => fn.send);
 function askForClick(focus) {
+  asked = true;
   setStat('Tick the box below to show you are not a robot.', 'busy');
   if (!focus) return;
   const cf = document.getElementById('cf');
@@ -269,15 +273,17 @@ function renderTurnstile() {
     'expired-callback': () => { token = ''; },
     // When the check needs a click, say so (the status used to sit on
     // "Checking" with the box unannounced, Sep 30 audit). The focus moves to
-    // it only when a send or an upload is waiting on it, never out of a box
-    // someone is still typing in (Oct 7 audit F85).
+    // it only when a send is waiting on it, never out of a box someone is
+    // still typing in (Oct 7 audit F85). Once ticked, the ask goes.
     'before-interactive-callback': () => {
       needsClick = true;
-      askForClick(waiting.length > 0);
+      askForClick(sendWaits());
     },
     'after-interactive-callback': () => {
       needsClick = false;
-      if (waiting.length) setStat('Checking', 'busy');
+      if (sendWaits()) setStat('Checking', 'busy');
+      else if (asked) setStat('');
+      asked = false;
     },
   });
 }
@@ -295,7 +301,7 @@ async function ensureCheck() {
     throw new UserError("The spam check didn't load on this network, so the form can't send. Email your item to erc@tamu.edu instead.");
   }
 }
-function takeToken() {
+function takeToken(forSend = true) {
   return new Promise((resolve, reject) => {
     const take = () => {
       const t = token; token = '';
@@ -309,8 +315,9 @@ function takeToken() {
       turnstile.reset(widgetId);
       reject(new UserError("The spam check didn't finish. Nothing you typed is lost; try again."));
     }, 60000);
+    onToken.send = forSend;
     waiting.push(onToken);
-    if (needsClick) askForClick(true);
+    if (needsClick) askForClick(forSend);
   });
 }
 
@@ -449,7 +456,7 @@ fileIn.addEventListener('change', () => {
       });
       const resp = await fetch(`${DESK}/api/newsletter-image`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: file.name, type: ext, file: b64, turnstile_token: await takeToken() }),
+        body: JSON.stringify({ name: file.name, type: ext, file: b64, turnstile_token: await takeToken(false) }),
       });
       const data = await readReply(resp);
       if (!data.ok) throw new UserError("The upload didn't go through. Try again, or send the item without it.");
@@ -540,6 +547,9 @@ form.addEventListener('submit', async event => {
     // without it, and the next item could pick it up).
     if (uploading) {
       setStat('Finishing the upload', 'busy');
+      // The upload may be waiting on the check; now a send waits on it too.
+      waiting.forEach((fn) => (fn.send = true));
+      if (needsClick) askForClick(true);
       await uploading;
     }
     if (uploadFailed && !sendWithout) {
