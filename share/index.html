@@ -220,9 +220,9 @@ root.innerHTML = `
     </div>
     <div class="field">
       <label for="e">Your email address</label>
-      <input id="e" type="email" autocomplete="email" required>
+      <input id="e" type="email" autocomplete="email" required aria-describedby="e-hint" data-hint="e-hint">
       <p class="field__error" id="e-err" hidden></p>
-      <small>Used only to reply about this item, and for the newsletter if you tick the box.</small>
+      <small id="e-hint">Used only to reply about this item, and for the newsletter if you tick the box.</small>
     </div>
     <label class="check field--full"><input type="checkbox" id="optin"><span>Join the ERC newsletter.</span></label>
     <div class="btns field--full">
@@ -251,6 +251,14 @@ const SITE_KEY = /^(localhost|127\.0\.0\.1)$/.test(location.hostname)
 let widgetId = null;
 let token = '';
 let waiting = [];
+let needsClick = false;
+function askForClick(focus) {
+  setStat('Tick the box below to show you are not a robot.', 'busy');
+  if (!focus) return;
+  const cf = document.getElementById('cf');
+  cf.tabIndex = -1;
+  cf.focus();
+}
 function renderTurnstile() {
   if (widgetId !== null || !window.turnstile) return;
   widgetId = turnstile.render('#cf', {
@@ -259,15 +267,18 @@ function renderTurnstile() {
     callback: t => { token = t; const w = waiting; waiting = []; w.forEach(fn => fn()); },
     'error-callback': () => { token = ''; },
     'expired-callback': () => { token = ''; },
-    // When the check needs a click, say so and put the focus on it; the
-    // status used to sit on "Checking" with the box unannounced (Sep 30 audit).
+    // When the check needs a click, say so (the status used to sit on
+    // "Checking" with the box unannounced, Sep 30 audit). The focus moves to
+    // it only when a send or an upload is waiting on it, never out of a box
+    // someone is still typing in (Oct 7 audit F85).
     'before-interactive-callback': () => {
-      setStat('Tick the box below to show you are not a robot.', 'busy');
-      const cf = document.getElementById('cf');
-      cf.tabIndex = -1;
-      cf.focus();
+      needsClick = true;
+      askForClick(waiting.length > 0);
     },
-    'after-interactive-callback': () => setStat('Checking', 'busy'),
+    'after-interactive-callback': () => {
+      needsClick = false;
+      if (waiting.length) setStat('Checking', 'busy');
+    },
   });
 }
 window.onTurnstileLoad = renderTurnstile;
@@ -299,6 +310,7 @@ function takeToken() {
       reject(new UserError("The spam check didn't finish. Nothing you typed is lost; try again."));
     }, 60000);
     waiting.push(onToken);
+    if (needsClick) askForClick(true);
   });
 }
 
@@ -339,13 +351,12 @@ function setFieldError(id, msg) {
   box.hidden = !msg;
   const inputs = id === 'type' ? [...typesBox.querySelectorAll('input')] : [document.getElementById(id)];
   for (const input of inputs) {
-    if (msg) {
-      input.setAttribute('aria-invalid', 'true');
-      input.setAttribute('aria-describedby', `${id}-err`);
-    } else {
-      input.removeAttribute('aria-invalid');
-      input.removeAttribute('aria-describedby');
-    }
+    // A box's own hint line stays tied to it (Oct 7 audit F105).
+    const said = [msg && `${id}-err`, input.dataset.hint].filter(Boolean).join(' ');
+    if (msg) input.setAttribute('aria-invalid', 'true');
+    else input.removeAttribute('aria-invalid');
+    if (said) input.setAttribute('aria-describedby', said);
+    else input.removeAttribute('aria-describedby');
   }
 }
 const clearErrors = () => ERR_IDS.forEach(id => setFieldError(id, ''));

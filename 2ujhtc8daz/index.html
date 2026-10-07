@@ -67,8 +67,16 @@
   });
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const password = document.getElementById('p').value;
-    if (!password) return say('Enter the password.', true);
+    const password = p.value;
+    // After a miss the cursor goes back in the box with the text selected,
+    // so the next paste replaces it (Oct 7 audit F115).
+    const again = (msg) => {
+      go.disabled = false;
+      say(msg, true);
+      p.focus();
+      p.select();
+    };
+    if (!password) return again('Enter the password.');
     go.disabled = true;
     say('Checking…');
     try {
@@ -78,14 +86,10 @@
         body: JSON.stringify({ password }),
       });
       const j = await r.json().catch(() => ({ ok: false, error: 'Something went wrong on our side. Try again in a minute.' }));
-      if (!j.ok) {
-        go.disabled = false;
-        return say(j.error, true);
-      }
+      if (!j.ok) return again(j.error);
       location.href = '../';
     } catch {
-      go.disabled = false;
-      say("Couldn't reach the server. Check your connection and try again.", true);
+      again("Couldn't reach the server. Check your connection and try again.");
     }
   });
 })();

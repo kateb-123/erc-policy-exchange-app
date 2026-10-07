@@ -919,8 +919,17 @@ function heroCardHTML(entry, loaded) {
       words = words.replace(new RegExp(`\\b${e}\\b`, "g"), (m) => `<b>${m}</b>`);
     });
     const split = (it.headline || "").match(/^([^:]{3,40}):\s+(.+)$/);
-    const title = split ? `<p class="tk__kick">${mark(split[1])}</p><h3 class="hc__ttl tk__ttl">${wnTitleLink({ ...entry, it: { ...it, headline: split[2] } })}</h3>` : head;
     const rsvp = /forms|rsvp/i.test(it.link || "") ? "RSVP" : "Register";
+    // The series sits inside the heading, and the link says RSVP, so screen
+    // readers and voice control get both (Oct 7 audit F77). Same look.
+    const say = (s) => `<span class="sr-only">${s}</span>`;
+    const link = wnTitleLink({ ...entry, it: { ...it, headline: split ? split[2] : it.headline } }).replace(
+      /(<span class="sr-only"> \(opens in new tab\)<\/span>)?<\/a>$/,
+      (m, tab) => `${say(`, ${rsvp}`)}${tab || ""}</a>`
+    );
+    const title = split
+      ? `<h3 class="hc__ttl tk__ttl"><span class="tk__kick">${mark(split[1])}${say(": ")}</span><span class="tk__name">${link}</span></h3>`
+      : `<h3 class="hc__ttl">${link}</h3>`;
     return `
     <div class="hc__v hc-ticket"><div class="tk__main">${title}${who ? `<p class="tk__who">${who}</p>` : ""}${
       blurb ? `<p class="tk__desc">${words}</p>` : ""
@@ -1120,7 +1129,8 @@ function initWhatsNew(list) {
   const rows = $$(".rail__row", vp);
   const picks = $$(".rail__pick", vp);
   const phone = matchMedia("(max-width: 820px)");
-  const calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const motion = matchMedia("(prefers-reduced-motion: reduce)");
+  let calm = motion.matches;
   // Motion nobody asked for: off from the start for anyone who has said so.
   let off = calm;
   let held = false; // a pointer or focus on the card or the list holds it
@@ -1268,6 +1278,16 @@ function initWhatsNew(list) {
     if (split.contains(e.relatedTarget)) return;
     held = false;
     schedule();
+  }, until);
+  // Reduce Motion switched on mid-visit stops the cards and the fades at
+  // once, like pressing Pause (Oct 7 audit F120); switched off, they stay
+  // paused until Resume.
+  motion.addEventListener("change", () => {
+    calm = motion.matches;
+    if (calm && !off) {
+      off = true;
+      sync();
+    }
   }, until);
   phone.addEventListener("change", () => {
     announce();

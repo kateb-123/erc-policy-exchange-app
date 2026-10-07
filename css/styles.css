@@ -1364,15 +1364,25 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
 }
 /* The series and the title, one size, one weight (Kate: "more ="; the
    SemiBold of every other card's title), light maroon over maroon. */
-#wn-feat .hc .tk__kick {
-  margin: 0 0 calc(-8 * var(--u));
-  font: 600 calc(46 * var(--u)) / 1.1 var(--head);
-  color: var(--maroon-muted);
-}
+/* Both lines live in the heading (audit F77): the series on its own line,
+   the title clamped to two lines under it, as before. */
 #wn-feat .hc .tk__ttl {
+  display: block;
   font-size: calc(46 * var(--u));
   line-height: 1.1;
   -webkit-line-clamp: 2;
+}
+#wn-feat .hc .tk__kick {
+  display: block;
+  margin: 0 0 calc(2 * var(--u));
+  font: 600 calc(46 * var(--u)) / 1.1 var(--head);
+  color: var(--maroon-muted);
+}
+#wn-feat .hc .tk__name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: inherit;
+  overflow: hidden;
 }
 #wn-feat .hc .tk__who {
   margin: calc(4 * var(--u)) 0 0;

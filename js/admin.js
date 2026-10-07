@@ -527,7 +527,10 @@ function openItem(key) {
     grid.append(row);
   }
   form.append(grid);
+  // An empty title is marked under its own box like the others (Oct 7
+  // audit F114: it used to be reported by Save, a screen below).
   const checkAll = fieldChecks([
+    [form.elements.headline, (v) => (v ? '' : 'An item needs a title.')],
     [form.elements.link, RULES.link],
     [form.elements.infographic, RULES.picture],
     [form.elements.date, RULES.date],
@@ -688,10 +691,6 @@ function openItem(key) {
       if (control.closest('.admin-field')?.hidden) continue;
       const v = control.value.trim();
       if (v !== (item[name] || '')) fields[name] = v;
-    }
-    if ('headline' in fields && !fields.headline) {
-      form.elements.headline.focus();
-      return note(form, 'An item needs a title.', 'error');
     }
     if (!checkAll()) return note(form, 'Fix the marked field first.', 'error');
     busy(true);
@@ -993,6 +992,7 @@ function openCard(id) {
   rows[6].append(pictureUpload(inputs.image));
   grid.append(...rows);
   const checkAll = fieldChecks([
+    [inputs.headline, (v) => (v ? '' : isQuote() ? 'A card needs the quote.' : 'A card needs a title.')],
     [inputs.link, RULES.link],
     [inputs.image, RULES.picture],
   ]);
@@ -1072,12 +1072,11 @@ function openCard(id) {
     // A hidden field's words don't ride along.
     if (!isQuote()) card.who = card.role = '';
     else card.label = card.blurb = '';
-    if (!card.headline) return note(form, isQuote() ? 'A card needs the quote.' : 'A card needs a title.', 'error');
+    if (!checkAll()) return note(form, 'Fix the marked field first.', 'error');
     if (!card.until) {
       inputs.until.focus();
       return note(form, 'Pick the last day to show the card.', 'error');
     }
-    if (!checkAll()) return note(form, 'Fix the marked field first.', 'error');
     save.disabled = true;
     note(form, 'Saving…', 'busy');
     // A changed card replaces the old one in one checked save.
