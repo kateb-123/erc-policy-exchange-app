@@ -1592,6 +1592,17 @@ html.admin-on #wn-feat .hc .hc__v--slot.hc-date {
 #wn-feat .hc .hc-edit--wide {
   grid-template-columns: minmax(0, 1fr);
 }
+/* The research card's picture framed on white (Kate, Oct 6, pick C): grey
+   room on three sides, as around the words, a thin outline, and the whole
+   picture shown, a chart's edges included. */
+#wn-feat .hc .hc-edit .hc__img--pt {
+  margin: calc(36 * var(--u)) calc(40 * var(--u)) calc(36 * var(--u)) 0;
+  background: #fff;
+  box-shadow: 0 0 0 calc(2 * var(--u)) var(--g400);
+}
+#wn-feat .hc .hc-edit .hc__img--pt img {
+  object-fit: contain;
+}
 #wn-feat .hc .hc-edit--dark {
   background: var(--maroon);
 }
