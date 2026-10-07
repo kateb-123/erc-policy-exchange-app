@@ -1130,16 +1130,6 @@ function initWhatsNew(list) {
   // the stop before the moving card (Oct 7 audit F75). It sits outside the
   // card, so the card's read-aloud never repeats it.
   const first = $(".wn-pause-first", split);
-  // When a keyboard reaches it, it shows at the card's top left corner, in
-  // every layout (the card sits in a different grid cell at each width).
-  first.addEventListener("focus", () => {
-    const parent = first.offsetParent;
-    if (!parent) return;
-    const c = feat.getBoundingClientRect();
-    const p = parent.getBoundingClientRect();
-    first.style.left = `${c.left - p.left + 12}px`;
-    first.style.top = `${c.top - p.top + 12}px`;
-  });
   const count = $(".caro__count b", split);
   const countBox = $(".caro__count", split);
   const rows = $$(".rail__row", vp);
@@ -1158,6 +1148,21 @@ function initWhatsNew(list) {
   // go when the band is rebuilt.
   const lasting = new AbortController();
   const until = { signal: lasting.signal };
+  // When a keyboard reaches it, it shows at the card's top left corner, in
+  // every layout (the card sits in a different grid cell at each width).
+  // Measured on screen, then divided by the page's zoom on big windows
+  // (grow.js), since the button's own lengths are zoomed too.
+  const placeFirst = () => {
+    const parent = first.offsetParent;
+    if (!parent) return;
+    const z = first.currentCSSZoom || parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--grow")) || 1;
+    const c = feat.getBoundingClientRect();
+    const p = parent.getBoundingClientRect();
+    first.style.left = `${(c.left - p.left) / z + 12}px`;
+    first.style.top = `${(c.top - p.top) / z + 12}px`;
+  };
+  first.addEventListener("focus", placeFirst);
+  addEventListener("resize", () => document.activeElement === first && placeFirst(), until);
 
   list.forEach(({ it }) => wnShape(wnImage(it)));
 

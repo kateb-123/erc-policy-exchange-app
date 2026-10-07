@@ -480,18 +480,17 @@ function openItem(key) {
   const previewFrame = el('div', { class: 'admin-preview__frame' });
   const previewCard = el('div', { id: 'wn-feat', class: 'feat no-art admin-preview__card', inert: true });
   const fullBtn = el('button', { type: 'button', class: 'btn-text admin-preview__full' }, 'See it full size');
+  // While it is full size the rest of the form is inert, so neither Tab nor
+  // a click can reach a field under the card (review of audit F74).
   const showFull = (on) => {
     preview.classList.toggle('is-full', on);
     fullBtn.textContent = on ? 'Back to the form' : 'See it full size';
+    for (const n of form.children) if (n !== preview) n.inert = on;
   };
   fullBtn.addEventListener('click', () => showFull(!preview.classList.contains('is-full')));
-  // A click on the dimmed form, Escape, or Tab out of the button goes back
-  // to the form, not out of it; focus never lands on a field under the card.
+  // A click on the dimmed form, or Escape, goes back to the form, not out of it.
   preview.addEventListener('click', (e) => {
     if (e.target === preview) showFull(false);
-  });
-  preview.addEventListener('focusout', (e) => {
-    if (!preview.contains(e.relatedTarget)) showFull(false);
   });
   // The dialog is reused, so this listener leaves with the form.
   const backOnEscape = (e) => {

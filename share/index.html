@@ -253,8 +253,9 @@ let token = '';
 let waiting = [];
 let needsClick = false;
 let asked = false;
+let sendPending = false; // a Send is waiting on an upload that has yet to ask
 // Only a send takes the cursor to the check; an upload waits for it quietly.
-const sendWaits = () => waiting.some((fn) => fn.send);
+const sendWaits = () => sendPending || waiting.some((fn) => fn.send);
 function askForClick(focus) {
   asked = true;
   setStat('Tick the box below to show you are not a robot.', 'busy');
@@ -282,7 +283,8 @@ function renderTurnstile() {
     'after-interactive-callback': () => {
       needsClick = false;
       if (sendWaits()) setStat('Checking', 'busy');
-      else if (asked) setStat('');
+      // Clear the ask, never a message that has since replaced it.
+      else if (asked && /Tick the box/.test(stat.textContent)) setStat('');
       asked = false;
     },
   });
@@ -315,9 +317,9 @@ function takeToken(forSend = true) {
       turnstile.reset(widgetId);
       reject(new UserError("The spam check didn't finish. Nothing you typed is lost; try again."));
     }, 60000);
-    onToken.send = forSend;
+    onToken.send = forSend || sendPending;
     waiting.push(onToken);
-    if (needsClick) askForClick(forSend);
+    if (needsClick) askForClick(onToken.send);
   });
 }
 
@@ -547,10 +549,16 @@ form.addEventListener('submit', async event => {
     // without it, and the next item could pick it up).
     if (uploading) {
       setStat('Finishing the upload', 'busy');
-      // The upload may be waiting on the check; now a send waits on it too.
+      // The upload may be waiting on the check, or about to ask for it; now
+      // a send waits on it too.
+      sendPending = true;
       waiting.forEach((fn) => (fn.send = true));
       if (needsClick) askForClick(true);
-      await uploading;
+      try {
+        await uploading;
+      } finally {
+        sendPending = false;
+      }
     }
     if (uploadFailed && !sendWithout) {
       sendWithout = true;
