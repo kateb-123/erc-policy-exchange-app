@@ -1420,6 +1420,10 @@ const SUBTYPE_ORDER = {
 
 // The ERC's own subtypes: their label is the darker maroon, every other one
 // the lighter (Kate, Sep 23).
+// The ERC's own categories, ERC Research and ERC Events, as a small maroon
+// box with white words on the section and search rows (Kate, Oct 7); A&M
+// categories keep the plain tag.
+const ercTag = (cat) => (/^erc\b/i.test((cat || "").trim()) ? " tag--erc" : "");
 const OWN_SUBTYPES = new Set(["erc research", "erc events", "texas a&m", "a&m"]);
 function sortSubtypes(subs, type) {
   const order = SUBTYPE_ORDER[(type || "").toLowerCase()] || [];
@@ -1746,7 +1750,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
       const source = (it.source || "").trim();
       const subtype = (it.subtype || "").trim();
       const catText = subtype || (it.type || "");
-      const catHTML = `<div class="feed-item__cat"><span class="tag ${colorFor[subtype] || ""}">${esc(catText)}</span></div>`;
+      const catHTML = `<div class="feed-item__cat"><span class="tag ${colorFor[subtype] || ""}${ercTag(catText)}">${esc(catText)}</span></div>`;
       const detailId = `feed-detail-${i}`;
       // The right side: Opportunities show the deadline, everything else its date.
       const rv = isOpp
@@ -1849,7 +1853,7 @@ function renderHeadlineCards(results, colorFor, total = results.length) {
         .join(" • ");
       return `
         <article class="ncard" data-key="${esc(itemKey(it))}">
-          <span class="tag ${colorFor[subtype] || ""}">${esc(subtype || it.type || "")}</span>
+          <span class="tag ${colorFor[subtype] || ""}${ercTag(subtype)}">${esc(subtype || it.type || "")}</span>
           <h3 class="ncard__title">${itemTitleLink(it, true)}</h3>
           ${subhead ? `<span class="ncard__subhead">${subhead}</span>` : ""}
         </article>`;

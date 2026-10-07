@@ -2515,6 +2515,13 @@ main {
 .tag--own {
   color: var(--maroon);
 }
+/* ERC Research and ERC Events: a small maroon box, white words (Kate, Oct 7). */
+.tag.tag--erc {
+  padding: 4px 7px;
+  margin: -4px 0; /* the box grows into the space around it; rows keep their height */
+  background: var(--maroon);
+  color: #fff;
+}
 
 /* ---------- Headline cards ----------
    Aggie UX News Collection. The shipped component carries a card image per
