@@ -471,9 +471,33 @@ function openItem(key) {
   // site's lookups still find the real one.
   // Inert: the card's title is a real link, and it must not take the Tab
   // key or an Enter mid-edit (audit F37).
-  const preview = el('div', { class: 'admin-preview', inert: true });
-  const previewCard = el('div', { id: 'wn-feat', class: 'feat no-art admin-preview__card' });
-  preview.append(previewCard);
+  // It is drawn at its real laptop size and shrunk as a whole, so every line
+  // breaks where it does on the home page; "See it full size" shows it at
+  // that size over the form (audit F74, Kate's pick D, Oct 7).
+  const preview = el('div', { class: 'admin-preview' });
+  const previewFrame = el('div', { class: 'admin-preview__frame' });
+  const previewCard = el('div', { id: 'wn-feat', class: 'feat no-art admin-preview__card', inert: true });
+  const fullBtn = el('button', { type: 'button', class: 'btn-text admin-preview__full' }, 'See it full size');
+  const showFull = (on) => {
+    preview.classList.toggle('is-full', on);
+    fullBtn.textContent = on ? 'Back to the form' : 'See it full size';
+  };
+  fullBtn.addEventListener('click', () => showFull(!preview.classList.contains('is-full')));
+  // A click on the dimmed form, or Escape, goes back to the form, not out of it.
+  preview.addEventListener('click', (e) => {
+    if (e.target === preview) showFull(false);
+  });
+  // The dialog is reused, so this listener leaves with the form.
+  const backOnEscape = (e) => {
+    if (e.key !== 'Escape' || !preview.classList.contains('is-full')) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    showFull(false);
+  };
+  d.addEventListener('keydown', backOnEscape, true);
+  d.addEventListener('close', () => d.removeEventListener('keydown', backOnEscape, true), { once: true });
+  previewFrame.append(previewCard);
+  preview.append(previewFrame, fullBtn);
   form.append(preview);
   const grid = el('div', { class: 'admin-grid' });
   for (const [name, label, kind, hint] of FIELDS) {
