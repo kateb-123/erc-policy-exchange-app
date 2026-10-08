@@ -35,7 +35,12 @@ const SESSION_COOKIE = 'exa_admin'; // HttpOnly: the sign-in itself
 const HINT_COOKIE = 'exa_admin_on'; // readable: tells the page to load the editor
 // Editing turns off after 10 minutes without use (Kate, Sep 24). Every
 // session check and every save renews it, so it only runs out when idle.
-const SESSION_SECONDS = 10 * 60;
+// The page turns editing off and signs out at 10 idle minutes; the sign-in
+// here lasts 11, so a click in the page's last-minute warning always finds
+// it still on (Oct 7 audit F89: the page renews at most once a minute).
+const SESSION_SECONDS = 11 * 60;
+// How long the Undo after a delete can put the item back.
+const UNDO_SECONDS = 24 * 60 * 60;
 const CSV_PATH = 'data/news.csv';
 const FEATURED_PATH = 'data/featured.json';
 const COLUMNS = [
@@ -58,6 +63,13 @@ const sessionSecret = (env) =>
   (env.ADMIN_PASSWORD
     ? crypto.createHash('sha256').update(`exchange-admin-session:${env.ADMIN_PASSWORD}`).digest('hex')
     : '');
+// The Undo after a delete carries a note signed with its own key, so the
+// note can never pass for a sign-in, nor a sign-in for the note.
+const undoSecret = (env) => {
+  const s = sessionSecret(env);
+  return s ? crypto.createHash('sha256').update(`exchange-admin-undo:${s}`).digest('hex') : '';
+};
+const hashOf = (text) => crypto.createHash('sha1').update(String(text)).digest('hex');
 
 function sign(payload, secret) {
   const body = Buffer.from(JSON.stringify(payload)).toString('base64url');
@@ -251,7 +263,40 @@ function deleteRow(text, original) {
     before: hit.row,
     after: null,
     message: `Admin: delete "${hit.row.headline}"`,
+    // What the Undo needs: the row's own text and where it stood.
+    line: text.slice(hit.rec.start, hit.rec.end),
+    at: hit.rec.start,
   };
+}
+
+// The Undo after a delete (Oct 7 audit F108): the row's own text goes back
+// where it stood when the file is as the delete left it, else at the end.
+// It has to be one whole row, it passes the same checks as an edit, and an
+// item with its link already in the file is a conflict.
+function restoreRow(text, undo) {
+  const { recs, header } = csvHeader(text);
+  const line = String(undo.line || '');
+  const own = csvRecords(line);
+  // An even count of quote marks means no quote is left open.
+  if (own.length !== 1 || own[0].end !== line.length || (line.match(/"/g) || []).length % 2) {
+    throw new BadRequest("That item didn't come through whole.");
+  }
+  const row = rowOf(header, own[0].cells);
+  cleanFields(row);
+  const key = keyOf(row);
+  const live = recs.slice(1).filter((rec) => !(rec.cells.length === 1 && rec.cells[0].trim() === ''));
+  if (live.some((rec) => keyOf(rowOf(header, rec.cells)) === key)) {
+    throw new Conflict('That item is already on the site. Reload the page to see it.');
+  }
+  const same = undo.was === hashOf(text) && (undo.at === text.length || recs.some((rec, i) => i > 0 && rec.start === undo.at));
+  const at = same ? undo.at : text.length;
+  const ending = endingOf(text, recs[0]) || '\n';
+  let head = text.slice(0, at);
+  if (!head.endsWith('\n')) head += ending; // a file whose last row has no line end
+  const body = at < text.length && !line.endsWith('\n') ? line + ending : line;
+  const next = head + body + text.slice(at);
+  if (csvRecords(next).length !== recs.length + 1) throw new BadRequest("That item didn't come through whole.");
+  return { text: next, before: null, after: row, message: `Admin: put back "${row.headline}"` };
 }
 
 /* ---------- featured.json: pins, one-off cards, hidden items ---------- */
@@ -386,6 +431,28 @@ function dropFeatured(f, key) {
   f.heroes = f.heroes.filter((h) => h.key !== key);
   f.hidden = f.hidden.filter((k) => k !== key);
   return f.pins.length + f.heroes.length + f.hidden.length !== n;
+}
+// What dropFeatured is about to take, each with its place, so the Undo can
+// put it back as it was (Oct 7 audit F108).
+function featuredOf(f, key) {
+  const at = (list, hit) => list.map((v, i) => [i, v]).filter(([, v]) => hit(v));
+  return { pins: at(f.pins, (p) => p.key === key), heroes: at(f.heroes, (h) => h.key === key), hidden: at(f.hidden, (k) => k === key) };
+}
+// Puts them back, each in its old place, unless the item already has one;
+// only this item's own entries go back.
+function putBackFeatured(f, key, was) {
+  let changed = false;
+  const back = (list, entries, has) => {
+    for (const [i, v] of Array.isArray(entries) ? entries : []) {
+      if (!v || !has(v) || list.some(has)) continue;
+      list.splice(Math.min(Number(i) || 0, list.length), 0, v);
+      changed = true;
+    }
+  };
+  back(f.pins, was && was.pins, (p) => p.key === key);
+  back(f.heroes, was && was.heroes, (h) => h.key === key);
+  back(f.hidden, was && was.hidden, (k) => k === key);
+  return changed;
 }
 
 function rekeyFeatured(f, from, to) {
@@ -588,13 +655,22 @@ async function handleSave(req, res, { env = process.env, gh = github(env) } = {}
         return op === 'edit' ? editRow(text, body.original, body.fields) : deleteRow(text, body.original);
       });
       let featured = null;
+      let restore;
       if (op === 'delete' && out.before) {
         const dropped = await withFile(gh, FEATURED_PATH, (text) => {
           const f = readFeatured(text);
-          if (!dropFeatured(f, keyOf(out.before))) return { featured: f, same: true };
-          return { text: `${JSON.stringify(f, null, 2)}\n`, message: 'Admin: drop a deleted item from the home cards', featured: f };
+          const was = featuredOf(f, keyOf(out.before));
+          if (!dropFeatured(f, keyOf(out.before))) return { featured: f, same: true, was };
+          return { text: `${JSON.stringify(f, null, 2)}\n`, message: 'Admin: drop a deleted item from the home cards', featured: f, was };
         }).catch(() => null);
         featured = dropped ? dropped.featured : null;
+        // The Undo's note: the row's text, its place, the file as the delete
+        // left it, and the home cards that went with it, signed so it comes
+        // back unchanged (Oct 7 audit F108).
+        restore = sign(
+          { exp: Math.floor(Date.now() / 1000) + UNDO_SECONDS, line: out.line, at: out.at, was: hashOf(out.text), featured: dropped ? dropped.was : null },
+          undoSecret(env)
+        );
       }
       if (out.after && keyOf(out.before) !== keyOf(out.after)) {
         const moved = await withFile(gh, FEATURED_PATH, (text) => {
@@ -604,7 +680,23 @@ async function handleSave(req, res, { env = process.env, gh = github(env) } = {}
         }).catch(() => null);
         featured = moved ? moved.featured : null;
       }
-      return send(res, 200, { ok: true, row: out.after, featured });
+      return send(res, 200, { ok: true, row: out.after, featured, ...(restore ? { restore } : {}) });
+    }
+    if (op === 'restore') {
+      const undo = verify(body.restore, undoSecret(env));
+      if (!undo) throw new BadRequest("It's too late to undo that here. The deleted item is still in the GitHub history.");
+      const out = await withFile(gh, CSV_PATH, (text) => {
+        if (text === null) throw new Error('news.csv is missing.');
+        return restoreRow(text, undo);
+      });
+      // Its pin, card choice and hidden mark go back too; if that save
+      // fails, the item is back and the page says the rest isn't.
+      const back = await withFile(gh, FEATURED_PATH, (text) => {
+        const f = readFeatured(text);
+        if (!putBackFeatured(f, keyOf(out.after), undo.featured)) return { featured: f, same: true };
+        return { text: `${JSON.stringify(f, null, 2)}\n`, message: 'Admin: put a deleted item back on the home cards', featured: f };
+      }).catch(() => null);
+      return send(res, 200, { ok: true, row: out.after, featured: back ? back.featured : null, ...(back ? {} : { lost: true }) });
     }
     const out = await withFile(gh, FEATURED_PATH, (text) => {
       const f = readFeatured(text);
@@ -633,6 +725,7 @@ module.exports = {
   fromThisSite,
   sessionCookies,
   sessionSecret,
+  undoSecret,
   csvRecords,
   keyOf,
   findRow,
@@ -641,10 +734,13 @@ module.exports = {
   savePicture,
   editRow,
   deleteRow,
+  restoreRow,
   readFeatured,
   applyFeatured,
   rekeyFeatured,
   dropFeatured,
+  featuredOf,
+  putBackFeatured,
   github,
   withFile,
   handleLogin,

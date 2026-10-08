@@ -48,6 +48,10 @@ function uploadPicture(body, onProgress) {
       resolve(data ? { status: xhr.status, ...data } : { ok: false, status: xhr.status, error: 'Something went wrong on our side. Try again in a minute.' });
     };
     xhr.onerror = () => resolve({ ok: false, status: 0, error: "Couldn't reach the server. Check your connection and try again." });
+    // A stalled upload gives up after a minute, so Save comes back (Oct 7
+    // audit F110).
+    xhr.timeout = 60 * 1000;
+    xhr.ontimeout = () => resolve({ ok: false, status: 0, error: 'The picture took too long to send. Check your connection and try again.' });
     xhr.send(JSON.stringify(body));
   });
 }
@@ -58,7 +62,8 @@ const PHONE = '(max-width: 780px)';
 // Editing turns off after 10 minutes without use (Kate, Sep 24). A click or a
 // key anywhere on the page is use; while there is use the sign-in is renewed
 // at most once a minute, and after 10 quiet minutes the editor goes away and
-// the sign-in ends.
+// the sign-in ends. The server's sign-in lasts 11 minutes, so a click in the
+// last minute always finds it on (Oct 7 audit F89).
 const IDLE_MS = 10 * 60 * 1000;
 let idleTimer = 0;
 let lastRenew = 0;
@@ -77,6 +82,7 @@ async function start() {
   document.documentElement.classList.add('admin-on');
   watch();
   ['pointerdown', 'keydown'].forEach((ev) => document.addEventListener(ev, stayAwake, true));
+  document.addEventListener('wheel', wheelAwake, { capture: true, passive: true });
   stayAwake();
 }
 
@@ -92,23 +98,43 @@ function stayAwake() {
   warnTimer = setTimeout(warnQuiet, IDLE_MS - 60 * 1000);
   const w = $('.admin-bar__warn');
   if (w) w.hidden = true;
+  if (warned) {
+    $('.admin-toast').hidden = true;
+    warned = false;
+  }
   if (Date.now() - lastRenew > 60 * 1000) {
     api('session').then((s) => {
       if (!s.ok) goQuiet();
     });
   }
 }
-// A minute before the editor turns off, the strip says so (audit F35); any
-// click or key keeps it on.
+// Scrolling with the wheel or the trackpad is use too, looked at once a
+// second at most; the sign-in is still renewed at most once a minute (Oct 7
+// audit F111). Not the scroll event: the New & Upcoming list scrolls itself,
+// which would keep editing on for good.
+let lastWheel = 0;
+function wheelAwake() {
+  if (Date.now() - lastWheel < 1000) return;
+  lastWheel = Date.now();
+  stayAwake();
+}
+// A minute before the editor turns off, the strip says so (audit F35), and
+// so does the message box at the foot, which stays in view when the strip
+// has scrolled away (Oct 7 audit F111); any click or key keeps it on.
+const WARN = 'Editing turns off in 1 minute. Click anywhere to keep editing.';
+let warned = false;
 function warnQuiet() {
   const w = $('.admin-bar__warn');
   if (w) w.hidden = false;
+  toast(WARN, { stay: true });
+  warned = true;
 }
 
 function goQuiet() {
   clearTimeout(idleTimer);
   clearTimeout(warnTimer);
   ['pointerdown', 'keydown'].forEach((ev) => document.removeEventListener(ev, stayAwake, true));
+  document.removeEventListener('wheel', wheelAwake, { capture: true });
   if (observer) observer.disconnect();
   // A form with changes in it stays open, with a way to sign in beside it
   // (audit F35); an untouched one closes.
@@ -146,19 +172,31 @@ const findItem = (key) => X.state.allItems.find((it) => X.itemKey(it) === key);
 const pinOf = (key) => X.state.featured.pins.find((p) => p.key === key);
 
 let toastTimer = 0;
-// A toast goes after 6 seconds; one with a link stays until it is dismissed.
-function toast(msg, { link, linkText } = {}) {
+// A toast goes after 6 seconds; one with a link or a button (Undo, Oct 7
+// audit F90, F108) stays until it is dismissed or the next one comes, and
+// one marked stay until the next one.
+function toast(msg, { link, linkText, action, actionText, stay } = {}) {
   const t = $('.admin-toast');
   t.textContent = msg;
   t.hidden = false;
   clearTimeout(toastTimer);
-  if (link) {
-    t.append(' ', el('a', { href: link, target: '_blank', rel: 'noopener' }, linkText));
+  warned = false;
+  if (link) t.append(' ', el('a', { href: link, target: '_blank', rel: 'noopener' }, linkText));
+  if (action) {
+    const b = el('button', { type: 'button', class: 'admin-toast__undo' }, actionText);
+    b.addEventListener('click', () => {
+      b.disabled = true;
+      action();
+    });
+    t.append(' ', b);
+  }
+  if (link || action) {
     const x = el('button', { type: 'button', class: 'admin-toast__x', 'aria-label': 'Close' }, '×');
     x.addEventListener('click', () => (t.hidden = true));
     t.append(' ', x);
     return;
   }
+  if (stay) return;
   toastTimer = setTimeout(() => {
     t.hidden = true;
   }, 6000);
@@ -173,7 +211,8 @@ function buildBar() {
     el('button', { type: 'button', 'data-admin': 'card' }, 'Add to New & Upcoming'),
     el('button', { type: 'button', 'data-admin': 'hidden' }, 'Hidden items'),
     el('button', { type: 'button', 'data-admin': 'out' }, 'Sign out'),
-    el('span', { class: 'admin-bar__warn', role: 'status', hidden: true }, 'Editing turns off in 1 minute. Click anywhere to keep editing.')
+    // Not a live region: the message box says it aloud (Oct 7 audit F111).
+    el('span', { class: 'admin-bar__warn', hidden: true }, WARN)
   );
   bar.addEventListener('click', async (e) => {
     const b = e.target.closest('[data-admin]');
@@ -316,14 +355,22 @@ function note(form, msg, kind, link) {
 }
 // A sign-in that ran out mid-edit: the form keeps everything typed and
 // offers the door in a new tab; once signed in there, Save works here again
-// (audit F35).
-function noteSignIn(form) {
-  note(form, 'Your sign-in ran out.', 'error', { href: DOOR, text: 'Sign in again in a new tab, then Save.' });
+// (audit F35). then: what to click once signed in.
+function noteSignIn(form, then = 'Save') {
+  note(form, 'Your sign-in ran out.', 'error', { href: DOOR, text: `Sign in again in a new tab, then ${then}.` });
 }
 // A failed call: the sign-in case gets its link, the rest their message.
-function fail(form, r) {
-  if (r.status === 401) return noteSignIn(form);
+function fail(form, r, then) {
+  if (r.status === 401) return noteSignIn(form, then);
   return note(form, r.error, 'error');
+}
+// An Undo that didn't go through says why and keeps its button, so it can
+// be tried again (Oct 7 audit F90, F108).
+function undoFailed(r, retry) {
+  if (r.status === 401) {
+    return toast('Your sign-in ran out.', { link: DOOR, linkText: 'Sign in again in a new tab, then Undo.', action: retry, actionText: 'Undo' });
+  }
+  toast(r.error, { action: retry, actionText: 'Undo' });
 }
 // A running count under a box. The house rule (Kate, Sep 30, the desk's
 // rewrite prompt): titles 80 characters, summaries 180, so they fit every
@@ -400,6 +447,29 @@ function fieldRow(id, label, control, hint) {
   return wrap;
 }
 
+// A picture goes at most 1200 px on its long side, as WebP (Oct 7 audit
+// F92): no card draws one wider. One already that small and lighter than
+// its WebP goes as it is, and so does any picture in a browser that can't
+// write WebP.
+const PICTURE_SIDE = 1200;
+async function shrinkPicture(f) {
+  const img = await createImageBitmap(f);
+  const scale = Math.min(1, PICTURE_SIDE / Math.max(img.width, img.height));
+  const canvas = el('canvas', { width: Math.round(img.width * scale), height: Math.round(img.height * scale) });
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  img.close();
+  const webp = await new Promise((res) => canvas.toBlob(res, 'image/webp', 0.82));
+  if (!webp || webp.type !== 'image/webp' || (scale === 1 && f.size <= webp.size)) return { blob: f, name: f.name };
+  return { blob: webp, name: f.name.replace(/\.[^.]+$/, '') + '.webp' };
+}
+const readBase64 = (blob) =>
+  new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(String(r.result).split(',')[1] || '');
+    r.onerror = () => rej(r.error);
+    r.readAsDataURL(blob);
+  });
+
 // A picture from her computer (Kate, Sep 30): read it, send it, and put the
 // path it was saved under into the picture link box beside it.
 function pictureUpload(linkInput) {
@@ -417,27 +487,31 @@ function pictureUpload(linkInput) {
   input.addEventListener('change', async () => {
     const f = input.files[0];
     if (!f) return;
-    if (f.size > 3 * 1024 * 1024) {
-      tell('That picture is over 3 MB. Make it smaller first.', true);
-      input.value = '';
-      return;
-    }
     tell('Saving the picture… 0%');
     const btn = saveBtn();
     if (btn) btn.disabled = true;
-    const data = await new Promise((res, rej) => {
-      const r = new FileReader();
-      r.onload = () => res(String(r.result).split(',')[1] || '');
-      r.onerror = rej;
-      r.readAsDataURL(f);
-    });
-    const r = await uploadPicture({ op: 'picture', name: f.name, type: f.type, data }, (pct) => tell(`Saving the picture… ${pct}%`));
-    input.value = '';
-    if (btn) btn.disabled = false;
-    if (!r.ok) return tell(r.status === 401 ? 'Your sign-in ran out. Sign in again in a new tab, then pick the picture again.' : r.error, true);
+    // However it ends, Save comes back and the same file can be picked
+    // again (Oct 7 audit F110).
+    const end = (msg, bad) => {
+      input.value = '';
+      if (btn) btn.disabled = false;
+      tell(msg, bad);
+    };
+    let pic;
+    try {
+      // One that can't be drawn goes as it is; one that can't be read fails.
+      pic = await shrinkPicture(f).catch(() => ({ blob: f, name: f.name }));
+      pic.data = await readBase64(pic.blob);
+    } catch {
+      return end("Couldn't read that picture. Download it from Drive first, or pick another.", true);
+    }
+    // The 3 MB line is for what is sent, after the shrink.
+    if (pic.blob.size > 3 * 1024 * 1024) return end('That picture is over 3 MB. Make it smaller first.', true);
+    const r = await uploadPicture({ op: 'picture', name: pic.name, type: pic.blob.type, data: pic.data }, (pct) => tell(`Saving the picture… ${pct}%`));
+    if (!r.ok) return end(r.status === 401 ? 'Your sign-in ran out. Sign in again in a new tab, then pick the picture again.' : r.error, true);
     linkInput.value = r.path;
     linkInput.dispatchEvent(new Event('input', { bubbles: true }));
-    tell('Picture saved. Save this form to use it.');
+    end('Picture saved. Save this form to use it.');
   });
   wrap.append(input, label, say);
   return wrap;
@@ -643,18 +717,27 @@ function openItem(key) {
   const confirmBox = el('div', { class: 'admin-confirm', hidden: true });
   const yes = el('button', { type: 'button', class: 'btn admin-danger-btn' }, 'Delete it');
   const no = el('button', { type: 'button', class: 'btn-text' }, 'Keep it');
+  // "For good" sets it apart from Hide beside it (Oct 7 audit F108).
   confirmBox.append(
-    el('p', {}, 'Delete this item from the site?'),
+    el('p', {}, 'Delete this item for good? Its pin and card go with it. To take it off the site for now, use Hide.'),
     yes,
     no
   );
   form.append(confirmBox);
+  // Hide sends none of what was typed, so with changes in the form it asks
+  // first; an untouched form hides at once (Oct 7 audit F91).
+  const hideBox = el('div', { class: 'admin-confirm', hidden: true });
+  const hideYes = el('button', { type: 'button', class: 'btn admin-danger-btn' }, 'Hide it');
+  const hideNo = el('button', { type: 'button', class: 'btn-text' }, 'Keep editing');
+  hideBox.append(el('p', {}, 'Hide without saving your changes?'), hideYes, hideNo);
+  form.append(hideBox);
   const guardBox = closeGuard(d, form);
   form.append(guardBox);
 
-  const busy = (on) => [save, cancel, hide, del, yes, no].forEach((b) => (b.disabled = on));
+  const busy = (on) => [save, cancel, hide, del, yes, no, hideYes, hideNo].forEach((b) => (b.disabled = on));
   cancel.addEventListener('click', () => d.tryClose());
   del.addEventListener('click', () => {
+    hideBox.hidden = true;
     confirmBox.hidden = false;
     no.focus();
   });
@@ -669,13 +752,27 @@ function openItem(key) {
     const r = await api('save', { op: 'delete', original: { ...item } });
     busy(false);
     if (!r.ok) return fail(form, r);
-    X.state.allItems.splice(X.state.allItems.indexOf(item), 1);
+    const at = X.state.allItems.indexOf(item);
+    X.state.allItems.splice(at, 1);
     X.refresh();
     d.close();
-    toast('Deleted. It leaves the live site in about a minute.');
+    // Undo puts the row back, with its pin and card (Oct 7 audit F108).
+    const undo = async () => {
+      const back = await api('save', { op: 'restore', restore: r.restore });
+      if (!back.ok) return undoFailed(back, undo);
+      X.state.allItems.splice(Math.min(at, X.state.allItems.length), 0, item);
+      if (back.featured) X.state.featured = back.featured;
+      X.refresh();
+      toast(
+        back.lost
+          ? "It's back on the site, but its pin and card didn't come back. Set them again with Edit."
+          : 'Back on the site. The live site shows it in about a minute.'
+      );
+    };
+    toast('Deleted. It leaves the live site in about a minute.', r.restore ? { action: undo, actionText: 'Undo' } : {});
   });
 
-  hide.addEventListener('click', async () => {
+  const hideNow = async () => {
     busy(true);
     note(form, 'Hiding…', 'busy');
     const r = await api('save', { op: 'hide', key });
@@ -685,6 +782,17 @@ function openItem(key) {
     X.refresh();
     d.close();
     toast('Hidden. It leaves the live site in about a minute.');
+  };
+  hide.addEventListener('click', () => {
+    if (!guardBox.dirty) return hideNow();
+    confirmBox.hidden = true;
+    hideBox.hidden = false;
+    hideNo.focus();
+  });
+  hideYes.addEventListener('click', hideNow);
+  hideNo.addEventListener('click', () => {
+    hideBox.hidden = true;
+    hide.focus();
   });
 
   form.addEventListener('submit', async (e) => {
@@ -1035,21 +1143,41 @@ function openCard(id) {
     const ul = el('ul');
     live.forEach((c) => {
       const li = el('li');
-      li.append(el('span', {}, `${c.headline} (until ${c.until})`));
-      const rm = el('button', { type: 'button', class: 'btn-text' }, 'Remove');
-      rm.addEventListener('click', async () => {
-        rm.disabled = true;
-        const r = await api('save', { op: 'uncard', id: c.id });
-        if (!r.ok) {
-          rm.disabled = false;
-          return fail(form, r);
-        }
-        X.state.featured = r.featured;
-        X.refresh();
-        li.remove();
-        toast('Card removed. It leaves the live site in about a minute.');
-      });
-      li.append(rm);
+      // A removed card's row turns into "Removed." with Undo in place: a
+      // message at the foot can't be clicked while this window is open.
+      // Undo sends the same card back as a new one (Oct 7 audit F90).
+      const showRow = (card) => {
+        const rm = el('button', { type: 'button', class: 'btn-text' }, 'Remove');
+        li.replaceChildren(el('span', {}, `${card.headline} (until ${card.until})`), rm);
+        rm.addEventListener('click', async () => {
+          rm.disabled = true;
+          const r = await api('save', { op: 'uncard', id: card.id });
+          if (!r.ok) {
+            rm.disabled = false;
+            return fail(form, r, 'Remove');
+          }
+          X.state.featured = r.featured;
+          X.refresh();
+          const undo = el('button', { type: 'button', class: 'btn-text' }, 'Undo');
+          li.replaceChildren(el('span', {}, 'Removed.'), undo);
+          undo.focus();
+          toast('Card removed. It leaves the live site in about a minute.');
+          undo.addEventListener('click', async () => {
+            undo.disabled = true;
+            const back = await api('save', { op: 'card', card, replace: '' });
+            if (!back.ok) {
+              undo.disabled = false;
+              return fail(form, back, 'Undo');
+            }
+            X.state.featured = back.featured;
+            X.refresh();
+            showRow(back.featured.cards[0]); // a new card goes first
+            $('button', li).focus();
+            toast('Card back. The live site shows it in about a minute.');
+          });
+        });
+      };
+      showRow(c);
       ul.append(li);
     });
     box.append(ul);
@@ -1057,18 +1185,29 @@ function openCard(id) {
   }
 
   form.append(closeGuard(d, form));
+  // While a save runs, every way out waits for it, as in the item form
+  // (Oct 7 audit F113).
+  const busy = (on) => [save, cancel, remove].forEach((b) => b && (b.disabled = on));
   cancel.addEventListener('click', () => d.tryClose());
   if (remove) {
     remove.addEventListener('click', async () => {
-      remove.disabled = true;
+      busy(true);
       note(form, 'Removing…', 'busy');
       const r = await api('save', { op: 'uncard', id: existing.id });
-      remove.disabled = false;
+      busy(false);
       if (!r.ok) return fail(form, r);
       X.state.featured = r.featured;
       X.refresh();
       d.close();
-      toast('Card removed. It leaves the live site in about a minute.');
+      // Undo sends the same card back (Oct 7 audit F90).
+      const undo = async () => {
+        const back = await api('save', { op: 'card', card: existing, replace: '' });
+        if (!back.ok) return undoFailed(back, undo);
+        X.state.featured = back.featured;
+        X.refresh();
+        toast('Card back. The live site shows it in about a minute.');
+      };
+      toast('Card removed. It leaves the live site in about a minute.', { action: undo, actionText: 'Undo' });
     });
   }
   form.addEventListener('submit', async (e) => {
@@ -1082,11 +1221,11 @@ function openCard(id) {
       inputs.until.focus();
       return note(form, 'Pick the last day to show the card.', 'error');
     }
-    save.disabled = true;
+    busy(true);
     note(form, 'Saving…', 'busy');
     // A changed card replaces the old one in one checked save.
     const r = await api('save', { op: 'card', card, replace: existing ? existing.id : '' });
-    save.disabled = false;
+    busy(false);
     if (!r.ok) return fail(form, r);
     X.state.featured = r.featured;
     X.refresh();
@@ -1119,20 +1258,23 @@ function openHidden() {
       const show = el('button', { type: 'button', class: 'btn-text' }, 'Show again');
       show.addEventListener('click', async () => {
         show.disabled = true;
+        note(box, 'Showing it again…', 'busy');
         const r = await api('save', { op: 'unhide', key });
         if (!r.ok) {
           show.disabled = false;
-          return toast(r.error);
+          return fail(box, r, 'Show again');
         }
         X.state.featured = r.featured;
         X.refresh();
         li.remove();
-        toast('Back on the site. The live site shows it in about a minute.');
+        note(box, 'Back on the site. The live site shows it in about a minute.');
       });
       li.append(show);
       ul.append(li);
     });
-    box.append(ul);
+    // This window's own message line: the one at the foot sits under its
+    // grey veil and can't be clicked (Oct 7 audit F109).
+    box.append(ul, el('p', { class: 'admin-note', role: 'status' }));
   }
   const close = el('button', { type: 'button', class: 'btn-text' }, 'Close');
   close.addEventListener('click', () => d.close());

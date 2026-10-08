@@ -48,6 +48,48 @@ ok('delete removes one row', () => {
   assert.strictEqual(again.length, rows.length - 1);
   assert.deepStrictEqual(again[3], rows[4]);
 });
+// The Undo after a delete (Oct 7 audit F108).
+const sha1 = (t) => require('crypto').createHash('sha1').update(t).digest('hex');
+ok('restore puts a deleted row back exactly, or at the end', () => {
+  for (const i of [0, 3, rows.length - 1]) {
+    const d = A.deleteRow(csv, rows[i]);
+    assert.strictEqual(A.restoreRow(d.text, { line: d.line, at: d.at, was: sha1(d.text) }).text, csv);
+  }
+  // The file moved on since the delete: the row goes at the end, word for word.
+  const d = A.deleteRow(csv, rows[3]);
+  const moved = A.editRow(d.text, rows[5], { blurb: 'Changed meanwhile.' }).text;
+  const back = A.restoreRow(moved, { line: d.line, at: d.at, was: sha1(d.text) });
+  assert.ok(back.text.endsWith(d.line)); assert.ok(back.message.startsWith('Admin: '));
+  const again = ctx.parseCSV(back.text);
+  assert.strictEqual(again.length, rows.length); assert.deepStrictEqual(again[again.length - 1], rows[3]);
+  // A file whose last row has no line end gets one before the row.
+  const bare = csv.replace(/\r?\n$/, '');
+  const b2 = A.restoreRow(d.text.replace(/\r?\n$/, ''), { line: d.line, at: d.at, was: 'other' });
+  assert.strictEqual(ctx.parseCSV(b2.text).length, rows.length);
+  // A last row with no line end comes back as it was.
+  const dl = A.deleteRow(bare, rows[rows.length - 1]);
+  assert.strictEqual(A.restoreRow(dl.text, { line: dl.line, at: dl.at, was: sha1(dl.text) }).text, bare);
+});
+ok('restore refuses a row already there, a broken row and a bad one', () => {
+  const d = A.deleteRow(csv, rows[3]);
+  assert.throws(() => A.restoreRow(csv, { line: d.line, at: d.at, was: sha1(csv) }), A.Conflict);
+  const at = { at: d.at, was: sha1(d.text) };
+  assert.throws(() => A.restoreRow(d.text, { line: d.line + d.line, ...at }), A.BadRequest);
+  assert.throws(() => A.restoreRow(d.text, { line: d.line.replace(/\r?\n$/, '') + '"\n', ...at }), A.BadRequest);
+  assert.throws(() => A.restoreRow(d.text, { line: 'Bad,row\n', ...at }), A.BadRequest);
+  assert.throws(() => A.restoreRow(d.text, { line: '', ...at }), A.BadRequest);
+});
+ok('a deleted item\'s home cards go back in their places', () => {
+  const f = A.readFeatured(JSON.stringify({ pins: [{ key: 'a', until: '2026-10-20' }, { key: 'z', until: '2026-10-21', title: 'Desk' }, { key: 'b', until: '2026-10-22' }], heroes: [{ key: 'z', hero: 'words', summary: 'Mine.' }], hidden: [], cards: [] }));
+  const before = JSON.parse(JSON.stringify(f));
+  const was = A.featuredOf(f, 'z');
+  A.dropFeatured(f, 'z');
+  assert.ok(A.putBackFeatured(f, 'z', was));
+  assert.deepStrictEqual(f, before);
+  assert.ok(!A.putBackFeatured(f, 'z', was)); // already back: nothing twice
+  assert.ok(!A.putBackFeatured(f, 'y', was)); // only the item's own entries
+  assert.ok(!A.putBackFeatured(f, 'z', null));
+});
 ok('a changed row is a conflict', () => {
   assert.throws(() => A.editRow(csv, { ...rows[2], headline: 'not what is there' }, { blurb: 'x' }), A.Conflict);
 });
@@ -182,7 +224,7 @@ function call(handler, { method = 'POST', headers = {}, body, deps }) {
     assert.strictEqual(r.status, 403);
     r = await call(A.handleLogin, { body: { password: env.ADMIN_PASSWORD }, deps: { env, pause: async () => {} } });
     assert.strictEqual(r.status, 200);
-    const c = r.headers['set-cookie']; assert.ok(/exa_admin=[^;]+; HttpOnly; Path=\/; Max-Age=600; Secure; SameSite=Strict/.test(c[0])); assert.ok(/^exa_admin_on=1;/.test(c[1]));
+    const c = r.headers['set-cookie']; assert.ok(/exa_admin=[^;]+; HttpOnly; Path=\/; Max-Age=660; Secure; SameSite=Strict/.test(c[0])); assert.ok(/^exa_admin_on=1;/.test(c[1]));
   });
   const login = await call(A.handleLogin, { body: { password: env.ADMIN_PASSWORD }, deps: { env, pause: async () => {} } });
   const cookie = login.headers['set-cookie'].map((c) => c.split(';')[0]).join('; ');
@@ -257,15 +299,48 @@ function call(handler, { method = 'POST', headers = {}, body, deps }) {
     r = await call(A.handleSave, { headers: { cookie }, body: { op: 'card', replace: 'cgone', card: { headline: 'X', until: '2026-10-21' } }, deps: { env, gh } });
     assert.strictEqual(r.status, 409);
   });
+  await okA('save: Undo after a delete puts the row and its home cards back', async () => {
+    const key = A.keyOf(rows[4]);
+    const feat = `${JSON.stringify({ pins: [{ key: 'https://other', until: '2026-10-20' }, { key, until: '2026-10-21', title: 'Desk title' }], cards: [], hidden: [], heroes: [{ key, hero: 'words', summary: 'Her words.' }] }, null, 2)}\n`;
+    const gh = fakeGh({ 'data/news.csv': csv, 'data/featured.json': feat });
+    let r = await call(A.handleSave, { headers: { cookie }, body: { op: 'delete', original: rows[4] }, deps: { env, gh } });
+    assert.strictEqual(r.status, 200); assert.ok(r.body.restore);
+    assert.deepStrictEqual(JSON.parse(gh.files['data/featured.json']).pins.map((p) => p.key), ['https://other']);
+    const token = r.body.restore;
+    // The note is no sign-in, and needs one.
+    let s = await call(A.handleSave, { headers: { cookie: `exa_admin=${token}` }, body: { op: 'restore', restore: token }, deps: { env, gh } });
+    assert.strictEqual(s.status, 401);
+    s = await call(A.handleSave, { body: { op: 'restore', restore: token }, deps: { env, gh } });
+    assert.strictEqual(s.status, 401);
+    // A sign-in is no note, and a changed note is refused.
+    const session = cookie.match(/exa_admin=([^;]+)/)[1];
+    s = await call(A.handleSave, { headers: { cookie }, body: { op: 'restore', restore: session }, deps: { env, gh } });
+    assert.strictEqual(s.status, 400);
+    s = await call(A.handleSave, { headers: { cookie }, body: { op: 'restore', restore: token.replace(/^./, (c) => (c === 'e' ? 'f' : 'e')) }, deps: { env, gh } });
+    assert.strictEqual(s.status, 400);
+    s = await call(A.handleSave, { headers: { cookie }, body: { op: 'restore', restore: token }, deps: { env, gh } });
+    assert.strictEqual(s.status, 200); assert.deepStrictEqual(s.body.row, { ...rows[4] }); assert.ok(!s.body.lost);
+    assert.strictEqual(gh.files['data/news.csv'], csv);
+    assert.strictEqual(gh.files['data/featured.json'], feat);
+    assert.deepStrictEqual(s.body.featured, JSON.parse(feat));
+    // A second Undo finds it there already.
+    s = await call(A.handleSave, { headers: { cookie }, body: { op: 'restore', restore: token }, deps: { env, gh } });
+    assert.strictEqual(s.status, 409);
+    assert.ok(gh.writes.every((w) => w.message.startsWith('Admin: ')));
+    // A note past its time is refused.
+    const old = A.sign({ exp: Math.floor(Date.now() / 1000) - 1, line: 'x' }, A.undoSecret(env));
+    s = await call(A.handleSave, { headers: { cookie }, body: { op: 'restore', restore: old }, deps: { env, gh } });
+    assert.strictEqual(s.status, 400);
+  });
   await okA('save: no GitHub key yet', async () => {
     const r = await call(A.handleSave, { headers: { cookie }, body: { op: 'hide', key: 'k' }, deps: { env, gh: { ready: false } } });
     assert.strictEqual(r.status, 503);
   });
-  await okA('session and logout; checks and saves renew the 10 minutes', async () => {
+  await okA('session and logout; checks and saves renew the sign-in (11 minutes here, 10 on the page: audit F89)', async () => {
     let r = await call(A.handleSession, { method: 'GET', headers: { cookie }, deps: { env } }); assert.strictEqual(r.body.ok, true);
-    assert.ok(/^exa_admin=[^;]+; HttpOnly; Path=\/; Max-Age=600;/.test(r.headers['set-cookie'][0]));
+    assert.ok(/^exa_admin=[^;]+; HttpOnly; Path=\/; Max-Age=660;/.test(r.headers['set-cookie'][0]));
     const s = await call(A.handleSave, { headers: { cookie }, body: { op: 'hide', key: 'k' }, deps: { env, gh: fakeGh({ 'data/news.csv': csv }) } });
-    assert.strictEqual(s.status, 200); assert.ok(/Max-Age=600/.test([].concat(s.headers['set-cookie'])[0]));
+    assert.strictEqual(s.status, 200); assert.ok(/Max-Age=660/.test([].concat(s.headers['set-cookie'])[0]));
     const expired = A.sign({ exp: Math.floor(Date.now() / 1000) - 1 }, A.sessionSecret(env));
     r = await call(A.handleSession, { method: 'GET', headers: { cookie: `exa_admin=${expired}` }, deps: { env } }); assert.strictEqual(r.body.ok, false);
     r = await call(A.handleSession, { method: 'GET', deps: { env } }); assert.strictEqual(r.body.ok, false);
