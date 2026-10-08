@@ -553,7 +553,9 @@ function buildLanding() {
   el.dataset.wired = "1";
   el.addEventListener("click", (e) => {
     const btn = e.target.closest(".slab-btn");
-    if (!btn || modifiedClick(e)) return;
+    // Before the data lands the button is a plain link, so a click loads the
+    // section rather than drawing it empty (review of F78).
+    if (!btn || modifiedClick(e) || !state.ready) return;
     e.preventDefault();
     setType(btn.dataset.type);
   });
@@ -1174,7 +1176,11 @@ function initWhatsNew(list) {
 
   // Only the card on show and the next one fetch their pictures, not every
   // card's at once (Oct 7 audit F92: 2.6 MB on the first look).
-  const fetchNext = () => list.length > 1 && wnShape(wnImage(list[(at + 1) % list.length].it));
+  const fetchNext = () => {
+    if (list.length < 2) return;
+    wnShape(wnImage(list[(at + 1) % list.length].it));
+    wnShape(wnImage(list[(at - 1 + list.length) % list.length].it));
+  };
 
   async function show(i, { fade = true } = {}) {
     at = (i + list.length) % list.length;
@@ -1186,8 +1192,13 @@ function initWhatsNew(list) {
     count.textContent = at + 1;
     if (!phone.matches) glideTo(rows[at], !fade);
     const mine = ++turn;
-    const shape = await Promise.race([wnShape(wnImage(list[at].it)), wnWait(1500).then(() => "")]);
+    const pending = wnShape(wnImage(list[at].it));
+    const shape = await Promise.race([pending, wnWait(1500).then(() => "")]);
     if (mine !== turn) return;
+    // A picture slower than the wait is drawn when it lands, if its card is
+    // still on show (review of F92: only the cards either side are fetched
+    // ahead now).
+    if (!shape) pending.then((late) => late && mine === turn && show(at, { fade: false }));
     const paint = () => {
       feat.className = `feat ${shape ? `has-${shape}` : "no-art"}`;
       feat.dataset.key = wnKey(list[at]);
@@ -1985,7 +1996,7 @@ function renderSearch() {
 
   const list = $("#news-list");
   if (results.length === 0) {
-    list.innerHTML = `<div class="state">Every word has to match. Try fewer words.</div>`;
+    list.innerHTML = `<div class="state">${terms.length > 1 ? "Every word has to match. Try fewer words." : "Try another word."}</div>`;
     return;
   }
 

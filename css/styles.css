@@ -160,6 +160,16 @@ a:hover {
 .fa-arrow-left {
   --icon: url("../assets/icons/arrow-left.svg");
 }
+/* High Contrast (forced colours) repaints backgrounds with the page colour,
+   which would blank a masked icon; there the icon keeps the text's forced
+   colour, as the font glyph did (review of F116). */
+@media (forced-colors: active) {
+  .fa-solid,
+  .admin-edit::before {
+    forced-color-adjust: none;
+    background: CanvasText;
+  }
+}
 /* Keeps a title's last word and its outbound arrow on one line (F101). */
 .nowrap {
   white-space: nowrap;

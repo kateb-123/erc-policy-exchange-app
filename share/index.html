@@ -72,7 +72,7 @@
     <div class="site-footer__inner">
       <img
         class="site-footer__logo"
-        src="../assets/ERC_Horizontal_MaroonText-346.png"
+        src="../assets/ERC_Horizontal_MaroonText-519.png"
         width="173"
         height="64"
         loading="lazy"
@@ -147,12 +147,20 @@ class UserError extends Error {}
 const plain = err =>
   err instanceof UserError
     ? err.message
-    : err?.name === 'TimeoutError'
+    : err?.name === 'TimeoutError' || err?.name === 'AbortError'
       ? "The desk didn't answer in time. Nothing you typed is lost; try again."
     : err instanceof TypeError
       ? "Couldn't reach the server. Check your connection and try again."
       : 'Something went wrong on our side. Try again in a moment, or email your item to erc@tamu.edu.';
 // The desk answers in JSON; a crash or timeout page doesn't.
+// A request that gives up after ms; Safari before 16 has no
+// AbortSignal.timeout, so it is built by hand there (review of F84).
+const timeoutSignal = ms => {
+  if (AbortSignal.timeout) return AbortSignal.timeout(ms);
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+};
 const readReply = async resp => {
   const data = await resp.json().catch(() => null);
   if (!data) throw new Error('The reply was not JSON.');
@@ -508,7 +516,8 @@ fileIn.addEventListener('change', () => {
       const tok = await takeToken(false, ctrl.signal);
       // A stalled upload stops after 60 seconds, so the dots can't run forever.
       const failed = "The upload didn't go through. Try again, or send the item without it.";
-      const timer = setTimeout(() => ctrl.abort(new UserError(failed)), 60000);
+      let timedOut = false;
+      const timer = setTimeout(() => { timedOut = true; ctrl.abort(); }, 60000);
       let data;
       try {
         const resp = await fetch(`${DESK}/api/newsletter-image`, {
@@ -531,7 +540,7 @@ fileIn.addEventListener('change', () => {
       if (gen !== uploadGen) return;
       uploadFailed = true;
       // Out of time reads as a failed upload, not as a fault on our side.
-      setMedia(plain(ctrl.signal.aborted ? ctrl.signal.reason : err), 'error');
+      setMedia(plain(timedOut ? new UserError(failed) : err), 'error');
     } finally {
       if (gen === uploadGen) pick.removeAttribute('aria-disabled');
     }
@@ -632,7 +641,7 @@ form.addEventListener('submit', async event => {
     setStat('Sending', 'busy');
     // A send that hangs ends in a minute with a message (Oct 7 audit F84).
     const resp = await fetch(`${DESK}/api/submit`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(60000),
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: timeoutSignal(60000),
       body: JSON.stringify({
         title,
         blurb: desc,
@@ -649,6 +658,9 @@ form.addEventListener('submit', async event => {
     if (resp.status === 403) throw new UserError("The spam check didn't pass. Nothing you typed is lost; try again.");
     const data = await readReply(resp);
     if (!data.ok) throw new UserError((data.errors ?? ["Couldn't save that. Try again in a moment."]).join(' '));
+    // Received: the draft goes now, not after the newsletter step, so a tab
+    // closed during that step can't bring the item back (review of F87).
+    dropDraft();
 
     // Opt-in only: never subscribe anyone who did not tick the box. It goes
     // through the desk like the submission, so the list's address stays out

@@ -98,10 +98,8 @@ function stayAwake() {
   warnTimer = setTimeout(warnQuiet, IDLE_MS - 60 * 1000);
   const w = $('.admin-bar__warn');
   if (w) w.hidden = true;
-  if (warned) {
-    $('.admin-toast').hidden = true;
-    warned = false;
-  }
+  const t = $('.admin-toast');
+  if (t && t.dataset.kind === 'warn') t.hidden = true;
   if (Date.now() - lastRenew > 60 * 1000) {
     api('session').then((s) => {
       if (!s.ok) goQuiet();
@@ -122,12 +120,12 @@ function wheelAwake() {
 // so does the message box at the foot, which stays in view when the strip
 // has scrolled away (Oct 7 audit F111); any click or key keeps it on.
 const WARN = 'Editing turns off in 1 minute. Click anywhere to keep editing.';
-let warned = false;
+// An Undo on show is never covered: the strip still warns (review of F111).
+const undoShowing = () => !!$('.admin-toast:not([hidden]) .admin-toast__undo');
 function warnQuiet() {
   const w = $('.admin-bar__warn');
   if (w) w.hidden = false;
-  toast(WARN, { stay: true });
-  warned = true;
+  if (!undoShowing()) toast(WARN, { stay: true, kind: 'warn' });
 }
 
 function goQuiet() {
@@ -147,7 +145,8 @@ function goQuiet() {
     const form = $('form', dialog);
     if (form) noteSignIn(form);
   }
-  toast('Editing turned off after 10 minutes without use.', { link: DOOR, linkText: 'Sign in again' });
+  // An Undo on show stays: its retry says how to sign in again.
+  if (!undoShowing()) toast('Editing turned off after 10 minutes without use.', { link: DOOR, linkText: 'Sign in again' });
 }
 
 /* ---------- Small helpers ---------- */
@@ -175,20 +174,28 @@ let toastTimer = 0;
 // A toast goes after 6 seconds; one with a link or a button (Undo, Oct 7
 // audit F90, F108) stays until it is dismissed or the next one comes, and
 // one marked stay until the next one.
-function toast(msg, { link, linkText, action, actionText, stay } = {}) {
+function toast(msg, { link, linkText, action, actionText, stay, kind, focus } = {}) {
   const t = $('.admin-toast');
   t.textContent = msg;
   t.hidden = false;
+  t.dataset.kind = kind || '';
   clearTimeout(toastTimer);
-  warned = false;
   if (link) t.append(' ', el('a', { href: link, target: '_blank', rel: 'noopener' }, linkText));
   if (action) {
-    const b = el('button', { type: 'button', class: 'admin-toast__undo' }, actionText);
-    b.addEventListener('click', () => {
+    // focus: the Undo takes the keyboard after a dialog closed (returnFocus
+    // looks for it), and once pressed the focus goes on to the next Undo or
+    // the strip, never to the page's start (review of F90, F108).
+    const b = el('button', { type: 'button', class: 'admin-toast__undo', ...(focus ? { 'data-focus': true } : {}) }, actionText);
+    b.addEventListener('click', async () => {
       b.disabled = true;
-      action();
+      await action();
+      if (document.activeElement === document.body || !document.activeElement) {
+        const next = $('.admin-toast:not([hidden]) .admin-toast__undo') || $('.admin-bar button');
+        if (next) next.focus();
+      }
     });
     t.append(' ', b);
+    if (focus) b.focus();
   }
   if (link || action) {
     const x = el('button', { type: 'button', class: 'admin-toast__x', 'aria-label': 'Close' }, '×');
@@ -525,7 +532,7 @@ function returnFocus(d, opener, where) {
     'close',
     () =>
       setTimeout(() => {
-        const t = (where && where()) || (opener && opener.isConnected && opener) || $('.admin-bar button');
+        const t = $('.admin-toast:not([hidden]) .admin-toast__undo[data-focus]') || (where && where()) || (opener && opener.isConnected && opener) || $('.admin-bar button');
         if (t) t.focus();
       }, 60),
     { once: true }
@@ -754,6 +761,7 @@ function openItem(key) {
     if (!r.ok) return fail(form, r);
     const at = X.state.allItems.indexOf(item);
     X.state.allItems.splice(at, 1);
+    if (r.featured) X.state.featured = r.featured;
     X.refresh();
     d.close();
     // Undo puts the row back, with its pin and card (Oct 7 audit F108).
@@ -769,7 +777,7 @@ function openItem(key) {
           : 'Back on the site. The live site shows it in about a minute.'
       );
     };
-    toast('Deleted. It leaves the live site in about a minute.', r.restore ? { action: undo, actionText: 'Undo' } : {});
+    toast('Deleted. It leaves the live site in about a minute.', r.restore ? { action: undo, actionText: 'Undo', focus: true } : {});
   });
 
   const hideNow = async () => {
@@ -1207,7 +1215,7 @@ function openCard(id) {
         X.refresh();
         toast('Card back. The live site shows it in about a minute.');
       };
-      toast('Card removed. It leaves the live site in about a minute.', { action: undo, actionText: 'Undo' });
+      toast('Card removed. It leaves the live site in about a minute.', { action: undo, actionText: 'Undo', focus: true });
     });
   }
   form.addEventListener('submit', async (e) => {
