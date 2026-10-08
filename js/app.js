@@ -315,16 +315,24 @@ function init(rows, modified, featured) {
   validateSubtype();
 
   // Back and Forward: the URL is the source of truth, so re-read it and render.
-  window.addEventListener("popstate", () => {
+  // Coming back from a brief, the list shows as many rows as before and the
+  // focus goes to the row that opened it (Oct 7 audit F79).
+  window.addEventListener("popstate", (e) => {
+    const saved = e.state || {};
     readURL();
     validateSubtype();
-    state.shown = PAGE_SIZE;
-    state.searchFrom = null;
+    state.shown = saved.shown || PAGE_SIZE;
+    state.searchFrom = saved.searchFrom || null;
     state.briefFrom = null;
     $("#global-search").value = state.q;
     closeMenu();
     render();
-    focusHeading();
+    const from = saved.brief && $$(`[data-brief="${saved.brief}"], [data-brief-row="${saved.brief}"]`).find((el) => el.offsetParent !== null);
+    if (from) {
+      const target = from.matches("a, button") ? from : from.querySelector("a, button") || from;
+      target.focus({ preventScroll: true });
+      target.scrollIntoView({ block: "center" });
+    } else focusHeading();
   });
 
   // Global search (top strip): typing searches every section at once; clearing
@@ -538,7 +546,7 @@ function buildLanding() {
   const el = $("#landing-cards");
   el.innerHTML = NEWS_TABS.map(
     (t) => `
-    <a class="slab-btn" href="?type=${t.value}" data-type="${t.value}"><span class="slab-btn__icon" aria-hidden="true"></span><span class="slab-btn__name">${esc(t.nav)}</span> <small>${esc(countLabel(t.value))}</small>${faIcon("chevron-right", "slab-btn__go")}</a>`
+    <a class="slab-btn" href="?type=${t.value}" data-type="${t.value}"><span class="slab-btn__icon" aria-hidden="true"></span><span class="slab-btn__name">${esc(t.nav)}</span> <small>${state.allItems.length ? esc(countLabel(t.value)) : "&nbsp;"}</small>${faIcon("chevron-right", "slab-btn__go")}</a>`
   ).join("");
 
   if (el.dataset.wired) return;
@@ -1164,7 +1172,9 @@ function initWhatsNew(list) {
   first.addEventListener("focus", placeFirst);
   addEventListener("resize", () => document.activeElement === first && placeFirst(), until);
 
-  list.forEach(({ it }) => wnShape(wnImage(it)));
+  // Only the card on show and the next one fetch their pictures, not every
+  // card's at once (Oct 7 audit F92: 2.6 MB on the first look).
+  const fetchNext = () => list.length > 1 && wnShape(wnImage(list[(at + 1) % list.length].it));
 
   async function show(i, { fade = true } = {}) {
     at = (i + list.length) % list.length;
@@ -1183,6 +1193,7 @@ function initWhatsNew(list) {
       feat.dataset.key = wnKey(list[at]);
       feat.dataset.len = wnLen(list[at].it);
       feat.innerHTML = wnFeatHTML(list[at], shape) + heroCardHTML(list[at], shape);
+      fetchNext();
     };
     if (!fade || calm) return paint();
     feat.classList.add("is-out");
@@ -1456,7 +1467,9 @@ function distinct(field, items = state.items) {
 // purple, orange). Lowercase, matching the CSV labels. Subtypes not listed
 // here sink to the end alphabetically.
 const SUBTYPE_ORDER = {
-  event: ["erc events", "texas a&m", "online", "webinar", "off-campus"],
+  // The sheet now says "A&M" and "Webinar-Online"; the old names stay so an
+  // older row still sorts (Oct 7 audit F100).
+  event: ["erc events", "a&m", "texas a&m", "webinar-online", "online", "webinar", "off-campus"],
   research: ["erc research", "working paper", "peer-reviewed", "report"],
   headline: ["texas", "national"],
   opportunity: ["call for proposals", "fellowships & programs", "funding & grants"],
@@ -1545,10 +1558,10 @@ function baseComparator(sort) {
   const { key, dir, first } = sort;
   const mult = dir === "asc" ? 1 : -1;
   // "ERC first" / "Texas first": that subtype on top, newest first within
-  // each half.
+  // each half, a year-only date placed as Newest places it (Oct 7 audit F80).
   if (key === "sub") {
     const top = (it) => ((it.subtype || "").trim().toLowerCase() === first ? 0 : 1);
-    return (a, b) => top(a) - top(b) || (b.date || "").localeCompare(a.date || "");
+    return (a, b) => top(a) - top(b) || midOfPeriod(b.date || "").localeCompare(midOfPeriod(a.date || ""));
   }
   // "Closing soon": firm deadlines ascending (soonest first); rolling / fuzzy /
   // undated ones always fall to the bottom, ordered newest-posted among
@@ -1620,6 +1633,14 @@ const cleanBlurb = (s) =>
 // The sheet's medium codes read as words; "online" says nothing and goes, and
 // a medium that only repeats the outlet ("The 74 • The 74") is left off.
 const MEDIUM_WORDS = { online: "", tv: "TV", radio: "Radio", newspaper: "Newspaper", magazine: "Magazine" };
+// A headline row with no source but an outlet in the medium column shows
+// that outlet as its source, before the date like every other card (Oct 7
+// audit F102: two cards read "Oct 5, 2026 • Dallas Morning News").
+const sourceOf = (it) => {
+  const s = (it.source || "").trim();
+  const m = (it.medium || "").trim();
+  return s || (m && !(m.toLowerCase() in MEDIUM_WORDS) ? m : "");
+};
 const mediumLabel = (raw, source) => {
   const m = (raw || "").trim();
   if (!m || fold(m) === fold(source)) return "";
@@ -1633,10 +1654,17 @@ const SEP = `<span class="feed-meta-sep" aria-hidden="true">·</span>`;
 // while the title leaves the site, so the title needs its own cue (phones have
 // no hover underline). Link-only rows already carry a row-level ↗.
 const NEW_TAB = `<span class="sr-only"> (opens in new tab)</span>`;
+// The arrow rides with the title's last word: a no-break space alone did not
+// hold it, since an icon box may still wrap onto a line by itself (Oct 7
+// audit F101). A title that ends inside a tag (an italic name) keeps the space.
+const withLastWord = (html, tail) => {
+  const m = html.match(/^([\s\S]*?)(\S+)$/);
+  return m && !/[<>]/.test(m[2]) ? `${m[1]}<span class="nowrap">${m[2]}&nbsp;${tail}</span>` : `${html}&nbsp;${tail}`;
+};
 const titleLink = (link, headline, ext = false) =>
   link
-    ? `<a class="feed-title-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${mark(headline)}${
-        ext ? `&nbsp;${faIcon("arrow-up-right-from-square", "feed-ext")}` : "" // nbsp keeps the arrow on the last word's line
+    ? `<a class="feed-title-link" href="${esc(link)}" target="_blank" rel="noopener noreferrer">${
+        ext ? withLastWord(mark(headline), faIcon("arrow-up-right-from-square", "feed-ext")) : mark(headline)
       }${NEW_TAB}</a>`
     : `<span class="feed-title-link">${mark(headline)}</span>`;
 
@@ -1795,7 +1823,7 @@ function renderFeedCards(results, colorFor, total = results.length) {
   const isOpp = state.type === "opportunity";
   const rows = results
     .map((it, i) => {
-      const source = (it.source || "").trim();
+      const source = sourceOf(it);
       const subtype = (it.subtype || "").trim();
       const catText = subtype || (it.type || "");
       const catHTML = `<div class="feed-item__cat"><span class="tag ${colorFor[subtype] || ""}${ercTag(catText)}">${esc(catText)}</span></div>`;
@@ -1893,7 +1921,7 @@ function renderHeadlineCards(results, colorFor, total = results.length) {
   const cards = results
     .map((it) => {
       const subtype = (it.subtype || "").trim();
-      const source = (it.source || "").trim();
+      const source = sourceOf(it);
       const medium = mediumLabel(it.medium, source);
       const subhead = [source, it.date ? formatDate(it.date) : "", medium]
         .filter(Boolean)
@@ -1957,7 +1985,7 @@ function renderSearch() {
 
   const list = $("#news-list");
   if (results.length === 0) {
-    list.innerHTML = `<div class="state">Try another word.</div>`;
+    list.innerHTML = `<div class="state">Every word has to match. Try fewer words.</div>`;
     return;
   }
 
@@ -1968,7 +1996,7 @@ function renderSearch() {
     .slice(0, state.shown)
     .map((it) => {
       const link = (it.link || "").trim();
-      const source = (it.source || "").trim();
+      const source = sourceOf(it);
       const titleHTML = itemTitleLink(it);
       // The date a reader goes by: an opportunity's deadline, else its own.
       const when =
@@ -2079,6 +2107,9 @@ function renderBrief() {
 }
 
 function openBrief(id, title) {
+  // The list being left keeps its length, the opening row and where a search
+  // began, for Back (Oct 7 audit F79).
+  history.replaceState({ shown: state.shown, brief: id, searchFrom: state.searchFrom }, "");
   state.briefFrom = { view: state.view, type: state.type, archive: state.archive };
   state.view = "brief";
   state.brief = id;
@@ -2207,8 +2238,9 @@ function chevronIcon() {
  * Boot
  * ------------------------------------------------------------ */
 async function loadCSV(path) {
-  // no-store so an edited CSV always shows up on refresh.
-  const res = await fetch(path, { cache: "no-store" });
+  // no-cache: the browser asks every time, so an edit shows on refresh, but an
+  // unchanged file costs a few hundred bytes, not the whole file (audit F78).
+  const res = await fetch(path, { cache: "no-cache" });
   if (!res.ok) throw new Error(`${path} → HTTP ${res.status}`);
   return {
     rows: parseCSV(await res.text()),
@@ -2220,7 +2252,7 @@ async function loadCSV(path) {
 async function loadFeatured() {
   const list = (v) => (Array.isArray(v) ? v : []);
   try {
-    const res = await fetch(FEATURED_JSON, { cache: "no-store" });
+    const res = await fetch(FEATURED_JSON, { cache: "no-cache" });
     const j = res.ok ? await res.json() : {};
     return { pins: list(j.pins), cards: list(j.cards), hidden: list(j.hidden), heroes: list(j.heroes) };
   } catch {
@@ -2235,6 +2267,19 @@ async function boot() {
   $("#section").hidden = false;
   // A section's title and line are known before the data is (audit F68).
   if (state.view === "section") drawSectionHead();
+  // Home shows its welcome, the card's frame and the four buttons at once;
+  // the card and the counts fill in when the data lands, so nothing jumps
+  // (Oct 7 audit F78: it was "Loading..." with the footer under it).
+  if (state.view === "home") {
+    $("#section").hidden = true;
+    $("#landing").hidden = false;
+    buildLanding();
+    // The arrows' row and the update line hold their room, unseen.
+    $("#wn-split").innerHTML = `<article class="feat no-art" id="wn-feat" aria-hidden="true"><div class="hc"></div></article>
+      <div class="caro" aria-hidden="true" style="visibility: hidden"><button type="button" class="caro__btn" tabindex="-1">${faIcon("chevron-left")}</button><button type="button" class="rail__pause" tabindex="-1">${faIcon("pause")}</button><button type="button" class="caro__btn" tabindex="-1">${faIcon("chevron-right")}</button><span class="caro__count"><b>1</b> / 1</span></div>
+      <p class="sr-only" role="status">Loading the latest items</p>`;
+    $("#landing-updated").innerHTML = "&nbsp;";
+  }
   try {
     const [{ rows, modified }, featured] = await Promise.all([loadCSV(NEWS_CSV), loadFeatured()]);
     init(rows, modified, featured);

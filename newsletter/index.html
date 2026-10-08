@@ -21,7 +21,6 @@
     href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Work+Sans:ital,wght@0,400;0,600;0,700;0,900;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <link rel="stylesheet" href="../css/styles.css?v=176" />
   <script src="../js/grow.js?v=3"></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTurnstileLoad&render=explicit" async defer></script>
@@ -70,7 +69,10 @@
     <div class="site-footer__inner">
       <img
         class="site-footer__logo"
-        src="../assets/ERC_Horizontal_MaroonText.png"
+        src="../assets/ERC_Horizontal_MaroonText-346.png"
+        width="173"
+        height="64"
+        loading="lazy"
         alt="Education Research Center, Texas A&amp;M University"
       />
       <div class="site-footer__links">
@@ -286,8 +288,11 @@ function setFieldError(id, msg) {
   else input.removeAttribute('aria-describedby');
 }
 const clearErrors = () => ERR_IDS.forEach(id => setFieldError(id, ''));
+// The count under Join goes with the last field message (Oct 7 audit F106).
 form.addEventListener('input', e => {
   if (ERR_IDS.includes(e.target.id)) setFieldError(e.target.id, '');
+  const fixed = ERR_IDS.every(i => document.getElementById(`${i}-err`).hidden);
+  if (fixed && / needs? a fix\.$/.test(stat.textContent)) setStat('');
 });
 
 const doneBox = el('div', 'done');
@@ -301,7 +306,7 @@ form.addEventListener('submit', async event => {
   const bad = [];
   if (!name) bad.push(['n', 'Add your name.']);
   if (!email) bad.push(['e', 'Add your email address.']);
-  else if (!/^\S+@\S+\.\S+$/.test(email)) bad.push(['e', "That email address doesn't look right."]);
+  else if (!/^\S+@\S+\.\S+$/.test(email)) bad.push(['e', 'Enter an email address like name@example.com.']);
   clearErrors();
   if (bad.length) {
     bad.forEach(([id, msg]) => setFieldError(id, msg));

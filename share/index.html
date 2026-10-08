@@ -21,7 +21,6 @@
     href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Work+Sans:ital,wght@0,400;0,600;0,700;0,900;1,400&display=swap"
     rel="stylesheet"
   />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.1/css/all.min.css" integrity="sha512-QeR2VH+lsBE5LSAe1Q5EnTBbe7XTBubt8dG93Y7gidSgdMCr8nVqKcfKAMyN96SV8KDbZVTDXChatu5G2KQGzg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <!-- The site's one stylesheet: the bar, the footer, and the form live there. -->
   <link rel="stylesheet" href="../css/styles.css?v=176" />
   <script src="../js/grow.js?v=3"></script>
@@ -73,7 +72,10 @@
     <div class="site-footer__inner">
       <img
         class="site-footer__logo"
-        src="../assets/ERC_Horizontal_MaroonText.png"
+        src="../assets/ERC_Horizontal_MaroonText-346.png"
+        width="173"
+        height="64"
+        loading="lazy"
         alt="Education Research Center, Texas A&amp;M University"
       />
       <div class="site-footer__links">
@@ -145,6 +147,8 @@ class UserError extends Error {}
 const plain = err =>
   err instanceof UserError
     ? err.message
+    : err?.name === 'TimeoutError'
+      ? "The desk didn't answer in time. Nothing you typed is lost; try again."
     : err instanceof TypeError
       ? "Couldn't reach the server. Check your connection and try again."
       : 'Something went wrong on our side. Try again in a moment, or email your item to erc@tamu.edu.';
@@ -176,7 +180,8 @@ const root = document.getElementById('root');
 let picked = '';
 let mediaUrl = '';
 let uploading = null;    // the upload in flight, so Submit can wait for it
-let uploadGen = 0;       // moves on when the form starts over, so a late upload can't land in it
+let uploadCtrl = null;   // stops that upload: Remove, or its time limit
+let uploadGen = 0;      // moves on when the form starts over, so a late upload can't land in it
 let uploadFailed = false;
 let sendWithout = false; // a second Submit after a failed upload sends without the media
 
@@ -303,8 +308,11 @@ async function ensureCheck() {
     throw new UserError("The spam check didn't load on this network, so the form can't send. Email your item to erc@tamu.edu instead.");
   }
 }
-function takeToken(forSend = true) {
+function takeToken(forSend = true, signal) {
   return new Promise((resolve, reject) => {
+    // A stopped upload gives up its place in the line, so it can't take the
+    // token a send is waiting for (Oct 7 audit F84).
+    if (signal?.aborted) return reject(signal.reason);
     const take = () => {
       const t = token; token = '';
       setTimeout(() => turnstile.reset(widgetId), 0);
@@ -319,6 +327,11 @@ function takeToken(forSend = true) {
     }, 60000);
     onToken.send = forSend || sendPending;
     waiting.push(onToken);
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timer);
+      waiting = waiting.filter(fn => fn !== onToken);
+      reject(signal.reason);
+    }, { once: true });
     if (needsClick) askForClick(onToken.send);
   });
 }
@@ -369,11 +382,35 @@ function setFieldError(id, msg) {
   }
 }
 const clearErrors = () => ERR_IDS.forEach(id => setFieldError(id, ''));
-// A field's message goes as soon as the field is touched again.
+// A field's message goes as soon as the field is touched again, and the count
+// under Send goes with the last one (Oct 7 audit F106).
 form.addEventListener('input', e => {
   const id = e.target.name === 'type' ? 'type' : e.target.id;
   if (ERR_IDS.includes(id)) setFieldError(id, '');
+  const fixed = ERR_IDS.every(i => document.getElementById(`${i}-err`).hidden);
+  if (fixed && / needs? a fix\.$/.test(stat.textContent)) setStat('');
 });
+
+// The item is kept in this browser as it is typed, so a phone that reloads the
+// page in the background brings it back. Name and email are never kept, for
+// shared computers (Oct 7 audit F87).
+const DRAFT = 'exchange-share-draft-v1';
+const DRAFT_IDS = ['t', 'l', 'd'];
+form.addEventListener('input', () => {
+  const draft = { type: typesBox.querySelector('input:checked')?.value ?? '' };
+  for (const id of DRAFT_IDS) draft[id] = document.getElementById(id).value;
+  try { localStorage.setItem(DRAFT, JSON.stringify(draft)); } catch {}
+});
+const dropDraft = () => { try { localStorage.removeItem(DRAFT); } catch {} };
+try {
+  const draft = JSON.parse(localStorage.getItem(DRAFT)) ?? {};
+  for (const id of DRAFT_IDS) {
+    const box = document.getElementById(id);
+    if (!box.value && typeof draft[id] === 'string') box.value = draft[id];
+  }
+  const radio = [...typesBox.querySelectorAll('input')].find(r => r.value === draft.type);
+  if (radio && !picked) { radio.checked = true; picked = radio.value; }
+} catch {}
 
 // Big pictures and a PDF's first page go up as JPEG, at most 2000px on the
 // long side, so a phone photo or a photo-heavy flyer fits the 2.5 MB limit
@@ -420,15 +457,26 @@ const EXT = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/gif': 'gif', 'imag
 // While a file is on its way the button stays put and says it is busy, so
 // keyboard focus stays where it was (it used to vanish with the button).
 pick.addEventListener('click', () => { if (!uploading) fileIn.click(); });
-rm.addEventListener('click', () => { clearMedia(); pick.focus(); });
+// Stops a file still on its way: Remove was pressed, or the form started over.
+const stopUpload = () => {
+  uploadGen++;
+  uploadCtrl?.abort();
+  uploading = null;
+  pick.removeAttribute('aria-disabled');
+};
+rm.addEventListener('click', () => { stopUpload(); clearMedia(); pick.focus(); });
 fileIn.addEventListener('change', () => {
   const file = fileIn.files[0];
   fileIn.value = '';
   if (!file) return;
   const gen = ++uploadGen;
-  uploadFailed = false; sendWithout = false;
+  const ctrl = uploadCtrl = new AbortController();
+  // A new file drops the old one, so a failed replacement never sends the
+  // earlier file unseen. Remove stays, to stop this upload or clear a failed
+  // one (Oct 7 audit F84).
+  clearMedia();
   pick.setAttribute('aria-disabled', 'true');
-  rm.hidden = true;
+  rm.hidden = false;
   const job = (async () => {
     try {
       let blob = file;
@@ -448,6 +496,7 @@ fileIn.addEventListener('change', () => {
         ext = 'jpg';
       }
       if (blob.size > MAX) throw new UserError('Too big, even after shrinking it. Keep it under 2.5 MB.');
+      if (gen !== uploadGen) return; // removed while the file was being prepared
       setMedia('Uploading…', 'busy');
       await ensureCheck();
       const b64 = await new Promise((res, rej) => {
@@ -456,12 +505,22 @@ fileIn.addEventListener('change', () => {
         r.onerror = () => rej(new UserError("Couldn't read that file."));
         r.readAsDataURL(blob);
       });
-      const resp = await fetch(`${DESK}/api/newsletter-image`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: file.name, type: ext, file: b64, turnstile_token: await takeToken(false) }),
-      });
-      const data = await readReply(resp);
-      if (!data.ok) throw new UserError("The upload didn't go through. Try again, or send the item without it.");
+      const tok = await takeToken(false, ctrl.signal);
+      // A stalled upload stops after 60 seconds, so the dots can't run forever.
+      const failed = "The upload didn't go through. Try again, or send the item without it.";
+      const timer = setTimeout(() => ctrl.abort(new UserError(failed)), 60000);
+      let data;
+      try {
+        const resp = await fetch(`${DESK}/api/newsletter-image`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: file.name, type: ext, file: b64, turnstile_token: tok }),
+          signal: ctrl.signal,
+        });
+        data = await readReply(resp);
+      } finally {
+        clearTimeout(timer);
+      }
+      if (!data.ok) throw new UserError(failed);
       if (gen !== uploadGen) return; // the form was sent or started over meanwhile
       mediaUrl = data.url;
       // Says what went up, and that a PDF went as its first page (Sep 30 audit).
@@ -471,7 +530,8 @@ fileIn.addEventListener('change', () => {
     } catch (err) {
       if (gen !== uploadGen) return;
       uploadFailed = true;
-      setMedia(plain(err), 'error');
+      // Out of time reads as a failed upload, not as a fault on our side.
+      setMedia(plain(ctrl.signal.aborted ? ctrl.signal.reason : err), 'error');
     } finally {
       if (gen === uploadGen) pick.removeAttribute('aria-disabled');
     }
@@ -480,11 +540,12 @@ fileIn.addEventListener('change', () => {
   job.then(() => { if (uploading === job) uploading = null; });
 });
 
-// The form starts over after a send: the type, the media and the messages go too.
+// The form starts over after a send: the type, the media, the messages and the
+// kept draft go too.
 form.addEventListener('reset', () => {
   picked = '';
-  uploadGen++;
-  uploading = null;
+  stopUpload();
+  dropDraft();
   clearMedia();
   clearErrors();
   setStat('');
@@ -532,7 +593,7 @@ form.addEventListener('submit', async event => {
   if (!desc) bad.push(['d', 'Add a description.']);
   if (!name) bad.push(['n', 'Add your name.']);
   if (!email) bad.push(['e', 'Add your email address.']);
-  else if (!/^\S+@\S+\.\S+$/.test(email)) bad.push(['e', "That email address doesn't look right."]);
+  else if (!/^\S+@\S+\.\S+$/.test(email)) bad.push(['e', 'Enter an email address like name@example.com.']);
   clearErrors();
   if (bad.length) {
     bad.forEach(([id, msg]) => setFieldError(id, msg));
@@ -569,8 +630,9 @@ form.addEventListener('submit', async event => {
     setStat('Checking', 'busy');
     const tok = await takeToken();
     setStat('Sending', 'busy');
+    // A send that hangs ends in a minute with a message (Oct 7 audit F84).
     const resp = await fetch(`${DESK}/api/submit`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: AbortSignal.timeout(60000),
       body: JSON.stringify({
         title,
         blurb: desc,

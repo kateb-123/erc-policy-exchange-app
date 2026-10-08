@@ -105,6 +105,65 @@ a:hover {
 .skip-link:hover {
   color: #fff;
 }
+/* The thirteen Font Awesome icons the site uses, as small local files drawn
+   through a mask in the text's colour, in Font Awesome 7's own box (1.25em
+   wide, 1em tall, centred, the glyph's foot 0.125em under the baseline), so
+   they look the same. The whole icon set no longer loads from another server
+   before a page can draw (Oct 7 audit F116). Icons: Font Awesome Free 7.3.1,
+   CC BY 4.0. */
+.fa-solid {
+  display: var(--fa-display, inline-block);
+  width: var(--fa-width, 1.25em);
+  height: 1em;
+  line-height: 1;
+  vertical-align: -0.125em;
+  font-style: normal;
+  background: currentColor;
+  /* One em tall at the top centre of its box, as a font glyph sits, even
+     where a rule makes the box bigger (a 40px tap area). */
+  -webkit-mask: var(--icon) 50% 0 / auto 1em no-repeat;
+  mask: var(--icon) 50% 0 / auto 1em no-repeat;
+}
+.fa-bars {
+  --icon: url("../assets/icons/bars.svg");
+}
+.fa-magnifying-glass {
+  --icon: url("../assets/icons/magnifying-glass.svg");
+}
+.fa-arrow-up-right-from-square {
+  --icon: url("../assets/icons/arrow-up-right-from-square.svg");
+}
+.fa-chevron-right {
+  --icon: url("../assets/icons/chevron-right.svg");
+}
+.fa-chevron-left {
+  --icon: url("../assets/icons/chevron-left.svg");
+}
+.fa-chevron-down {
+  --icon: url("../assets/icons/chevron-down.svg");
+}
+.fa-video {
+  --icon: url("../assets/icons/video.svg");
+}
+.fa-play {
+  --icon: url("../assets/icons/play.svg");
+}
+.fa-pause {
+  --icon: url("../assets/icons/pause.svg");
+}
+.fa-box-archive {
+  --icon: url("../assets/icons/box-archive.svg");
+}
+.fa-arrow-right {
+  --icon: url("../assets/icons/arrow-right.svg");
+}
+.fa-arrow-left {
+  --icon: url("../assets/icons/arrow-left.svg");
+}
+/* Keeps a title's last word and its outbound arrow on one line (F101). */
+.nowrap {
+  white-space: nowrap;
+}
 .sr-only {
   position: absolute;
   width: 1px;
@@ -2933,6 +2992,7 @@ main {
   margin: 0;
   accent-color: var(--maroon);
   flex-shrink: 0;
+  cursor: pointer; /* the circle and the box take the hand, as their words do (Oct 7 audit F107) */
 }
 .upload {
   display: flex;
@@ -2991,6 +3051,13 @@ main {
 }
 .btn-text:hover {
   text-decoration: underline;
+}
+/* A switched-off text button fades like Save does, with no hand or
+   underline, so a click on it does not seem ignored (Oct 7 audit F113). */
+.btn-text:disabled {
+  opacity: 0.6;
+  cursor: default;
+  text-decoration: none;
 }
 .btn-text--quiet {
   font-family: var(--sans);
@@ -3513,10 +3580,15 @@ main {
   cursor: pointer;
 }
 .admin-edit::before {
-  content: "\f303"; /* Font Awesome's pen */
+  content: "";
+  display: inline-block;
+  width: 1em;
+  height: 1em;
   margin-right: 7px;
-  font-family: "Font Awesome 7 Free";
-  font-weight: 900;
+  vertical-align: -0.125em;
+  background: currentColor;
+  -webkit-mask: url("../assets/icons/pencil.svg") center / contain no-repeat;
+  mask: url("../assets/icons/pencil.svg") center / contain no-repeat;
 }
 .admin-edit:hover {
   transform: rotate(2deg) scale(1.08);
@@ -3907,6 +3979,19 @@ ul.admin-list {
 .admin-toast a {
   color: #fff;
   font-weight: 700;
+}
+/* Undo in the bottom message after a delete or a removed card (Oct 7 audit
+   F90, F108): a white underlined word, like the message's link. */
+.admin-toast__undo {
+  margin-left: 6px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
 }
 .admin-toast__x {
   margin-left: 8px;
