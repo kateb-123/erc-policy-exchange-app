@@ -599,11 +599,16 @@ function whatsNewFeed(per = WN_PER) {
   // their dates last (Kate, Sep 24: "ONLY the six I told you"); the
   // round-robin of twelve shows only when nothing is pinned.
   const tabOf = (it) => NEWS_TABS.find((t) => t.value === (it.type || "").toLowerCase());
+  // A pin's own title, summary and photo, written on the desk's Highlight
+  // page, stand in for the item's own in the card (Kate, Oct 23; js/pins.js).
   const pinned = state.featured.pins
     .filter((p) => (p.until || "") >= TODAY)
-    .map((p) => state.items.find((it) => itemKey(it) === p.key))
-    .filter((it) => it && !isExpired(it) && tabOf(it))
-    .map((it) => ({ it, tab: tabOf(it) }));
+    .map((p) => ({ p, it: state.items.find((it) => itemKey(it) === p.key) }))
+    .filter(({ it }) => it && !isExpired(it) && tabOf(it))
+    .map(({ p, it }) => {
+      const pinnedAs = withPin(it, p);
+      return { it: pinnedAs.it, tab: tabOf(it), pinSummary: pinnedAs.summary };
+    });
   const cards = state.featured.cards
     .filter((c) => (c.until || "") >= TODAY)
     .map((c) => ({
@@ -629,7 +634,8 @@ function whatsNewFeed(per = WN_PER) {
       const h = heroOf(itemKey(e.it));
       e.hero = h.hero || "";
       e.dark = !!h.dark;
-      e.summary = h.summary || ""; // the card's own words (Kate, Oct 6)
+      // The card's own words: the pin's from the desk first, else the edit door's (Kate, Oct 6 and 23).
+      e.summary = e.pinSummary || h.summary || "";
     }
   });
   // The Share card closes the rotation where the hero cards show (Kate,
