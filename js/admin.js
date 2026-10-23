@@ -677,7 +677,12 @@ function openItem(key) {
   const summaryWas = heroRow.summary || '';
   const cardSum = el('textarea', { id: 'a-cardsum', rows: '3', maxlength: '600' });
   cardSum.value = summaryWas;
-  const cardSumRow = fieldRow('a-cardsum', 'Card summary', cardSum, 'Only the New & Upcoming card shows it, in place of the Summary.');
+  // A pick from the desk's Highlight page may carry its own words and photo,
+  // which the card shows first (Oct 23); the hint says so, so a change here is never a mystery.
+  const deskWords = pin && (pin.title || pin.summary || pin.image);
+  const cardSumRow = fieldRow('a-cardsum', 'Card summary', cardSum, deskWords
+    ? "The desk's Highlight page set this card's words or photo; the card shows those first. Change them there."
+    : 'Only the New & Upcoming card shows it, in place of the Summary.');
   cardSumRow.classList.add('admin-field--wide');
   cardSumRow.append(titleCount(cardSum, (n) => `${n} characters. Aim for 280 or fewer.`));
   // A headline's card shows no summary, so the box is not offered there.
@@ -705,7 +710,9 @@ function openItem(key) {
     const it = { ...item };
     for (const [name] of FIELDS) it[name] = form.elements[name].value;
     const tab = X.NEWS_TABS.find((t) => t.value === (it.type || '').toLowerCase()) || { value: '', nav: 'ERC' };
-    previewCard.innerHTML = X.heroCardHTML({ it, tab, hero: tiles.value, dark: tiles.dark, summary: cardSum.value.trim() });
+    // The preview is the card as the site draws it: the desk's pin words first (js/pins.js).
+    const pinned = pin && window.withPin ? window.withPin(it, pin) : { it, summary: '' };
+    previewCard.innerHTML = X.heroCardHTML({ it: pinned.it, tab, hero: tiles.value, dark: tiles.dark, summary: pinned.summary || cardSum.value.trim() });
     previewCard.dataset.len = previewCard.querySelector('.hc')?.dataset.len || '';
   };
   form.addEventListener('input', paint);
