@@ -11,11 +11,11 @@
  * Set in Vercel (Project > Settings > Environment Variables), for
  * Production only (a preview deploy with them would also commit to main),
  * never here:
- *   ADMIN_PASSWORD   the password Kate chose: 20 characters or more. Each
- *                    wrong guess waits 1.5 s, but Vercel runs many copies
- *                    at once, so length is what stops fast guessing (a
- *                    Firewall rate limit on /api/admin/login adds a second
- *                    stop).
+ *   ADMIN_PASSWORD   the team's password: 6 characters or more (Kate,
+ *                    Oct 23: one short team password for the desk and this
+ *                    door, her call over the 20 of before). Each wrong
+ *                    guess waits 1.5 s; a Firewall rate limit on
+ *                    /api/admin/login, where one is set, stops fast guessing.
  *   GITHUB_TOKEN     a fine-grained token for this repo only, with
  *                    Contents: read and write
  * Optional:
@@ -51,7 +51,7 @@ const TYPES = ['research', 'event', 'opportunity', 'headline'];
 const MAX_FIELD = 6000;
 // The editor's words for the sheet's columns, for the messages she reads.
 const FIELD_WORDS = { headline: 'title', blurb: 'summary', infographic: 'picture link', subtype: 'category', type: 'section' };
-const MIN_PASSWORD = 20;
+const MIN_PASSWORD = 6;
 
 class BadRequest extends Error {}
 class Conflict extends Error {}

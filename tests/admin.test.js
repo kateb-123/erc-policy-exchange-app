@@ -257,9 +257,14 @@ function call(handler, { method = 'POST', headers = {}, body, deps }) {
     assert.strictEqual(r.status, 400);
     assert.ok(gh.writes.every((w) => w.message.startsWith('Admin: ')));
   });
+  await okA('login: a team password of 7 characters opens the door (Kate, Oct 23)', async () => {
+    const teamEnv = { ADMIN_PASSWORD: 'abc-123', GITHUB_TOKEN: 'x' };
+    const r = await call(A.handleLogin, { body: { password: 'abc-123' }, deps: { env: teamEnv, pause: async () => {} } });
+    assert.strictEqual(r.status, 200);
+  });
   await okA('login: a short password keeps the door shut', async () => {
-    const shortEnv = { ADMIN_PASSWORD: 'short one', GITHUB_TOKEN: 'x' };
-    let r = await call(A.handleLogin, { body: { password: 'short one' }, deps: { env: shortEnv, pause: async () => {} } });
+    const shortEnv = { ADMIN_PASSWORD: 'abc', GITHUB_TOKEN: 'x' };
+    let r = await call(A.handleLogin, { body: { password: 'abc' }, deps: { env: shortEnv, pause: async () => {} } });
     assert.strictEqual(r.status, 503);
     r = await call(A.handleSession, { method: 'GET', headers: { cookie }, deps: { env: shortEnv } });
     assert.strictEqual(r.body.ok, false);
